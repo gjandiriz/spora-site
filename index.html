@@ -1,138 +1,180 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SPORA</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
+      background: #07111f;
       color: white;
     }
 
-    .wrapper {
-      display: flex;
-      flex-wrap: wrap;
+    .hero {
       min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      overflow: hidden;
     }
 
     .left {
-      flex: 1;
-      padding: 60px;
-      max-width: 600px;
-    }
-
-    .right {
-      flex: 1;
-      background: url('imagen.jpg') center/cover no-repeat;
-      min-height: 400px;
-    }
-
-    h1 {
-      font-size: 48px;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      font-weight: normal;
-      color: #cbd5f5;
-      margin-bottom: 30px;
-    }
-
-    p {
-      color: #e2e8f0;
-    }
-
-    ul {
-      margin-top: 20px;
-    }
-
-    li {
-      margin-bottom: 10px;
-    }
-
-    .form {
-      margin-top: 30px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      border: none;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      background: #22c55e;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #16a34a;
-    }
-
-    .mail {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #94a3b8;
+      padding: 48px 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: linear-gradient(90deg, rgba(7,17,31,1) 0%, rgba(10,22,40,0.96) 75%, rgba(10,22,40,0.75) 100%);
+      position: relative;
+      z-index: 2;
     }
 
     .lang {
       position: absolute;
-      top: 20px;
-      right: 20px;
-      color: #94a3b8;
+      top: 24px;
+      right: 28px;
+      color: #c7d2e1;
+      font-size: 18px;
+      letter-spacing: 0.5px;
     }
 
+    .brand {
+      font-size: 64px;
+      font-weight: 700;
+      margin: 0 0 28px 0;
+      letter-spacing: 1px;
+    }
+
+    .headline {
+      font-size: 38px;
+      line-height: 1.15;
+      font-weight: 500;
+      color: #dbeafe;
+      margin: 0 0 28px 0;
+      max-width: 560px;
+    }
+
+    .desc {
+      font-size: 18px;
+      line-height: 1.7;
+      color: #d1d5db;
+      max-width: 620px;
+      margin-bottom: 28px;
+    }
+
+    .bullets {
+      margin: 0 0 34px 0;
+      padding-left: 22px;
+      color: #d1d5db;
+      font-size: 17px;
+      line-height: 1.8;
+    }
+
+    .cta {
+      display: inline-block;
+      width: fit-content;
+      background: #2fc95c;
+      color: #07111f;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 18px;
+      padding: 16px 28px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+    }
+
+    .mail {
+      font-size: 18px;
+      color: #dbeafe;
+      margin-bottom: 18px;
+    }
+
+    .mail b {
+      font-weight: 700;
+    }
+
+    .note {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #aeb8c7;
+      max-width: 620px;
+    }
+
+    .right {
+      min-height: 100vh;
+      background:
+        linear-gradient(270deg, rgba(7,17,31,0.05) 0%, rgba(7,17,31,0.35) 35%, rgba(7,17,31,0.85) 100%),
+        url('imagen.jpg') center center / cover no-repeat;
+    }
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .right {
+        min-height: 420px;
+        order: -1;
+      }
+
+      .left {
+        padding: 36px 24px 44px 24px;
+      }
+
+      .brand {
+        font-size: 44px;
+        margin-top: 24px;
+      }
+
+      .headline {
+        font-size: 32px;
+      }
+
+      .lang {
+        top: 18px;
+        right: 18px;
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
-
 <body>
+  <section class="hero">
+    <div class="left">
+      <div class="lang">ES | EN</div>
 
-<div class="lang">ES | EN</div>
+      <h1 class="brand">SPORA</h1>
 
-<div class="wrapper">
+      <h2 class="headline">Ordená tu producción sin complicarte</h2>
 
-  <div class="left">
+      <div class="desc">
+        Spora ayuda a fábricas de 5 a 50 personas a seguir piezas, registrar avances y entender qué está pasando en planta en tiempo real.
+      </div>
 
-    <h1>SPORA</h1>
+      <ul class="bullets">
+        <li>Seguimiento de piezas por código o QR</li>
+        <li>Registro por operario y por puesto</li>
+        <li>Información clara, sin planillas caóticas</li>
+      </ul>
 
-    <h2>Ordená tu producción sin complicarte</h2>
-
-    <p>
-      Spora ayuda a fábricas de 5 a 50 personas a seguir piezas, registrar avances y entender qué está pasando en planta en tiempo real.
-    </p>
-
-    <ul>
-      <li>Seguimiento de piezas por código o QR</li>
-      <li>Registro por operario y por puesto</li>
-      <li>Información clara, sin planillas caóticas</li>
-    </ul>
-
-    <div class="form">
-      <button onclick="window.open('https://forms.gle/GpDRr6KGYqjqr9EK8', '_blank')">
+      <a class="cta" href="https://forms.gle/GpDRr6KGYqjqr9EK8" target="_blank">
         Quiero sumarme a la prueba
-      </button>
+      </a>
+
+      <div class="mail">
+        o escribinos a: <b>hola@spora.systems</b>
+      </div>
+
+      <div class="note">
+        Estamos trabajando con un grupo reducido de fábricas para lanzar la primera versión de Spora.
+      </div>
     </div>
 
-    <div class="mail">
-      o escribinos a: <b>hola@spora.systems</b>
-    </div>
-
-  </div>
-
-  <div class="right"></div>
-
-</div>
-
+    <div class="right"></div>
+  </section>
 </body>
 </html>
