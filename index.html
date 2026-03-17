@@ -11,16 +11,24 @@
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #0f172a, #1e293b);
       color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
     }
 
-    .container {
-      max-width: 700px;
-      padding: 20px;
+    .wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      min-height: 100vh;
+    }
+
+    .left {
+      flex: 1;
+      padding: 60px;
+      max-width: 600px;
+    }
+
+    .right {
+      flex: 1;
+      background: url('imagen.jpg') center/cover no-repeat;
+      min-height: 400px;
     }
 
     h1 {
@@ -35,41 +43,53 @@
     }
 
     p {
-      font-size: 18px;
       color: #e2e8f0;
-      margin-bottom: 20px;
     }
 
-    .bullets {
-      text-align: left;
-      margin: 30px 0;
+    ul {
+      margin-top: 20px;
     }
 
-    .bullets li {
+    li {
       margin-bottom: 10px;
     }
 
-    .cta {
+    .form {
       margin-top: 30px;
     }
 
-    .cta a {
-      background: #22c55e;
-      color: black;
-      padding: 15px 25px;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: bold;
-      display: inline-block;
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: none;
     }
 
-    .cta a:hover {
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #22c55e;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
       background: #16a34a;
     }
 
-    .beta {
-      margin-top: 20px;
+    .mail {
+      margin-top: 15px;
       font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .lang {
+      position: absolute;
+      top: 20px;
+      right: 20px;
       color: #94a3b8;
     }
 
@@ -78,7 +98,11 @@
 
 <body>
 
-  <div class="container">
+<div class="lang">ES | EN</div>
+
+<div class="wrapper">
+
+  <div class="left">
 
     <h1>SPORA</h1>
 
@@ -88,23 +112,27 @@
       Spora ayuda a fábricas de 5 a 50 personas a seguir piezas, registrar avances y entender qué está pasando en planta en tiempo real.
     </p>
 
-    <ul class="bullets">
+    <ul>
       <li>Seguimiento de piezas por código o QR</li>
       <li>Registro por operario y por puesto</li>
       <li>Información clara, sin planillas caóticas</li>
     </ul>
 
-    <div class="cta">
-      <a href="mailto:hola@spora.systems">
+    <div class="form">
+      <button onclick="window.open('https://forms.gle/GpDRr6KGYqjqr9EK8', '_blank')">
         Quiero sumarme a la prueba
-      </a>
+      </button>
     </div>
 
-    <div class="beta">
-      Estamos trabajando con un grupo reducido de fábricas para lanzar la primera versión de Spora.
+    <div class="mail">
+      o escribinos a: <b>hola@spora.systems</b>
     </div>
 
   </div>
+
+  <div class="right"></div>
+
+</div>
 
 </body>
 </html>
