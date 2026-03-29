@@ -135,17 +135,37 @@
       mostrar('pantalla-operario');
     }
 
-    function encenderCamara() {
-      if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 },
-        (txt) => { 
-          document.getElementById('input-scan').value = txt; 
-          vibrar(); 
-          procesarScan(); 
-        },
-        () => {}
-      ).catch(e => alert("Safari bloqueó el video. Usá el botón FOTO."));
-    }
+    async function encenderCamara() {
+  const readerDiv = document.getElementById('reader');
+  readerDiv.style.display = 'block';
+
+  // 1. Pedimos permiso al navegador de forma nativa (esto rompe el bloqueo)
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    // Si llegamos acá, el usuario dio permiso. Cerramos el stream temporal para que la librería lo tome.
+    stream.getTracks().forEach(track => track.stop());
+
+    if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+    
+    const config = { fps: 25, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 };
+
+    html5QrCode.start({ facingMode: "environment" }, config,
+      (txt) => { 
+        document.getElementById('input-scan').value = txt; 
+        vibrar(); 
+        procesarScan(); 
+      },
+      () => {}
+    ).catch(e => {
+        console.error(e);
+        alert("Error al iniciar el visor.");
+    });
+
+  } catch (err) {
+    console.error("Permiso denegado:", err);
+    alert("Cámara bloqueada. Por favor, dale permiso en el candadito de la barra de direcciones.");
+  }
+}
 
     function escanearDesdeFoto(e) {
       const f = e.target.files[0];
