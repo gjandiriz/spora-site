@@ -1,210 +1,185 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-6LL76RNQ2K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-6LL76RNQ2K');
-</script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-site-verification" content="vntHdJD6CUMV0l4Rfdetm-N37zzkTrnEnxMbljrsV1s" />
-
-  <title>SPORA | Sistema de trazabilidad y seguimiento de producción</title>
-  <meta name="description" content="Sistema de trazabilidad y seguimiento de producción para fábricas. Controlá tu producción en tiempo real con Spora.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=0" />
+  <title>SPORA | Sistema de Producción</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #07111f; color: white; overflow-x: hidden; }
+    .hidden { display: none !important; }
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #07111f;
-      color: white;
-    }
+    /* Estética Spora */
+    .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: rgba(10, 22, 40, 0.95); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 16px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    
+    h2 { color: #2fc95c; margin-bottom: 25px; letter-spacing: 2px; }
+    p { color: #aeb8c7; font-size: 14px; }
 
-    .hero {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      overflow: hidden;
-    }
+    /* Inputs y Botones */
+    input, select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white; font-size: 16px; outline: none; }
+    input:focus { border-color: #2fc95c; }
+    
+    button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 16px; transition: 0.3s; }
+    .btn-primary { background: #2fc95c; color: #07111f; }
+    .btn-secondary { background: #34495e; color: white; }
+    .btn-danger { background: #e74c3c; color: white; }
+    button:hover { opacity: 0.9; transform: translateY(-2px); }
 
-    .left {
-      padding: 48px 56px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      background: linear-gradient(90deg, rgba(7,17,31,1) 0%, rgba(10,22,40,0.96) 75%, rgba(10,22,40,0.75) 100%);
-      position: relative;
-      z-index: 2;
-    }
+    /* Cámara y Logs */
+    #reader { width: 100%; border-radius: 12px; overflow: hidden; margin: 15px 0; border: 2px solid #2fc95c; background: #000; }
+    #log-scan { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; max-height: 150px; overflow-y: auto; text-align: left; font-size: 13px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1); }
+    .log-entry { padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-    .lang {
-      position: absolute;
-      top: 24px;
-      right: 28px;
-      color: #c7d2e1;
-      font-size: 18px;
-      letter-spacing: 0.5px;
-    }
-
-    .brand {
-      font-size: 64px;
-      font-weight: 700;
-      margin: 0 0 28px 0;
-      letter-spacing: 1px;
-    }
-
-    .headline {
-      font-size: 38px;
-      line-height: 1.15;
-      font-weight: 500;
-      color: #dbeafe;
-      margin: 0 0 28px 0;
-      max-width: 560px;
-    }
-
-    .desc {
-      font-size: 18px;
-      line-height: 1.7;
-      color: #d1d5db;
-      max-width: 620px;
-      margin-bottom: 28px;
-    }
-
-    .bullets {
-      margin: 0 0 34px 0;
-      padding-left: 22px;
-      color: #d1d5db;
-      font-size: 17px;
-      line-height: 1.8;
-    }
-
-    .cta {
-      display: inline-block;
-      width: fit-content;
-      background: #2fc95c;
-      color: #07111f;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 18px;
-      padding: 16px 28px;
-      border-radius: 10px;
-      margin-bottom: 18px;
-    }
-
-    .mail-text {
-      font-size: 16px;
-      color: #aeb8c7;
-      margin-bottom: 10px;
-    }
-
-    .mail-box {
-      display: inline-block;
-      padding: 12px 16px;
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 10px;
-      color: #dbeafe;
-      font-size: 18px;
-      background: rgba(255,255,255,0.04);
-      margin-bottom: 18px;
-    }
-
-    .note {
-      font-size: 16px;
-      line-height: 1.6;
-      color: #aeb8c7;
-      max-width: 620px;
-    }
-
-    .right {
-      min-height: 100vh;
-      background:
-        linear-gradient(270deg, rgba(7,17,31,0.05) 0%, rgba(7,17,31,0.35) 35%, rgba(7,17,31,0.85) 100%),
-        url('imagen.jpg') center center / cover no-repeat;
-    }
-
-    @media (max-width: 980px) {
-      .hero {
-        grid-template-columns: 1fr;
-      }
-
-      .right {
-        min-height: 420px;
-        order: -1;
-      }
-
-      .left {
-        padding: 36px 24px 44px 24px;
-      }
-
-      .brand {
-        font-size: 44px;
-        margin-top: 24px;
-      }
-
-      .headline {
-        font-size: 32px;
-      }
-
-      .lang {
-        top: 18px;
-        right: 18px;
-        font-size: 16px;
-      }
-
-      .cta {
-        width: 100%;
-        text-align: center;
-      }
-
-      .mail-box {
-        width: 100%;
-        word-break: break-word;
-      }
-    }
+    /* Etiquetas Meta para iPhone */
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   </style>
 </head>
 <body>
+
   <section class="hero">
-    <div class="left">
-      <div class="lang">ES | EN</div>
+    <div class="card">
+      <h1 style="font-size: 28px; margin-bottom: 5px;">SPORA</h1>
+      <p id="subtitulo">Sistema de Gestión de Planta</p>
+      <hr style="opacity: 0.1; margin: 20px 0;">
 
-      <h1 class="brand">SPORA</h1>
-
-      <h2 class="headline">Sistema de trazabilidad y seguimiento de producción en tiempo real</h2>
-
-      <div class="desc">
-        Spora es un software de trazabilidad para fábricas de 5 a 50 personas que permite seguir piezas, registrar avances y controlar la producción en tiempo real, sin sistemas complejos.
+      <div id="pantalla-login">
+        <input type="password" id="pin-login" placeholder="PIN de Acceso" inputmode="numeric">
+        <button class="btn-primary" onclick="login()">INGRESAR AL SISTEMA</button>
       </div>
 
-      <ul class="bullets">
-        <li>Trazabilidad completa de la producción</li>
-        <li>Seguimiento de piezas por código o QR</li>
-        <li>Registro por operario y por puesto</li>
-        <li>Información clara, sin planillas caóticas</li>
-      </ul>
-
-      <a class="cta" href="mailto:hola@spora.systems?subject=Quiero%20probar%20Spora">
-        Quiero sumarme a la prueba
-      </a>
-
-      <div class="mail-text">o escribinos a:</div>
-      <div class="mail-box">hola@spora.systems</div>
-
-      <div class="note">
-        Spora es un sistema de seguimiento de producción diseñado para fábricas que necesitan orden, control y visibilidad en planta sin implementar soluciones complejas.
+      <div id="pantalla-seleccion-puesto" class="hidden">
+        <p>Bienvenido, <b id="nombre-op" style="color: white;"></b></p>
+        <label style="display:block; text-align:left; font-size:12px; margin-top:10px;">Seleccioná tu puesto de trabajo:</label>
+        <select id="select-puesto-op"></select>
+        <button class="btn-primary" onclick="entrarAPuesto()">CONFIGURAR ESTACIÓN</button>
       </div>
+
+      <div id="pantalla-operario" class="hidden">
+        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 15px;">
+          <p style="margin:0; color: #2fc95c;">Estación: <b id="estacion-op"></b></p>
+        </div>
+
+        <div id="reader"></div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button class="btn-secondary" onclick="encenderCamara()">▶️ VIVO</button>
+          <label for="input-archivo" style="background:#3498db; color:white; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:700; font-size:14px; height: 50px;">📷 FOTO</label>
+          <input type="file" id="input-archivo" accept="image/*" capture="environment" style="display:none;" onchange="escanearDesdeFoto(event)">
+        </div>
+
+        <input type="text" id="input-scan" placeholder="Aguardando código..." style="text-align: center; border-color: #f39c12; font-weight: bold;">
+        <button class="btn-primary" onclick="procesarScan()">REGISTRAR PIEZA</button>
+        
+        <div id="log-scan"></div>
+        <button onclick="location.reload()" style="background: transparent; color: #aeb8c7; font-size: 12px; border: 1px solid rgba(255,255,255,0.1);">CERRAR SESIÓN</button>
+      </div>
+
+      <div id="pantalla-menu" class="hidden">
+        <h3 style="color: #f39c12;">Panel Gerencial</h3>
+        <p>El panel de control completo se encuentra en la versión de escritorio.</p>
+        <button class="btn-secondary" onclick="location.reload()">VOLVER</button>
+      </div>
+
+      <div id="msj" style="margin-top: 15px; font-size: 13px; color: #f39c12;"></div>
     </div>
-
-    <div class="right"></div>
   </section>
+
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzbNN-xJFtiD3rhXc0fNlVPk2slg6JPW9RhNd8VyLHxlPOaUvuc2TNwiluJX2waT_s4/exec";
+    let usuarioActual = "";
+    let estacionActual = "";
+    let html5QrCode = null;
+
+    function mostrar(id) {
+      ['pantalla-login','pantalla-menu','pantalla-seleccion-puesto','pantalla-operario'].forEach(p => {
+        document.getElementById(p).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function login() {
+      const pin = document.getElementById('pin-login').value;
+      if(!pin) return;
+      document.getElementById('msj').innerText = "Verificando credenciales...";
+      
+      fetch(`${WEB_APP_URL}?action=login&pin=${pin}`)
+        .then(r => r.json())
+        .then(res => {
+          document.getElementById('msj').innerText = "";
+          if (res.status === "OK") {
+            usuarioActual = res.usuario.nombre;
+            if (res.usuario.rol === "GERENTE") {
+              mostrar('pantalla-menu');
+            } else {
+              document.getElementById('nombre-op').innerText = usuarioActual;
+              const sel = document.getElementById('select-puesto-op');
+              sel.innerHTML = '<option value="">-- Seleccionar --</option>';
+              res.puestosDisponibles.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
+              mostrar('pantalla-seleccion-puesto');
+            }
+          } else alert(res.mensaje);
+        }).catch(e => alert("Error de conexión."));
+    }
+
+    function entrarAPuesto() {
+      const p = document.getElementById('select-puesto-op').value;
+      if(!p) return alert("Seleccioná un puesto");
+      estacionActual = p;
+      document.getElementById('estacion-op').innerText = p;
+      mostrar('pantalla-operario');
+    }
+
+    function encenderCamara() {
+      if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 },
+        (txt) => { 
+          document.getElementById('input-scan').value = txt; 
+          vibrar(); 
+          procesarScan(); 
+        },
+        () => {}
+      ).catch(e => alert("Safari bloqueó el video. Usá el botón FOTO."));
+    }
+
+    function escanearDesdeFoto(e) {
+      const f = e.target.files[0];
+      if(!f) return;
+      document.getElementById('input-scan').value = "⌛ Procesando...";
+      if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.scanFile(f, true)
+        .then(txt => { 
+          document.getElementById('input-scan').value = txt; 
+          vibrar(); 
+          procesarScan(); 
+        })
+        .catch(() => alert("No se pudo leer el código."));
+    }
+
+    function procesarScan() {
+      const id = document.getElementById('input-scan').value;
+      if(!id || id.includes("⌛")) return;
+      
+      const url = `${WEB_APP_URL}?action=registrar&id=${encodeURIComponent(id)}&estacion=${encodeURIComponent(estacionActual)}&usuario=${encodeURIComponent(usuarioActual)}`;
+      
+      fetch(url)
+        .then(r => r.json())
+        .then(res => {
+          const log = document.getElementById('log-scan');
+          const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          if(res.status === "OK") {
+            log.innerHTML = `<div class="log-entry"><b style="color:#2fc95c">${hora}</b> - ${res.msj}</div>` + log.innerHTML;
+            document.getElementById('input-scan').value = "";
+          } else alert(res.msj);
+        });
+    }
+
+    function vibrar() { if (navigator.vibrate) navigator.vibrate(100); }
+  </script>
 </body>
 </html>
