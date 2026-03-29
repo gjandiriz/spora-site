@@ -136,37 +136,40 @@
     }
 
     async function encenderCamara() {
-  const readerDiv = document.getElementById('reader');
-  readerDiv.style.display = 'block';
+    const readerDiv = document.getElementById('reader');
+    readerDiv.style.display = 'block';
 
-  // 1. Pedimos permiso al navegador de forma nativa (esto rompe el bloqueo)
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    // Si llegamos acá, el usuario dio permiso. Cerramos el stream temporal para que la librería lo tome.
-    stream.getTracks().forEach(track => track.stop());
-
-    if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+    // 1. Limpiamos cualquier instancia previa para evitar conflictos
+    if(html5QrCode) {
+        try { await html5QrCode.stop(); } catch(e) {}
+    }
     
-    const config = { fps: 25, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 };
+    html5QrCode = new Html5Qrcode("reader");
 
-    html5QrCode.start({ facingMode: "environment" }, config,
-      (txt) => { 
-        document.getElementById('input-scan').value = txt; 
-        vibrar(); 
-        procesarScan(); 
-      },
-      () => {}
-    ).catch(e => {
-        console.error(e);
-        alert("Error al iniciar el visor.");
+    // 2. Configuración optimizada para iPhone (formato cuadrado y FPS estables)
+    const config = { 
+        fps: 20, 
+        qrbox: { width: 250, height: 200 },
+        aspectRatio: 1.0 
+    };
+
+    // 3. Arrancamos forzando la cámara trasera directamente
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        config,
+        (txt) => { 
+            document.getElementById('input-scan').value = txt; 
+            if (navigator.vibrate) navigator.vibrate(100);
+            procesarScan(); 
+        },
+        (errorMessage) => {
+            // Errores de lectura silenciosos para no trabar el video
+        }
+    ).catch(err => {
+        console.error("Error Safari:", err);
+        alert("Safari requiere permiso manual. Tocá el candadito o las 'AA' en la barra de direcciones y poné Cámara: PERMITIR.");
     });
-
-  } catch (err) {
-    console.error("Permiso denegado:", err);
-    alert("Cámara bloqueada. Por favor, dale permiso en el candadito de la barra de direcciones.");
-  }
 }
-
     function escanearDesdeFoto(e) {
       const f = e.target.files[0];
       if(!f) return;
