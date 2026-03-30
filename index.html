@@ -6,30 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Spora Systems V4.6 | Punto de Partida</title>
+    <title>Spora Systems V4.9 | Final</title>
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* ESTÉTICA UNIFICADA SPORA */
         body { font-family: 'Segoe UI', sans-serif; background: #07111f; color: white; margin: 0; padding: 15px; text-align: center; }
         .card { background: #111d2b; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 500px; margin: auto; border: 1px solid rgba(255,255,255,0.05); }
         .hidden { display: none !important; }
-        
         button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; color: white; background: #2c3e50; }
         button:active { transform: scale(0.96); }
-        
         input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid #2c3e50; background: #07111f; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
         input:focus { border-color: #2fc95c; }
-        
         label { display: block; text-align: left; font-size: 11px; font-weight: bold; margin-top: 10px; color: #2fc95c; }
-        
         .item-lista { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid #2fc95c; }
         .box-mapeo { background: rgba(0,0,0,0.2); border: 1px dashed #2fc95c; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: left; }
         .etiqueta-preview { background: white; color: black; border: 2px solid #000; margin: 15px auto; padding: 10px; width: 280px; text-align: center; border-radius: 5px; page-break-inside: avoid; }
-        
         #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #3498db; background: #000; margin: 15px 0; min-height: 200px; }
         hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0; }
     </style>
@@ -38,7 +32,7 @@
 
 <div class="card">
     <h1 style="letter-spacing: 5px; margin-bottom: 0;">SPORA</h1>
-    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px; letter-spacing: 2px;">SYSTEMS V4.6</p>
+    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px; letter-spacing: 2px;">SYSTEMS V4.9</p>
 
     <div id="pantalla-login">
         <input type="password" id="pin-login" placeholder="PIN de Acceso" inputmode="numeric">
@@ -80,8 +74,7 @@
             <input type="file" id="input-archivo-camara" accept="image/*" capture="environment" style="display:none;" onchange="escanearDesdeFoto(event)">
         </div>
 
-        <input type="text" id="input-scan" placeholder="Código..." style="font-size:24px; text-align:center; border:2px solid #f1c40f; margin-top:15px; background: #fff; color:#000;">
-        <button onclick="procesarScan()" style="background:#2ecc71; margin-top:10px; height:50px;">✅ REGISTRAR MANUAL</button>
+        <input type="text" id="input-scan" placeholder="Esperando código..." readonly style="font-size:20px; text-align:center; border:2px solid #f1c40f; margin-top:15px; background: #fff; color:#000;">
         <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; font-size:12px; text-align:left; border-radius:8px;"></div>
         <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
     </div>
@@ -149,13 +142,10 @@
     let html5QrCode = null;
     let isProcessing = false;
 
-    // --- DETECTOR DE ENTORNO (SHEETS O GITHUB) ---
     function callServer(action, params, callback) {
         if (typeof google !== 'undefined' && google.script && google.script.run) {
-            // Entorno Google Sheets
             google.script.run.withSuccessHandler(callback)[action](...Object.values(params));
         } else {
-            // Entorno GitHub API
             let url = API_URL + "?action=" + action;
             for (let key in params) { url += "&" + key + "=" + encodeURIComponent(params[key]); }
             fetch(url).then(r => r.json()).then(callback).catch(e => alert("Error de conexión API"));
@@ -193,29 +183,15 @@
         mostrar('pantalla-operario');
     }
 
-    // --- ESCANER CON FILTRO ANTI-PARPADEO ---
-   // --- ESCANER CON CICLO DE CONFIRMACIÓN REAL ---
+    // --- ESCANER CON CICLO DE CONFIRMACIÓN REAL ---
     function encenderCamara() {
         if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        
-        const config = { 
-            fps: 10, // Bajamos los FPS para que el procesador no sufra
-            qrbox: { width: 250, height: 150 } 
-        };
-        
+        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
         html5QrCode.start({ facingMode: "environment" }, config,
             (txt) => {
-                // 1. SI YA ESTÁ TRABAJANDO, IGNORA TODO LO DEMÁS
                 if (isProcessing) return; 
-                
                 isProcessing = true; 
-                vibrarCelu(); // Feedback inmediato al operario
-                
-                // 2. FEEDBACK VISUAL: Ponemos el código en el input para que se vea
-                document.getElementById('input-scan').value = "⌛ PROCESANDO: " + txt;
-                document.getElementById('input-scan').style.backgroundColor = "#f1c40f"; // Color de "espera"
-                
-                // 3. MANDAMOS A REGISTRAR
+                vibrarCelu();
                 procesarScan(txt);
             },
             () => {}
@@ -223,70 +199,58 @@
     }
 
     function procesarScan(codigoForzado) {
-        const id = codigoForzado || document.getElementById('input-scan').value;
-        
-        // Bloqueo de seguridad: si no hay ID o ya estamos procesando, salimos.
-        if(!id || id.includes("⌛")) {
-            isProcessing = false; 
-            return;
-        }
+        const id = codigoForzado || "";
+        if(!id || id.includes("⌛")) { isProcessing = false; return; }
         
         const inputScan = document.getElementById('input-scan');
-        inputScan.value = "⌛ VERIFICANDO...";
-        inputScan.style.backgroundColor = "#f1c40f"; // Amarillo: Procesando
+        inputScan.value = "⌛ VERIFICANDO: " + id;
+        inputScan.style.backgroundColor = "#f1c40f"; // Amarillo
 
         callServer("registrarEscaneo", {id: id, est: estacionActual, user: usuarioActual}, res => {
             const log = document.getElementById('log-scan');
-            const hora = new Date().toLocaleTimeString();
+            const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
             if(res.status === "OK") {
-                // CASO ÉXITO: El código existe y se grabó.
                 inputScan.style.backgroundColor = "#2fc95c"; // Verde
                 inputScan.value = "✅ OK: " + id;
                 log.innerHTML = `<div class="item-lista"><b style="color:#2fc95c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
-                
-                // Esperamos 2 segundos para que el operario vea el verde y cambie de pieza
-                setTimeout(() => {
-                    inputScan.value = "";
-                    inputScan.style.backgroundColor = "#fff";
-                    isProcessing = false; // LIBERAMOS PARA LA PRÓXIMA
-                }, 2000);
-
+                setTimeout(() => { resetScanState(); }, 2000);
             } else {
-                // CASO ERROR: El código NO existe o hubo falla.
                 inputScan.style.backgroundColor = "#e74c3c"; // Rojo
                 inputScan.style.color = "#fff";
                 inputScan.value = "❌ NO EXISTE: " + id;
-                
-                // IMPORTANTE: En caso de error, damos MÁS TIEMPO (4 segundos) 
-                // para que el operario saque la cámara del código erróneo.
                 log.innerHTML = `<div class="item-lista"><b style="color:#e74c3c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
-                
-                setTimeout(() => {
-                    inputScan.value = "";
-                    inputScan.style.backgroundColor = "#fff";
-                    inputScan.style.color = "#000";
-                    isProcessing = false; // RECIÉN ACÁ VOLVEMOS A HABILITAR LA CÁMARA
-                }, 4000); 
+                setTimeout(() => { resetScanState(); }, 4000); // Bloqueo más largo en error
             }
         });
+    }
+
+    function resetScanState() {
+        const inputScan = document.getElementById('input-scan');
+        inputScan.value = "";
+        inputScan.style.backgroundColor = "#fff";
+        inputScan.style.color = "#000";
+        isProcessing = false;
     }
 
     async function escanearDesdeFoto(event) {
         const file = event.target.files[0];
         if (!file || isProcessing) return;
         isProcessing = true;
-        document.getElementById('input-scan').value = "⌛ PROCESANDO...";
+        document.getElementById('input-scan').value = "⌛ PROCESANDO FOTO...";
         if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
         html5QrCode.scanFile(file, true).then(txt => {
-            document.getElementById('input-scan').value = txt;
-            procesarScan();
-        }).catch(() => { alert("No se detectó el código."); isProcessing = false; document.getElementById('input-scan').value = ""; });
+            procesarScan(txt);
+        }).catch(() => { 
+            alert("No se detectó el código en la foto."); 
+            isProcessing = false; 
+            resetScanState();
+        });
     }
 
-    
+    function vibrarCelu() { if (navigator.vibrate) navigator.vibrate(100); }
 
-    // --- IMPORTACION ---
+    // --- LOGICA IMPORTACION COMPLETA ---
     function leerExcel(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -312,8 +276,7 @@
     function agregarFilaExtra() {
         const div = document.createElement('div');
         div.className = 'item-lista';
-        div.style.borderLeft = "none";
-        div.style.background = "transparent";
+        div.style.borderLeft = "none"; div.style.background = "transparent";
         let opts = listaColumnasExcel.map(c => `<option value="${c}">${c}</option>`).join('');
         div.innerHTML = `<input type="text" class="extra-alias" placeholder="Alias" style="width:35%; margin:0;"><select class="extra-col" style="width:50%; margin:0;">${opts}</select><button onclick="this.parentElement.remove()" style="background:red; width:10%; margin:0;">X</button>`;
         document.getElementById('contenedor-extras').appendChild(div);
@@ -325,22 +288,18 @@
         const pzCol = document.getElementById('map-pieza').value;
         const alias = Array.from(document.querySelectorAll('.extra-alias')).map(n => n.value || "Dato");
         const cols = Array.from(document.querySelectorAll('.extra-col')).map(n => n.value);
-
-        if(!idProy || !ocCol || !pzCol) return alert("Faltan datos");
-
+        if(!idProy || !ocCol || !pzCol) return alert("Faltan datos de mapeo");
         const filas = datosExcelRaw.map(f => [String(f[ocCol]||"S/D"), String(f[pzCol]||"S/D"), ...cols.map(c => String(f[c]||""))]);
-
         callServer("crearProyecto", {id: idProy}, resP => {
             if(resP.status === "OK") {
                 callServer("importarDatosMapeados", {id: idProy, f: filas, h: alias}, resI => {
-                    alert("✅ " + resI);
-                    mostrar('pantalla-menu');
+                    alert("✅ " + resI); mostrar('pantalla-menu');
                 });
             } else alert(resP.msj);
         });
     }
 
-    // --- ETIQUETAS ---
+    // --- LOGICA ETIQUETAS COMPLETA ---
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
         callServer("obtenerPiezasPorProyecto", {id: id}, res => {
@@ -369,7 +328,7 @@
         });
     }
 
-    // --- GESTIÓN ---
+    // --- GESTION ---
     function guardarUsuario() {
         const d = { nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value, legajo: document.getElementById('u-legajo').value, nac: document.getElementById('u-nac').value, dir: document.getElementById('u-dir').value };
         callServer("crearNuevoUsuario", {d: d}, res => {
