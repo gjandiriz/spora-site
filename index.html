@@ -194,18 +194,71 @@
     }
 
     // --- ESCANER CON FILTRO ANTI-PARPADEO ---
+   // --- ESCANER CON CICLO DE CONFIRMACIÓN REAL ---
     function encenderCamara() {
         if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 },
+        
+        const config = { 
+            fps: 10, // Bajamos los FPS para que el procesador no sufra
+            qrbox: { width: 250, height: 150 } 
+        };
+        
+        html5QrCode.start({ facingMode: "environment" }, config,
             (txt) => {
-                if (isProcessing) return;
-                isProcessing = true;
-                document.getElementById('input-scan').value = txt;
-                if (navigator.vibrate) navigator.vibrate(100);
-                procesarScan();
+                // 1. SI YA ESTÁ TRABAJANDO, IGNORA TODO LO DEMÁS
+                if (isProcessing) return; 
+                
+                isProcessing = true; 
+                vibrarCelu(); // Feedback inmediato al operario
+                
+                // 2. FEEDBACK VISUAL: Ponemos el código en el input para que se vea
+                document.getElementById('input-scan').value = "⌛ PROCESANDO: " + txt;
+                document.getElementById('input-scan').style.backgroundColor = "#f1c40f"; // Color de "espera"
+                
+                // 3. MANDAMOS A REGISTRAR
+                procesarScan(txt);
             },
             () => {}
         ).catch(err => alert("Error de cámara."));
+    }
+
+    function procesarScan(codigoForzado) {
+        // Usamos el código que viene directo de la cámara o el del input
+        const id = codigoForzado || document.getElementById('input-scan').value;
+        if(!id || id.includes("⌛")) return;
+        
+        // Llamamos al servidor
+        callServer("registrarEscaneo", {id: id, est: estacionActual, user: usuarioActual}, res => {
+            const log = document.getElementById('log-scan');
+            const hora = new Date().toLocaleTimeString();
+            const inputScan = document.getElementById('input-scan');
+            
+            if(res.status === "OK") {
+                // FEEDBACK DE ÉXITO
+                inputScan.style.backgroundColor = "#2fc95c"; // Verde Spora
+                inputScan.value = "✅ REGISTRADO";
+                log.innerHTML = `<p style="color:#2fc95c"><b>${hora}</b> - ${res.msj}</p>` + log.innerHTML;
+                
+                // LIMPIAMOS DESPUÉS DE UN MOMENTO PARA LA PRÓXIMA PIEZA
+                setTimeout(() => {
+                    inputScan.value = "";
+                    inputScan.style.backgroundColor = "#fff";
+                    isProcessing = false; // RECIÉN ACÁ LIBERAMOS EL GATILLO
+                }, 1500); 
+
+            } else {
+                // FEEDBACK DE ERROR
+                inputScan.style.backgroundColor = "#e74c3c"; // Rojo error
+                inputScan.value = "❌ ERROR";
+                alert(res.msj);
+                
+                setTimeout(() => {
+                    inputScan.value = "";
+                    inputScan.style.backgroundColor = "#fff";
+                    isProcessing = false; // Liberamos para reintentar
+                }, 2000);
+            }
+        });
     }
 
     async function escanearDesdeFoto(event) {
@@ -220,21 +273,7 @@
         }).catch(() => { alert("No se detectó el código."); isProcessing = false; document.getElementById('input-scan').value = ""; });
     }
 
-    function procesarScan() {
-        const id = document.getElementById('input-scan').value;
-        if(!id || id.includes("⌛")) { isProcessing = false; return; }
-        
-        callServer("registrarEscaneo", {id: id, est: estacionActual, user: usuarioActual}, res => {
-            const log = document.getElementById('log-scan');
-            const hora = new Date().toLocaleTimeString();
-            if(res.status === "OK") {
-                log.innerHTML = `<p style="color:#2fc95c"><b>${hora}</b> - ${res.msj}</p>` + log.innerHTML;
-                document.getElementById('input-scan').value = "";
-            } else { alert(res.msj); document.getElementById('input-scan').value = ""; }
-            
-            setTimeout(() => { isProcessing = false; }, 1000); // 1 seg de espera
-        });
-    }
+    
 
     // --- IMPORTACION ---
     function leerExcel(input) {
