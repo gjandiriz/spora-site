@@ -1,174 +1,177 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
+    <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>SPORA | Control de Trazabilidad</title>
+    <title>Spora Systems V5.0 | Professional</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #07111f; color: white; text-align: center; }
-        .container { max-width: 450px; margin: auto; padding: 25px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+        /* MANTENEMOS TU ESTILO ORIGINAL Y AGREGAMOS TOQUES DE SPORA */
+        body { font-family: sans-serif; background: #07111f; color: #fff; padding: 15px; text-align: center; margin: 0; }
+        .card { background: #1a2634; padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-width: 500px; margin: auto; border: 1px solid rgba(255,255,255,0.1); }
         .hidden { display: none !important; }
-        
-        /* Estética Spora */
-        h1 { font-size: 32px; letter-spacing: 3px; color: white; margin-bottom: 5px; text-transform: uppercase; }
-        .sub { color: #2fc95c; font-size: 14px; margin-bottom: 30px; letter-spacing: 2px; font-weight: bold; }
-        
-        input, select { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.08); color: white; font-size: 18px; outline: none; transition: 0.3s; }
-        input:focus { border-color: #2fc95c; background: rgba(255,255,255,0.15); }
-        
-        button { width: 100%; padding: 18px; margin: 10px 0; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-green { background: #2fc95c; color: #07111f; box-shadow: 0 4px 15px rgba(47,201,92,0.3); }
-        .btn-gray { background: #1a2634; color: white; border: 1px solid rgba(255,255,255,0.1); }
-        .btn-outline { background: transparent; border: 1px solid #2fc95c; color: #2fc95c; }
-        
-        /* El Visor */
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid #2fc95c; background: #000; margin: 20px 0; position: relative; }
-        #log-scan { margin-top: 20px; font-size: 13px; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; max-height: 150px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); }
-        .status-msg { font-size: 14px; color: #f39c12; min-height: 24px; margin: 10px 0; font-weight: 500; }
-        
-        .card-admin { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border-left: 4px solid #2fc95c; margin-bottom: 20px; text-align: left; }
+        button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        button:hover { opacity: 0.8; transform: translateY(-1px); }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #333; background: #0d1721; color: white; box-sizing: border-box; }
+        label { display: block; text-align: left; font-size: 11px; font-weight: bold; margin-top: 10px; color: #2fc95c; text-transform: uppercase; }
+        .item-lista { display: flex; align-items: center; justify-content: space-between; background: #0d1721; border: 1px solid #333; padding: 10px; margin: 5px 0; border-radius: 8px; }
+        .etiqueta-preview { background: white; color: black; border: 2px solid #000; margin: 15px auto; padding: 10px; width: 280px; text-align: center; }
+        #reader { border-radius: 12px; overflow: hidden; border: 2px solid #2fc95c; background: #000; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>SPORA</h1>
-    <div class="sub">TRAZABILIDAD EN VIVO</div>
-
-    <div id="p-login">
-        <input type="password" id="pin" placeholder="PIN de acceso" inputmode="numeric">
-        <button class="btn-green" onclick="login()">INGRESAR AL SISTEMA</button>
-        <div id="msg-login" class="status-msg"></div>
+<div class="card">
+    <h1 style="letter-spacing: 4px; margin-bottom: 5px;">SPORA</h1>
+    <p style="color: #2fc95c; font-weight: bold; font-size: 12px; margin-top: 0; margin-bottom: 25px;">CONTROL DE TRAZABILIDAD</p>
+    
+    <div id="pantalla-login">
+        <input type="password" id="pin-login" placeholder="PIN de Acceso" inputmode="numeric">
+        <button onclick="login()" style="background:#2fc95c; color:#07111f;">ENTRAR</button>
+        <div id="msj-login" style="font-size:12px; margin-top:10px; color:#f39c12;"></div>
     </div>
 
-    <div id="p-menu-gerente" class="hidden">
-        <div class="card-admin">
-            <h3 style="margin:0; color:#2fc95c;">Panel de Gerencia</h3>
-            <p style="font-size:14px; opacity:0.7;">Gestión de producción y usuarios.</p>
+    <div id="pantalla-menu" class="hidden">
+        <button onclick="mostrar('pantalla-proyecto')" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
+        <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
+        <hr style="opacity:0.1; margin: 20px 0;">
+        <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
+        <button onclick="abrirGestor('USUARIO')" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
+        <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
+        <button onclick="abrirGestor('ESTACION')" style="background:#16a085">📋 GESTIONAR ESTACIONES</button>
+        <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ CONFIGURAR FLUJO</button>
+        <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
+    </div>
+
+    <div id="pantalla-seleccion-puesto" class="hidden">
+        <h3>Panel de Producción</h3>
+        <p>Hola <strong id="nombre-op" style="color:#2fc95c;"></strong></p>
+        <label>¿En qué estación vas a trabajar?</label>
+        <select id="select-puesto-op"></select>
+        <button onclick="entrarAPuesto()" style="background:#f39c12; color:white;">INGRESAR A ESTACIÓN</button>
+        <button onclick="location.reload()" style="background:#444">SALIR</button>
+    </div>
+
+    <div id="pantalla-operario" class="hidden">
+        <div style="background:#0d1721; border:1px solid #2fc95c; padding:10px; border-radius:12px; margin-bottom:15px;">
+            <p style="margin:2px">Puesto: <strong id="estacion-op" style="color:#2fc95c;"></strong></p>
+            <p style="margin:2px; font-size:12px; opacity:0.8">Operario: <span id="nombre-op-scan"></span></p>
         </div>
-        
-        <button class="btn-green" onclick="alert('Funcionalidad en desarrollo: Carga masiva de etiquetas')">📦 CARGAR BASE DE DATOS</button>
-        <button class="btn-green" onclick="alert('Funcionalidad en desarrollo: Alta de operarios')">👥 GESTIONAR USUARIOS</button>
-        <button class="btn-outline" onclick="abrirConfiguracionPuesto()">⚙️ MODO OPERARIO (IR A ESCÁNER)</button>
-        
-        <button onclick="location.reload()" style="background:transparent; color:#666; font-size:12px; margin-top:30px; border:none; cursor:pointer;">CERRAR SESIÓN</button>
-    </div>
 
-    <div id="p-puesto" class="hidden">
-        <p>Hola <b id="user-name" style="color:#2fc95c;"></b>,<br>seleccioná tu estación de trabajo:</p>
-        <select id="sel-puesto"></select>
-        <button class="btn-green" onclick="irAlEscaner()">CONFIGURAR PUESTO</button>
-        <button id="btn-volver-admin" class="hidden" onclick="mostrar('p-menu-gerente')" style="background:transparent; color:#666; font-size:12px; border:none;">Volver al Panel</button>
-    </div>
-
-    <div id="p-scan" class="hidden">
-        <div style="background:rgba(47,201,92,0.1); padding:10px; border-radius:12px; margin-bottom:15px; border: 1px solid rgba(47,201,92,0.2);">
-            <span id="label-puesto" style="color:#2fc95c; font-weight:bold; font-size:14px;"></span>
-        </div>
-        
         <div id="reader"></div>
         
-        <button id="btn-cam" class="btn-gray" onclick="encenderCamara()">▶️ ACTIVAR CÁMARA</button>
-        <div id="msg-scan" class="status-msg"></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px;">
+            <button id="btn-iniciar-vivo" onclick="encenderCamara()" style="background:#27ae60; margin:0;">▶️ VIVO</button>
+            <label for="input-archivo-camara" style="background:#3498db; color:white; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold; font-size:13px; height: 50px;">
+                📷 FOTO
+            </label>
+            <input type="file" id="input-archivo-camara" accept="image/*" capture="environment" style="display:none;" onchange="escanearDesdeFoto(event)">
+        </div>
 
-        <div id="log-scan"></div>
-        <button onclick="location.reload()" style="background:transparent; color:#666; font-size:12px; margin-top:30px; border:none; cursor:pointer;">FINALIZAR TURNO</button>
+        <input type="text" id="input-scan" placeholder="Código..." style="font-size:24px; text-align:center; border:2px solid #2fc95c; margin-top:15px; background: #000;">
+        <button onclick="procesarScan()" style="background:#2fc95c; color:#07111f; margin-top:10px;">✅ REGISTRAR MANUAL</button>
+        <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; border:1px solid #333; background:#000; padding:10px; font-size:12px; text-align:left; border-radius:8px;"></div>
+        <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
     </div>
-</div>
+
+    </div>
 
 <script>
-    const API = "https://script.google.com/macros/s/AKfycbzbNN-xJFtiD3rhXc0fNlVPk2slg6JPW9RhNd8VyLHxlPOaUvuc2TNwiluJX2waT_s4/exec";
-    let usuario = "";
-    let puesto = "";
-    let rol = "";
-    let scanner = null;
-    let puestosGuardados = [];
+    // ESTA ES LA URL DE TU GOOGLE SCRIPT (API)
+    const API_URL = "https://script.google.com/macros/s/AKfycbzbNN-xJFtiD3rhXc0fNlVPk2slg6JPW9RhNd8VyLHxlPOaUvuc2TNwiluJX2waT_s4/exec";
+    
+    let usuarioActual = "";
+    let estacionActual = "";
+    let html5QrCode = null;
 
-    function mostrar(id) {
-        document.querySelectorAll('.container > div').forEach(d => d.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-    }
-
-    function login() {
-        const pin = document.getElementById('pin').value;
-        if(!pin) return;
-        document.getElementById('msg-login').innerText = "Verificando identidad...";
-        
-        fetch(`${API}?action=login&pin=${pin}`)
-            .then(r => r.json())
-            .then(res => {
-                if(res.status === "OK") {
-                    usuario = res.usuario.nombre;
-                    rol = res.usuario.rol;
-                    puestosGuardados = res.puestosDisponibles;
-
-                    if (rol === "GERENTE") {
-                        document.getElementById('btn-volver-admin').classList.remove('hidden');
-                        mostrar('p-menu-gerente');
-                    } else {
-                        abrirConfiguracionPuesto();
-                    }
-                } else {
-                    document.getElementById('msg-login').innerText = res.mensaje;
-                }
-            }).catch(() => {
-                document.getElementById('msg-login').innerText = "Error: Revisá tu conexión";
-            });
-    }
-
-    function abrirConfiguracionPuesto() {
-        document.getElementById('user-name').innerText = usuario;
-        const sel = document.getElementById('sel-puesto');
-        sel.innerHTML = '<option value="">-- Seleccionar Puesto --</option>';
-        puestosGuardados.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
-        mostrar('p-puesto');
-    }
-
-    function irAlEscaner() {
-        puesto = document.getElementById('sel-puesto').value;
-        if(!puesto) return alert("Por favor, seleccioná un puesto de trabajo.");
-        document.getElementById('label-puesto').innerText = "ESTACIÓN: " + puesto;
-        mostrar('p-scan');
-    }
-
-    async function encenderCamara() {
-        document.getElementById('btn-cam').classList.add('hidden');
-        if(!scanner) scanner = new Html5Qrcode("reader");
-        
+    // --- PUENTE DE DATOS (REEMPLAZA A google.script.run) ---
+    async function llamarGoogle(accion, params = {}) {
+        let url = `${API_URL}?action=${accion}`;
+        for (let key in params) {
+            url += `&${key}=${encodeURIComponent(params[key])}`;
+        }
         try {
-            await scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 },
-                (txt) => { registrar(txt); },
-                () => {}
-            );
-        } catch(e) {
-            alert("Error: Asegurate de dar permiso de cámara en Safari.");
-            document.getElementById('btn-cam').classList.remove('hidden');
+            const response = await fetch(url);
+            return await response.json();
+        } catch (e) {
+            console.error("Error en comunicación:", e);
+            return { status: "ERROR", mensaje: "Error de conexión con Spora Cloud" };
         }
     }
 
-    function registrar(id) {
-        if(document.getElementById('msg-scan').innerText.includes("⌛")) return; 
+    function login() {
+        const pin = document.getElementById('pin-login').value;
+        if(!pin) return alert("Ingresá un PIN");
         
-        document.getElementById('msg-scan').innerText = "⌛ Registrando: " + id;
-        if(navigator.vibrate) navigator.vibrate(100);
-
-        fetch(`${API}?action=registrar&id=${encodeURIComponent(id)}&estacion=${encodeURIComponent(puesto)}&usuario=${encodeURIComponent(usuario)}`)
-            .then(r => r.json())
-            .then(res => {
-                const log = document.getElementById('log-scan');
-                const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                if(res.status === "OK") {
-                    log.innerHTML = `<div style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1);"><b style="color:#2fc95c">${hora}</b> - ${res.msj}</div>` + log.innerHTML;
-                    document.getElementById('msg-scan').innerText = "✅ ¡Listo! Escaneá la siguiente...";
-                    setTimeout(() => { if(!document.getElementById('msg-scan').innerText.includes("⌛")) document.getElementById('msg-scan').innerText = ""; }, 2500);
+        document.getElementById('msj-login').innerText = "Verificando...";
+        
+        llamarGoogle("login", { pin: pin }).then(res => {
+            if (res.status === "OK") {
+                usuarioActual = res.usuario.nombre;
+                if (res.usuario.rol === "GERENTE") {
+                    mostrar('pantalla-menu');
                 } else {
-                    alert(res.msj);
-                    document.getElementById('msg-scan').innerText = "❌ Error en el registro";
+                    document.getElementById('nombre-op').innerText = usuarioActual;
+                    const sel = document.getElementById('select-puesto-op');
+                    sel.innerHTML = '<option value="">-- Seleccionar Estación --</option>';
+                    res.puestosDisponibles.forEach(p => { sel.innerHTML += `<option value="${p}">${p}</option>`; });
+                    mostrar('pantalla-seleccion-puesto');
                 }
-            });
+            } else {
+                document.getElementById('msj-login').innerText = res.mensaje;
+            }
+        });
     }
+
+    function mostrar(id) {
+        const pantallas = ['pantalla-login','pantalla-menu','pantalla-seleccion-puesto','pantalla-operario','pantalla-impresion','pantalla-proyecto','form-usuario'];
+        pantallas.forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); });
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function entrarAPuesto() {
+        const puesto = document.getElementById('select-puesto-op').value;
+        if (!puesto) return alert("Seleccioná un puesto");
+        estacionActual = puesto;
+        document.getElementById('estacion-op').innerText = puesto;
+        document.getElementById('nombre-op-scan').innerText = usuarioActual;
+        mostrar('pantalla-operario');
+    }
+
+    // --- CAMARA (PARCHE IPHONE) ---
+    async function encenderCamara() {
+        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 20, qrbox: { width: 250, height: 150 } };
+        
+        html5QrCode.start({ facingMode: "environment" }, config,
+            (text) => {
+                document.getElementById('input-scan').value = text;
+                if (navigator.vibrate) navigator.vibrate(100);
+                procesarScan();
+            },
+            () => {} 
+        ).catch(err => alert("Revisá los permisos de cámara en Safari."));
+    }
+
+    function procesarScan() {
+        const idPieza = document.getElementById('input-scan').value;
+        if(!idPieza || idPieza.includes("⌛")) return;
+        
+        llamarGoogle("registrar", { id: idPieza, estacion: estacionActual, usuario: usuarioActual }).then(res => {
+            const log = document.getElementById('log-scan');
+            const hora = new Date().toLocaleTimeString();
+            if(res.status === "OK") {
+                log.innerHTML = `<p style="color:#2fc95c"><b>${hora}</b> - ${res.msj}</p>` + log.innerHTML;
+                document.getElementById('input-scan').value = "";
+            } else alert(res.msj);
+        });
+    }
+
+    // --- EL RESTO DE TUS FUNCIONES (IMPORTAR, ETIQUETAS) SE ADAPTAN IGUAL ---
+    // Gonzalo: Para cada función de tu Excel, usaremos el mismo formato de 'llamarGoogle'
 </script>
 </body>
 </html>
