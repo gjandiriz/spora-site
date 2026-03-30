@@ -223,40 +223,51 @@
     }
 
     function procesarScan(codigoForzado) {
-        // Usamos el código que viene directo de la cámara o el del input
         const id = codigoForzado || document.getElementById('input-scan').value;
-        if(!id || id.includes("⌛")) return;
         
-        // Llamamos al servidor
+        // Bloqueo de seguridad: si no hay ID o ya estamos procesando, salimos.
+        if(!id || id.includes("⌛")) {
+            isProcessing = false; 
+            return;
+        }
+        
+        const inputScan = document.getElementById('input-scan');
+        inputScan.value = "⌛ VERIFICANDO...";
+        inputScan.style.backgroundColor = "#f1c40f"; // Amarillo: Procesando
+
         callServer("registrarEscaneo", {id: id, est: estacionActual, user: usuarioActual}, res => {
             const log = document.getElementById('log-scan');
             const hora = new Date().toLocaleTimeString();
-            const inputScan = document.getElementById('input-scan');
             
             if(res.status === "OK") {
-                // FEEDBACK DE ÉXITO
-                inputScan.style.backgroundColor = "#2fc95c"; // Verde Spora
-                inputScan.value = "✅ REGISTRADO";
-                log.innerHTML = `<p style="color:#2fc95c"><b>${hora}</b> - ${res.msj}</p>` + log.innerHTML;
+                // CASO ÉXITO: El código existe y se grabó.
+                inputScan.style.backgroundColor = "#2fc95c"; // Verde
+                inputScan.value = "✅ OK: " + id;
+                log.innerHTML = `<div class="item-lista"><b style="color:#2fc95c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
                 
-                // LIMPIAMOS DESPUÉS DE UN MOMENTO PARA LA PRÓXIMA PIEZA
+                // Esperamos 2 segundos para que el operario vea el verde y cambie de pieza
                 setTimeout(() => {
                     inputScan.value = "";
                     inputScan.style.backgroundColor = "#fff";
-                    isProcessing = false; // RECIÉN ACÁ LIBERAMOS EL GATILLO
-                }, 1500); 
+                    isProcessing = false; // LIBERAMOS PARA LA PRÓXIMA
+                }, 2000);
 
             } else {
-                // FEEDBACK DE ERROR
-                inputScan.style.backgroundColor = "#e74c3c"; // Rojo error
-                inputScan.value = "❌ ERROR";
-                alert(res.msj);
+                // CASO ERROR: El código NO existe o hubo falla.
+                inputScan.style.backgroundColor = "#e74c3c"; // Rojo
+                inputScan.style.color = "#fff";
+                inputScan.value = "❌ NO EXISTE: " + id;
+                
+                // IMPORTANTE: En caso de error, damos MÁS TIEMPO (4 segundos) 
+                // para que el operario saque la cámara del código erróneo.
+                log.innerHTML = `<div class="item-lista"><b style="color:#e74c3c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
                 
                 setTimeout(() => {
                     inputScan.value = "";
                     inputScan.style.backgroundColor = "#fff";
-                    isProcessing = false; // Liberamos para reintentar
-                }, 2000);
+                    inputScan.style.color = "#000";
+                    isProcessing = false; // RECIÉN ACÁ VOLVEMOS A HABILITAR LA CÁMARA
+                }, 4000); 
             }
         });
     }
