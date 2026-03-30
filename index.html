@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>SPORA | Sistema de Trazabilidad</title>
+    <title>SPORA | Control de Trazabilidad</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         * { box-sizing: border-box; }
@@ -12,18 +12,23 @@
         .hidden { display: none !important; }
         
         /* Estética Spora */
-        h1 { font-size: 32px; letter-spacing: 3px; color: white; margin-bottom: 5px; }
-        .sub { color: #2fc95c; font-size: 14px; margin-bottom: 30px; letter-spacing: 1px; }
+        h1 { font-size: 32px; letter-spacing: 3px; color: white; margin-bottom: 5px; text-transform: uppercase; }
+        .sub { color: #2fc95c; font-size: 14px; margin-bottom: 30px; letter-spacing: 2px; font-weight: bold; }
         
-        input, select { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; font-size: 18px; outline: none; }
-        button { width: 100%; padding: 16px; margin: 15px 0; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
-        .btn-green { background: #2fc95c; color: #07111f; }
-        .btn-gray { background: #2c3e50; color: white; }
+        input, select { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.08); color: white; font-size: 18px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #2fc95c; background: rgba(255,255,255,0.15); }
+        
+        button { width: 100%; padding: 18px; margin: 10px 0; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-green { background: #2fc95c; color: #07111f; box-shadow: 0 4px 15px rgba(47,201,92,0.3); }
+        .btn-gray { background: #1a2634; color: white; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-outline { background: transparent; border: 1px solid #2fc95c; color: #2fc95c; }
         
         /* El Visor */
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; border: 2px solid #2fc95c; background: #000; margin: 20px 0; }
-        #log-scan { margin-top: 20px; font-size: 14px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; max-height: 120px; overflow-y: auto; }
-        .status-msg { font-size: 14px; color: #f39c12; min-height: 20px; margin: 10px 0; }
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid #2fc95c; background: #000; margin: 20px 0; position: relative; }
+        #log-scan { margin-top: 20px; font-size: 13px; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; max-height: 150px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); }
+        .status-msg { font-size: 14px; color: #f39c12; min-height: 24px; margin: 10px 0; font-weight: 500; }
+        
+        .card-admin { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border-left: 4px solid #2fc95c; margin-bottom: 20px; text-align: left; }
     </style>
 </head>
 <body>
@@ -34,19 +39,33 @@
 
     <div id="p-login">
         <input type="password" id="pin" placeholder="PIN de acceso" inputmode="numeric">
-        <button class="btn-green" onclick="login()">INGRESAR</button>
+        <button class="btn-green" onclick="login()">INGRESAR AL SISTEMA</button>
         <div id="msg-login" class="status-msg"></div>
     </div>
 
+    <div id="p-menu-gerente" class="hidden">
+        <div class="card-admin">
+            <h3 style="margin:0; color:#2fc95c;">Panel de Gerencia</h3>
+            <p style="font-size:14px; opacity:0.7;">Gestión de producción y usuarios.</p>
+        </div>
+        
+        <button class="btn-green" onclick="alert('Funcionalidad en desarrollo: Carga masiva de etiquetas')">📦 CARGAR BASE DE DATOS</button>
+        <button class="btn-green" onclick="alert('Funcionalidad en desarrollo: Alta de operarios')">👥 GESTIONAR USUARIOS</button>
+        <button class="btn-outline" onclick="abrirConfiguracionPuesto()">⚙️ MODO OPERARIO (IR A ESCÁNER)</button>
+        
+        <button onclick="location.reload()" style="background:transparent; color:#666; font-size:12px; margin-top:30px; border:none; cursor:pointer;">CERRAR SESIÓN</button>
+    </div>
+
     <div id="p-puesto" class="hidden">
-        <p>Hola <b id="user-name"></b>, ¿dónde estás?</p>
+        <p>Hola <b id="user-name" style="color:#2fc95c;"></b>,<br>seleccioná tu estación de trabajo:</p>
         <select id="sel-puesto"></select>
         <button class="btn-green" onclick="irAlEscaner()">CONFIGURAR PUESTO</button>
+        <button id="btn-volver-admin" class="hidden" onclick="mostrar('p-menu-gerente')" style="background:transparent; color:#666; font-size:12px; border:none;">Volver al Panel</button>
     </div>
 
     <div id="p-scan" class="hidden">
-        <div style="background:rgba(47,201,92,0.1); padding:8px; border-radius:8px; margin-bottom:15px;">
-            <span id="label-puesto" style="color:#2fc95c; font-weight:bold;"></span>
+        <div style="background:rgba(47,201,92,0.1); padding:10px; border-radius:12px; margin-bottom:15px; border: 1px solid rgba(47,201,92,0.2);">
+            <span id="label-puesto" style="color:#2fc95c; font-weight:bold; font-size:14px;"></span>
         </div>
         
         <div id="reader"></div>
@@ -55,7 +74,7 @@
         <div id="msg-scan" class="status-msg"></div>
 
         <div id="log-scan"></div>
-        <button onclick="location.reload()" style="background:transparent; color:#666; font-size:12px; margin-top:30px; border:none;">Cerrar Sesión</button>
+        <button onclick="location.reload()" style="background:transparent; color:#666; font-size:12px; margin-top:30px; border:none; cursor:pointer;">FINALIZAR TURNO</button>
     </div>
 </div>
 
@@ -63,7 +82,9 @@
     const API = "https://script.google.com/macros/s/AKfycbzbNN-xJFtiD3rhXc0fNlVPk2slg6JPW9RhNd8VyLHxlPOaUvuc2TNwiluJX2waT_s4/exec";
     let usuario = "";
     let puesto = "";
+    let rol = "";
     let scanner = null;
+    let puestosGuardados = [];
 
     function mostrar(id) {
         document.querySelectorAll('.container > div').forEach(d => d.classList.add('hidden'));
@@ -73,27 +94,41 @@
     function login() {
         const pin = document.getElementById('pin').value;
         if(!pin) return;
-        document.getElementById('msg-login').innerText = "Verificando...";
+        document.getElementById('msg-login').innerText = "Verificando identidad...";
         
         fetch(`${API}?action=login&pin=${pin}`)
             .then(r => r.json())
             .then(res => {
                 if(res.status === "OK") {
                     usuario = res.usuario.nombre;
-                    document.getElementById('user-name').innerText = usuario;
-                    const sel = document.getElementById('sel-puesto');
-                    sel.innerHTML = '<option value="">-- Seleccionar Puesto --</option>';
-                    res.puestosDisponibles.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
-                    mostrar('p-puesto');
+                    rol = res.usuario.rol;
+                    puestosGuardados = res.puestosDisponibles;
+
+                    if (rol === "GERENTE") {
+                        document.getElementById('btn-volver-admin').classList.remove('hidden');
+                        mostrar('p-menu-gerente');
+                    } else {
+                        abrirConfiguracionPuesto();
+                    }
                 } else {
                     document.getElementById('msg-login').innerText = res.mensaje;
                 }
-            }).catch(() => alert("Error de conexión con el servidor"));
+            }).catch(() => {
+                document.getElementById('msg-login').innerText = "Error: Revisá tu conexión";
+            });
+    }
+
+    function abrirConfiguracionPuesto() {
+        document.getElementById('user-name').innerText = usuario;
+        const sel = document.getElementById('sel-puesto');
+        sel.innerHTML = '<option value="">-- Seleccionar Puesto --</option>';
+        puestosGuardados.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
+        mostrar('p-puesto');
     }
 
     function irAlEscaner() {
         puesto = document.getElementById('sel-puesto').value;
-        if(!puesto) return alert("Seleccioná un puesto");
+        if(!puesto) return alert("Por favor, seleccioná un puesto de trabajo.");
         document.getElementById('label-puesto').innerText = "ESTACIÓN: " + puesto;
         mostrar('p-scan');
     }
@@ -103,22 +138,18 @@
         if(!scanner) scanner = new Html5Qrcode("reader");
         
         try {
-            // Pedimos permiso explícito antes (Truco Safari)
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            stream.getTracks().forEach(t => t.stop());
-
             await scanner.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 },
                 (txt) => { registrar(txt); },
                 () => {}
             );
         } catch(e) {
-            alert("Error al iniciar cámara. Asegurate de dar permiso en Safari.");
+            alert("Error: Asegurate de dar permiso de cámara en Safari.");
             document.getElementById('btn-cam').classList.remove('hidden');
         }
     }
 
     function registrar(id) {
-        if(document.getElementById('msg-scan').innerText.includes("⌛")) return; // Evitar duplicados
+        if(document.getElementById('msg-scan').innerText.includes("⌛")) return; 
         
         document.getElementById('msg-scan').innerText = "⌛ Registrando: " + id;
         if(navigator.vibrate) navigator.vibrate(100);
@@ -129,12 +160,12 @@
                 const log = document.getElementById('log-scan');
                 const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 if(res.status === "OK") {
-                    log.innerHTML = `<div style="padding:5px; border-bottom:1px solid #333;"><b style="color:#2fc95c">${hora}</b> - ${res.msj}</div>` + log.innerHTML;
-                    document.getElementById('msg-scan').innerText = "✅ ¡Listo! Siguiente...";
-                    setTimeout(() => { document.getElementById('msg-scan').innerText = ""; }, 2000);
+                    log.innerHTML = `<div style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1);"><b style="color:#2fc95c">${hora}</b> - ${res.msj}</div>` + log.innerHTML;
+                    document.getElementById('msg-scan').innerText = "✅ ¡Listo! Escaneá la siguiente...";
+                    setTimeout(() => { if(!document.getElementById('msg-scan').innerText.includes("⌛")) document.getElementById('msg-scan').innerText = ""; }, 2500);
                 } else {
                     alert(res.msj);
-                    document.getElementById('msg-scan').innerText = "❌ Error";
+                    document.getElementById('msg-scan').innerText = "❌ Error en el registro";
                 }
             });
     }
