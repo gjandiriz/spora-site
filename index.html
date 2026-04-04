@@ -157,21 +157,51 @@
         document.getElementById(id).classList.remove('hidden');
     }
 
+    // 1. REEMPLAZO EN EL LOGIN (Ajuste de parámetro PIN)
     function login() {
         const pin = document.getElementById('pin-login').value;
         if(!pin) return alert("Ingresá un PIN");
-        callServer("iniciarSesion", {pin: pin}, res => {
+        callServer("login", {pin: pin}, res => { // Cambiado de 'iniciarSesion' a 'login' para que coincida con tu doGet
             if (res.status === "OK") {
                 usuarioActual = res.usuario.nombre;
-                if (res.usuario.rol === "GERENTE") { mostrar('pantalla-menu'); }
+                if (res.usuario.rol === "GERENTE") mostrar('pantalla-menu');
                 else {
                     document.getElementById('nombre-op').innerText = usuarioActual;
                     const sel = document.getElementById('select-puesto-op');
                     sel.innerHTML = '<option value="">-- Seleccionar Puesto --</option>';
-                    res.puestosDisponibles.forEach(p => { sel.innerHTML += `<option value="${p}">${p}</option>`; });
+                    res.puestosDisponibles.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
                     mostrar('pantalla-seleccion-puesto');
                 }
             } else alert(res.mensaje);
+        });
+    }
+
+    // 2. REEMPLAZO EN EL REGISTRO (Ajuste de parámetros ID, ESTACION, USUARIO)
+    function procesarScan(id) {
+        const input = document.getElementById('input-scan');
+        input.value = "⌛ PROCESANDO...";
+        input.style.background = "#f1c40f"; 
+        input.style.color = "#000";
+
+        if (navigator.vibrate) navigator.vibrate(100);
+
+        // AQUÍ ESTABA EL ERROR: Cambiamos 'operario' por 'usuario' para tu doGet
+        callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
+            const log = document.getElementById('log-scan');
+            const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            if(res.status === "OK") {
+                input.value = "✅ REGISTRADO";
+                input.style.background = "#2fc95c"; 
+                log.innerHTML = `<div class="item-lista"><b style="color:#2fc95c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
+                setTimeout(() => { resetScanState(); }, 2000);
+            } else {
+                input.value = "❌ ERROR";
+                input.style.background = "#e74c3c"; 
+                input.style.color = "#fff";
+                log.innerHTML = `<div class="item-lista"><b style="color:#e74c3c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
+                setTimeout(() => { resetScanState(); }, 4000);
+            }
         });
     }
 
@@ -198,33 +228,7 @@
         ).catch(err => alert("Error de cámara."));
     }
 
-    function procesarScan(codigoForzado) {
-        const id = codigoForzado || "";
-        if(!id || id.includes("⌛")) { isProcessing = false; return; }
-        
-        const inputScan = document.getElementById('input-scan');
-        inputScan.value = "⌛ VERIFICANDO: " + id;
-        inputScan.style.backgroundColor = "#f1c40f"; // Amarillo
-
-        callServer("registrarEscaneo", {id: id, est: estacionActual, user: usuarioActual}, res => {
-            const log = document.getElementById('log-scan');
-            const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            if(res.status === "OK") {
-                inputScan.style.backgroundColor = "#2fc95c"; // Verde
-                inputScan.value = "✅ OK: " + id;
-                log.innerHTML = `<div class="item-lista"><b style="color:#2fc95c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
-                setTimeout(() => { resetScanState(); }, 2000);
-            } else {
-                inputScan.style.backgroundColor = "#e74c3c"; // Rojo
-                inputScan.style.color = "#fff";
-                inputScan.value = "❌ NO EXISTE: " + id;
-                log.innerHTML = `<div class="item-lista"><b style="color:#e74c3c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
-                setTimeout(() => { resetScanState(); }, 4000); // Bloqueo más largo en error
-            }
-        });
-    }
-
+    
     function resetScanState() {
         const inputScan = document.getElementById('input-scan');
         inputScan.value = "";
