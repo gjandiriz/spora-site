@@ -4,9 +4,10 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Spora Systems V5.2 | Full</title>
+    <title>Spora Systems V5.3 | Final Fix</title>
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -17,7 +18,6 @@
         .card { background: #111d2b; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 500px; margin: auto; border: 1px solid rgba(255,255,255,0.05); }
         .hidden { display: none !important; }
         button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; color: white; background: #2c3e50; }
-        button:active { transform: scale(0.96); }
         input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid #2c3e50; background: #07111f; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
         label { display: block; text-align: left; font-size: 11px; font-weight: bold; margin-top: 10px; color: #2fc95c; }
         .item-lista { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid #2fc95c; }
@@ -30,7 +30,7 @@
 
 <div class="card">
     <h1 style="letter-spacing: 5px; margin-bottom: 0;">SPORA</h1>
-    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px;">SYSTEMS V5.2</p>
+    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px;">SYSTEMS V5.3</p>
 
     <div id="pantalla-login">
         <input type="password" id="pin-login" placeholder="PIN de Acceso" inputmode="numeric">
@@ -43,7 +43,6 @@
         <hr style="opacity:0.1">
         <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
         <button onclick="abrirGestor('USUARIO')" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
-        <hr style="opacity:0.1">
         <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
         <button onclick="abrirGestor('ESTACION')" style="background:#16a085">📋 GESTIONAR ESTACIONES</button>
         <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ CONFIGURAR FLUJO</button>
@@ -68,28 +67,11 @@
         <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
     </div>
 
-    <div id="pantalla-proyecto" class="hidden">
-        <h3>Nuevo Lote de Producción</h3>
-        <input type="text" id="p-id" placeholder="ID del Proyecto (Ej: 81577)">
-        <input type="file" id="p-file" accept=".xlsx, .xls, .csv" onchange="leerExcel(this)">
-        <div id="zona-mapeo" class="hidden">
-            <div class="box-mapeo">
-                <label>Columna Orden (OC):</label><select id="map-oc"></select>
-                <label>Columna ID Pieza:</label><select id="map-pieza"></select>
-                <hr style="opacity:0.1">
-                <div id="contenedor-extras"></div>
-                <button onclick="agregarFilaExtra()" style="background:#3498db; font-size:11px; width:auto; padding:8px;">+ Agregar dato extra</button>
-            </div>
-            <button onclick="confirmarImportacion()" style="background:#27ae60; margin-top:15px;">IMPORTAR TODO</button>
-        </div>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">CANCELAR</button>
-    </div>
-
     <div id="pantalla-impresion" class="hidden">
         <h3>Configurador de Etiquetas</h3>
         <div style="display:flex; gap:5px;">
             <input type="text" id="id-proy-print" placeholder="ID Proyecto">
-            <button onclick="cargarColumnasProyecto()" style="background:#3498db; width:auto; padding:10px;">🔍</button>
+            <button onclick="cargarColumnasProyecto()" style="background:#3498db; width:auto;">🔍</button>
         </div>
         <div id="selector-campos-etiqueta" class="hidden">
             <div id="lista-checks-campos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; text-align: left; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px; margin-top:10px;"></div>
@@ -100,26 +82,29 @@
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
+    <div id="pantalla-proyecto" class="hidden">
+        <h3>Nuevo Lote</h3>
+        <input type="text" id="p-id" placeholder="ID Proyecto">
+        <input type="file" id="p-file" accept=".xlsx, .xls, .csv" onchange="leerExcel(this)">
+        <div id="zona-mapeo" class="hidden">
+            <div class="box-mapeo">
+                <label>OC:</label><select id="map-oc"></select>
+                <label>ID Pieza:</label><select id="map-pieza"></select>
+                <div id="contenedor-extras"></div>
+                <button onclick="agregarFilaExtra()" style="background:#3498db; font-size:11px; padding:5px; width:auto;">+ Extra</button>
+            </div>
+            <button onclick="confirmarImportacion()" style="background:#27ae60; margin-top:10px;">IMPORTAR</button>
+        </div>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
+
     <div id="form-usuario" class="hidden">
-        <h3>Nueva Ficha Persona</h3>
+        <h3>Ficha Persona</h3>
         <input type="text" id="u-nombre" placeholder="Nombre"><input type="number" id="u-pin" placeholder="PIN">
         <select id="u-rol"><option value="OPERARIO">OPERARIO</option><option value="GERENTE">GERENTE</option></select>
-        <input type="text" id="u-legajo" placeholder="Legajo"><input type="date" id="u-nac"><input type="text" id="u-dir" placeholder="Dirección">
         <button onclick="guardarUsuario()" style="background:#27ae60">GUARDAR</button><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
-
-    <div id="vista-credencial" class="hidden">
-        <div class="etiqueta-preview">
-            <h4 id="cred-nombre" style="margin:5px 0;"></h4>
-            <p>PIN: <strong id="cred-pin-val"></strong></p>
-            <svg id="barcode-cred"></svg>
-        </div>
-        <button onclick="mostrar('pantalla-menu')">FINALIZAR</button>
-    </div>
-
     <div id="pantalla-gestor" class="hidden"><h3 id="titulo-gestor"></h3><div id="lista-gestor"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
-    <div id="pantalla-flujo" class="hidden"><h3>Orden del Proceso</h3><div id="lista-estaciones"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
-    <div id="form-estacion" class="hidden"><h3>Nueva Estación</h3><input type="text" id="e-nombre" placeholder="Nombre"><input type="text" id="e-desc" placeholder="Descripción"><button onclick="guardarEstacion()" style="background:#27ae60">GUARDAR</button><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
 </div>
 
 <script>
@@ -128,31 +113,17 @@
     let datosExcelRaw = [], listaColumnasExcel = [];
 
     function callServer(action, params, callback) {
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-        // Entorno Google Sheets
-        google.script.run.withSuccessHandler(callback)[action](...Object.values(params));
-    } else {
-        // Entorno GitHub API - AGREGAMOS MODO NO-CORS PARA EVITAR EL BLOQUEO
-        let url = API_URL + "?action=" + action;
-        for (let key in params) { 
-            url += "&" + key + "=" + encodeURIComponent(params[key]); 
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.withSuccessHandler(callback)[action](...Object.values(params));
+        } else {
+            let url = API_URL + "?action=" + action;
+            for (let key in params) { url += "&" + key + "=" + encodeURIComponent(params[key]); }
+            fetch(url).then(r => r.json()).then(callback).catch(e => {
+                console.error("Falla en API:", e);
+                alert("Error de conexión API. Verifica la consola.");
+            });
         }
-
-        fetch(url, {
-            method: 'GET',
-            mode: 'no-cors', // ESTA LÍNEA ES VITAL
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(() => {
-            // Como usamos no-cors, no podemos leer la respuesta directamente aquí por seguridad del navegador.
-            // Para sistemas como el tuyo, la mejor forma de saltear esto es usar un tag de <script> dinámico
-            // o simplemente asegurar que la URL sea la correcta y los permisos sean "Cualquier persona".
-            
-            // INTENTO DE LECTURA ESTÁNDAR
-            fetch(url).then(r => r.json()).then(callback).catch(e => console.error("Error de parseo", e));
-        });
     }
-}
 
     function mostrar(id) {
         document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
@@ -161,7 +132,6 @@
 
     function login() {
         const pin = document.getElementById('pin-login').value;
-        if(!pin) return alert("Ingresá un PIN");
         callServer("login", {pin: pin}, res => {
             if (res.status === "OK") {
                 usuarioActual = res.usuario.nombre;
@@ -169,7 +139,7 @@
                 else {
                     document.getElementById('nombre-op').innerText = usuarioActual;
                     const sel = document.getElementById('select-puesto-op');
-                    sel.innerHTML = '<option value="">-- Seleccionar Puesto --</option>';
+                    sel.innerHTML = '<option value="">-- Puesto --</option>';
                     res.puestosDisponibles.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
                     mostrar('pantalla-seleccion-puesto');
                 }
@@ -181,11 +151,9 @@
         estacionActual = document.getElementById('select-puesto-op').value;
         if (!estacionActual) return alert("Seleccioná un puesto");
         document.getElementById('estacion-op').innerText = estacionActual;
-        document.getElementById('nombre-op-scan').innerText = usuarioActual;
         mostrar('pantalla-operario');
     }
 
-    // --- ESCANER V5.0: GATILLO MANUAL ---
     function encenderCamara() {
         if (isProcessing) return;
         document.getElementById("reader").style.display = "block";
@@ -193,13 +161,10 @@
         html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
             (txt) => {
                 isProcessing = true;
-                if (html5QrCode) {
-                    html5QrCode.stop().then(() => { document.getElementById("reader").style.display = "none"; }).catch(() => {});
-                }
-                if (navigator.vibrate) navigator.vibrate(100);
+                html5QrCode.stop().then(() => { document.getElementById("reader").style.display = "none"; });
                 procesarScan(txt);
             }, () => {}
-        ).catch(() => alert("Error de cámara."));
+        );
     }
 
     function procesarScan(id) {
@@ -207,64 +172,28 @@
         input.value = "⌛ REGISTRANDO..."; input.style.background = "#f1c40f"; 
         callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
             input.style.background = "#2fc95c"; input.value = "✅ CAPTURADO: " + id;
-            document.getElementById('log-scan').innerHTML = `<div class="item-lista"><b>${new Date().toLocaleTimeString()}</b>: ${res.msj}</div>` + document.getElementById('log-scan').innerHTML;
+            document.getElementById('log-scan').innerHTML = `<div><b>${new Date().toLocaleTimeString()}</b>: ${res.msj}</div>` + document.getElementById('log-scan').innerHTML;
             setTimeout(() => { input.value = ""; input.style.background = "#fff"; isProcessing = false; }, 1500);
         });
     }
 
-    // --- IMPORTACIÓN EXCEL COMPLETA ---
-    function leerExcel(input) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            if(datosExcelRaw.length > 0) {
-                listaColumnasExcel = Object.keys(datosExcelRaw[0]);
-                llenarSelect('map-oc', listaColumnasExcel);
-                llenarSelect('map-pieza', listaColumnasExcel);
-                document.getElementById('zona-mapeo').classList.remove('hidden');
-            }
-        };
-        reader.readAsArrayBuffer(input.files[0]);
-    }
-
-    function llenarSelect(id, cols) {
-        const sel = document.getElementById(id);
-        sel.innerHTML = '<option value="">--</option>';
-        cols.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
-    }
-
-    function agregarFilaExtra() {
-        const div = document.createElement('div'); div.className = 'item-lista'; div.style.border = "none"; div.style.background = "transparent";
-        let opts = listaColumnasExcel.map(c => `<option value="${c}">${c}</option>`).join('');
-        div.innerHTML = `<input type="text" class="extra-alias" placeholder="Alias" style="width:35%; margin:0;"><select class="extra-col" style="width:50%; margin:0;">${opts}</select><button onclick="this.parentElement.remove()" style="background:red; width:10%; margin:0;">X</button>`;
-        document.getElementById('contenedor-extras').appendChild(div);
-    }
-
-    function confirmarImportacion() {
-        const idProy = document.getElementById('p-id').value.trim();
-        const oc = document.getElementById('map-oc').value;
-        const pz = document.getElementById('map-pieza').value;
-        const alias = Array.from(document.querySelectorAll('.extra-alias')).map(n => n.value || "Dato");
-        const cl = Array.from(document.querySelectorAll('.extra-col')).map(n => n.value);
-        if(!idProy || !oc || !pz) return alert("Faltan datos");
-        const filas = datosExcelRaw.map(f => [String(f[oc]||"S/D"), String(f[pz]||"S/D"), ...cl.map(c => String(f[c]||""))]);
-        callServer("crearProyecto", {id: idProy}, resP => {
-            if(resP.status === "OK") callServer("importarDatosMapeados", {id: idProy, f: filas, h: alias}, resI => { alert("✅ Éxito"); mostrar('pantalla-menu'); });
-            else alert(resP.msj);
-        });
-    }
-
-    // --- ETIQUETAS COMPLETA ---
+    // --- CORRECCIÓN CRÍTICA DE ETIQUETAS ---
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
         if(!id) return alert("Ingresá un ID");
+        
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
-            if (res.status === "ERROR") return alert(res.msj);
+            // SEGURIDAD: Verificamos si res y res.encabezados existen antes de usar forEach
+            if (!res || !res.encabezados) {
+                console.error("Datos recibidos mal formados:", res);
+                return alert("No se encontraron datos para este proyecto.");
+            }
+            
             const lista = document.getElementById('lista-checks-campos');
             lista.innerHTML = "";
-            res.encabezados.forEach((h, i) => { if(i >= 2) lista.innerHTML += `<label><input type="checkbox" class="check-col-print" value="${i}"> ${h}</label>`; });
+            res.encabezados.forEach((h, i) => { 
+                if(i >= 2) lista.innerHTML += `<label><input type="checkbox" class="check-col-print" value="${i}"> ${h}</label>`; 
+            });
             document.getElementById('selector-campos-etiqueta').classList.remove('hidden');
         });
     }
@@ -273,9 +202,11 @@
         const idxs = Array.from(document.querySelectorAll('.check-col-print:checked')).map(cb => parseInt(cb.value));
         const id = document.getElementById('id-proy-print').value;
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
+            if (!res || !res.piezas) return alert("Error al obtener piezas.");
             const cont = document.getElementById('contenedor-etiquetas'); cont.innerHTML = "";
             res.piezas.forEach((p, i) => {
-                let extras = ""; idxs.forEach(ix => { extras += `<div>${res.encabezados[ix]}: <b>${p[ix]}</b></div>`; });
+                let extras = ""; 
+                idxs.forEach(ix => { extras += `<div>${res.encabezados[ix]}: <b>${p[ix]}</b></div>`; });
                 const div = document.createElement('div'); div.className = "etiqueta-preview";
                 div.innerHTML = `<b>LOTE: ${id}</b><br>OC: ${p[0]}${extras}<svg id="barcode-et-${i}"></svg><div style="font-size:10px">${p[1]}</div>`;
                 cont.appendChild(div); JsBarcode(`#barcode-et-${i}`, p[1], {format: "CODE128", height: 40, displayValue: false});
@@ -283,14 +214,34 @@
         });
     }
 
-    // --- GESTIÓN COMPLETA ---
-    function guardarUsuario() {
-        const d = { nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value, legajo: document.getElementById('u-legajo').value, nac: document.getElementById('u-nac').value, dir: document.getElementById('u-dir').value };
-        callServer("crearNuevoUsuario", {d: d}, res => {
-            document.getElementById('cred-nombre').innerText = res.nombre;
-            document.getElementById('cred-pin-val').innerText = res.pin;
-            JsBarcode("#barcode-cred", res.pin, {format:"CODE128", height:50, displayValue:true});
-            mostrar('vista-credencial');
+    function leerExcel(input) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            if(datosExcelRaw.length > 0) {
+                listaColumnasExcel = Object.keys(datosExcelRaw[0]);
+                llenarSelect('map-oc', listaColumnasExcel); llenarSelect('map-pieza', listaColumnasExcel);
+                document.getElementById('zona-mapeo').classList.remove('hidden');
+            }
+        };
+        reader.readAsArrayBuffer(input.files[0]);
+    }
+
+    function llenarSelect(id, cols) {
+        const sel = document.getElementById(id); sel.innerHTML = '<option value="">--</option>';
+        cols.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+    }
+
+    function confirmarImportacion() {
+        const idProy = document.getElementById('p-id').value.trim();
+        const oc = document.getElementById('map-oc').value;
+        const pz = document.getElementById('map-pieza').value;
+        const f = datosExcelRaw.map(r => [String(r[oc]||"S/D"), String(r[pz]||"S/D")]);
+        callServer("crearProyecto", {id: idProy}, resP => {
+            if(resP.status === "OK") callServer("importarDatosMapeados", {id: idProy, f: f, h: []}, resI => { alert("Exito"); mostrar('pantalla-menu'); });
+            else alert(resP.msj);
         });
     }
 
@@ -298,27 +249,8 @@
         mostrar('pantalla-gestor');
         callServer("listaGestion", {tipo: t}, res => {
             const c = document.getElementById('lista-gestor'); c.innerHTML = "";
-            res.forEach(item => {
-                const act = item.estado === "ACTIVO";
-                c.innerHTML += `<div class="item-lista"><span>${item.nombre}</span><button style="background:${act?'#e74c3c':'#27ae60'}; width:auto; padding:8px;" onclick="toggleEstado('${t}','${item.nombre}','${act?'INACTIVO':'ACTIVO'}')">${act?'OFF':'ON'}</button></div>`;
-            });
+            if(res && res.forEach) res.forEach(i => { c.innerHTML += `<div class="item-lista"><span>${i.nombre}</span></div>`; });
         });
-    }
-
-    function toggleEstado(t,n,e) { callServer("cambiarEstadoGeneral", {t:t, n:n, e:e}, () => abrirGestor(t)); }
-    
-    function cargarFlujograma() {
-        mostrar('pantalla-flujo');
-        callServer("obtenerEstacionesFlujo", {}, res => {
-            const cont = document.getElementById('lista-estaciones'); cont.innerHTML = "";
-            res.sort((a,b)=>a.orden-b.orden).forEach((e,i)=> { cont.innerHTML += `<div class="item-lista"><span>${i+1}. ${e.nombre}</span></div>`; });
-        });
-    }
-
-    function guardarEstacion() {
-        const n = document.getElementById('e-nombre').value;
-        const d = document.getElementById('e-desc').value;
-        callServer("crearNuevaEstacion", {d: {nombre: n, descripcion: d}}, res => { alert(res); mostrar('pantalla-menu'); });
     }
 </script>
 </body>
