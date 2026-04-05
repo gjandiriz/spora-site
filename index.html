@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Spora Systems V5.0 | Full</title>
+    <title>Spora Systems V5.2 | Full</title>
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -24,14 +24,13 @@
         .box-mapeo { background: rgba(0,0,0,0.2); border: 1px dashed #2fc95c; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: left; }
         .etiqueta-preview { background: white; color: black; border: 2px solid #000; margin: 15px auto; padding: 10px; width: 280px; text-align: center; border-radius: 5px; page-break-inside: avoid; }
         #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #3498db; background: #000; margin: 15px 0; min-height: 200px; display: none; }
-        hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1 style="letter-spacing: 5px; margin-bottom: 0;">SPORA</h1>
-    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px;">SYSTEMS V5.0</p>
+    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px;">SYSTEMS V5.2</p>
 
     <div id="pantalla-login">
         <input type="password" id="pin-login" placeholder="PIN de Acceso" inputmode="numeric">
@@ -41,10 +40,10 @@
     <div id="pantalla-menu" class="hidden">
         <button onclick="mostrar('pantalla-proyecto')" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
         <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
-        <hr>
+        <hr style="opacity:0.1">
         <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
         <button onclick="abrirGestor('USUARIO')" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
-        <hr>
+        <hr style="opacity:0.1">
         <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
         <button onclick="abrirGestor('ESTACION')" style="background:#16a085">📋 GESTIONAR ESTACIONES</button>
         <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ CONFIGURAR FLUJO</button>
@@ -56,7 +55,6 @@
         <p>Hola <strong id="nombre-op" style="color:#2fc95c;"></strong></p>
         <select id="select-puesto-op"></select>
         <button onclick="entrarAPuesto()" style="background:#f39c12">INGRESAR A ESTACIÓN</button>
-        <button onclick="location.reload()" style="background:#444">VOLVER</button>
     </div>
 
     <div id="pantalla-operario" class="hidden">
@@ -66,24 +64,25 @@
         <div id="reader"></div>
         <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
         <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center;">
-        <div id="log-scan" style="margin-top:15px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; font-size: 12px; text-align: left;"></div>
+        <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;"></div>
         <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
     </div>
 
     <div id="pantalla-proyecto" class="hidden">
-        <h3>Nuevo Lote</h3>
-        <input type="text" id="p-id" placeholder="ID Proyecto">
+        <h3>Nuevo Lote de Producción</h3>
+        <input type="text" id="p-id" placeholder="ID del Proyecto (Ej: 81577)">
         <input type="file" id="p-file" accept=".xlsx, .xls, .csv" onchange="leerExcel(this)">
         <div id="zona-mapeo" class="hidden">
             <div class="box-mapeo">
-                <label>OC:</label><select id="map-oc"></select>
-                <label>ID Pieza:</label><select id="map-pieza"></select>
+                <label>Columna Orden (OC):</label><select id="map-oc"></select>
+                <label>Columna ID Pieza:</label><select id="map-pieza"></select>
+                <hr style="opacity:0.1">
                 <div id="contenedor-extras"></div>
-                <button onclick="agregarFilaExtra()" style="background:#3498db; font-size:11px; padding:5px; width:auto;">+ Extra</button>
+                <button onclick="agregarFilaExtra()" style="background:#3498db; font-size:11px; width:auto; padding:8px;">+ Agregar dato extra</button>
             </div>
-            <button onclick="confirmarImportacion()" style="background:#27ae60; margin-top:10px;">IMPORTAR</button>
+            <button onclick="confirmarImportacion()" style="background:#27ae60; margin-top:15px;">IMPORTAR TODO</button>
         </div>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">CANCELAR</button>
     </div>
 
     <div id="pantalla-impresion" class="hidden">
@@ -96,19 +95,17 @@
             <div id="lista-checks-campos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; text-align: left; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px; margin-top:10px;"></div>
             <button onclick="generarVistaEtiquetasFlex()" style="background:#27ae60; margin-top:10px;">GENERAR ETIQUETAS</button>
         </div>
-        <div id="contenedor-etiquetas"></div>
+        <div id="contenedor-etiquetas" style="margin-top:20px;"></div>
         <button onclick="window.print()" style="background:#2c3e50">🖨️ IMPRIMIR</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
     <div id="form-usuario" class="hidden">
         <h3>Nueva Ficha Persona</h3>
-        <input type="text" id="u-nombre" placeholder="Nombre">
-        <input type="number" id="u-pin" placeholder="PIN">
+        <input type="text" id="u-nombre" placeholder="Nombre"><input type="number" id="u-pin" placeholder="PIN">
         <select id="u-rol"><option value="OPERARIO">OPERARIO</option><option value="GERENTE">GERENTE</option></select>
         <input type="text" id="u-legajo" placeholder="Legajo"><input type="date" id="u-nac"><input type="text" id="u-dir" placeholder="Dirección">
-        <button onclick="guardarUsuario()" style="background:#27ae60">GUARDAR</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+        <button onclick="guardarUsuario()" style="background:#27ae60">GUARDAR</button><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
     <div id="vista-credencial" class="hidden">
@@ -123,7 +120,6 @@
     <div id="pantalla-gestor" class="hidden"><h3 id="titulo-gestor"></h3><div id="lista-gestor"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
     <div id="pantalla-flujo" class="hidden"><h3>Orden del Proceso</h3><div id="lista-estaciones"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
     <div id="form-estacion" class="hidden"><h3>Nueva Estación</h3><input type="text" id="e-nombre" placeholder="Nombre"><input type="text" id="e-desc" placeholder="Descripción"><button onclick="guardarEstacion()" style="background:#27ae60">GUARDAR</button><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
-
 </div>
 
 <script>
@@ -146,41 +142,6 @@
         if(document.getElementById(id)) document.getElementById(id).classList.remove('hidden');
     }
 
-    // --- ESCANER V5.0: GATILLO MANUAL ---
-    function encenderCamara() {
-        if (isProcessing) return;
-        document.getElementById("reader").style.display = "block";
-        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        
-        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
-            (txt) => {
-                isProcessing = true;
-                if (html5QrCode) {
-                    html5QrCode.stop().then(() => { document.getElementById("reader").style.display = "none"; }).catch(() => {});
-                }
-                if (navigator.vibrate) navigator.vibrate(100);
-                procesarScan(txt);
-            }, () => {}
-        ).catch(() => alert("Error de cámara. Asegúrate de dar permisos."));
-    }
-
-    function procesarScan(id) {
-        const input = document.getElementById('input-scan');
-        input.value = "⌛ REGISTRANDO: " + id;
-        input.style.background = "#f1c40f"; 
-
-        callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
-            const log = document.getElementById('log-scan');
-            input.style.background = "#2fc95c"; 
-            input.value = "✅ CAPTURADO: " + id;
-            log.innerHTML = `<div class="item-lista"><b>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</b>: ${res.msj}</div>` + log.innerHTML;
-            setTimeout(() => { 
-                input.value = ""; input.style.background = "#fff"; isProcessing = false; 
-            }, 1500);
-        });
-    }
-
-    // --- LOGIN Y GESTIÓN ---
     function login() {
         const pin = document.getElementById('pin-login').value;
         if(!pin) return alert("Ingresá un PIN");
@@ -191,7 +152,7 @@
                 else {
                     document.getElementById('nombre-op').innerText = usuarioActual;
                     const sel = document.getElementById('select-puesto-op');
-                    sel.innerHTML = '<option value="">-- Puesto --</option>';
+                    sel.innerHTML = '<option value="">-- Seleccionar Puesto --</option>';
                     res.puestosDisponibles.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
                     mostrar('pantalla-seleccion-puesto');
                 }
@@ -207,7 +168,34 @@
         mostrar('pantalla-operario');
     }
 
-    // --- IMPORTACION EXCEL ---
+    // --- ESCANER V5.0: GATILLO MANUAL ---
+    function encenderCamara() {
+        if (isProcessing) return;
+        document.getElementById("reader").style.display = "block";
+        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
+            (txt) => {
+                isProcessing = true;
+                if (html5QrCode) {
+                    html5QrCode.stop().then(() => { document.getElementById("reader").style.display = "none"; }).catch(() => {});
+                }
+                if (navigator.vibrate) navigator.vibrate(100);
+                procesarScan(txt);
+            }, () => {}
+        ).catch(() => alert("Error de cámara."));
+    }
+
+    function procesarScan(id) {
+        const input = document.getElementById('input-scan');
+        input.value = "⌛ REGISTRANDO..."; input.style.background = "#f1c40f"; 
+        callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
+            input.style.background = "#2fc95c"; input.value = "✅ CAPTURADO: " + id;
+            document.getElementById('log-scan').innerHTML = `<div class="item-lista"><b>${new Date().toLocaleTimeString()}</b>: ${res.msj}</div>` + document.getElementById('log-scan').innerHTML;
+            setTimeout(() => { input.value = ""; input.style.background = "#fff"; isProcessing = false; }, 1500);
+        });
+    }
+
+    // --- IMPORTACIÓN EXCEL COMPLETA ---
     function leerExcel(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -231,8 +219,7 @@
     }
 
     function agregarFilaExtra() {
-        const div = document.createElement('div');
-        div.className = 'item-lista'; div.style.border = "none";
+        const div = document.createElement('div'); div.className = 'item-lista'; div.style.border = "none"; div.style.background = "transparent";
         let opts = listaColumnasExcel.map(c => `<option value="${c}">${c}</option>`).join('');
         div.innerHTML = `<input type="text" class="extra-alias" placeholder="Alias" style="width:35%; margin:0;"><select class="extra-col" style="width:50%; margin:0;">${opts}</select><button onclick="this.parentElement.remove()" style="background:red; width:10%; margin:0;">X</button>`;
         document.getElementById('contenedor-extras').appendChild(div);
@@ -244,23 +231,23 @@
         const pz = document.getElementById('map-pieza').value;
         const alias = Array.from(document.querySelectorAll('.extra-alias')).map(n => n.value || "Dato");
         const cl = Array.from(document.querySelectorAll('.extra-col')).map(n => n.value);
-        if(!idProy || !oc || !pz) return alert("Faltan datos de mapeo");
+        if(!idProy || !oc || !pz) return alert("Faltan datos");
         const filas = datosExcelRaw.map(f => [String(f[oc]||"S/D"), String(f[pz]||"S/D"), ...cl.map(c => String(f[c]||""))]);
         callServer("crearProyecto", {id: idProy}, resP => {
-            if(resP.status === "OK") callServer("importarDatosMapeados", {id: idProy, f: filas, h: alias}, resI => {
-                alert("✅ " + resI); mostrar('pantalla-menu');
-            }); else alert(resP.msj);
+            if(resP.status === "OK") callServer("importarDatosMapeados", {id: idProy, f: filas, h: alias}, resI => { alert("✅ Éxito"); mostrar('pantalla-menu'); });
+            else alert(resP.msj);
         });
     }
 
-    // --- ETIQUETAS ---
+    // --- ETIQUETAS COMPLETA ---
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
-        callServer("obtenerPiezasPorProyecto", {id: id}, res => {
-            if (typeof res === 'string') return alert(res);
+        if(!id) return alert("Ingresá un ID");
+        callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
+            if (res.status === "ERROR") return alert(res.msj);
             const lista = document.getElementById('lista-checks-campos');
             lista.innerHTML = "";
-            res.encabezados.forEach((h, i) => { if(i >= 5) lista.innerHTML += `<label><input type="checkbox" class="check-col-print" value="${i}"> ${h}</label>`; });
+            res.encabezados.forEach((h, i) => { if(i >= 2) lista.innerHTML += `<label><input type="checkbox" class="check-col-print" value="${i}"> ${h}</label>`; });
             document.getElementById('selector-campos-etiqueta').classList.remove('hidden');
         });
     }
@@ -268,21 +255,18 @@
     function generarVistaEtiquetasFlex() {
         const idxs = Array.from(document.querySelectorAll('.check-col-print:checked')).map(cb => parseInt(cb.value));
         const id = document.getElementById('id-proy-print').value;
-        callServer("obtenerPiezasPorProyecto", {id: id}, res => {
+        callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
             const cont = document.getElementById('contenedor-etiquetas'); cont.innerHTML = "";
             res.piezas.forEach((p, i) => {
-                let extras = "";
-                idxs.forEach(idx => { extras += `<div>${res.encabezados[idx]}: <b>${p[idx]}</b></div>`; });
-                const div = document.createElement('div');
-                div.className = "etiqueta-preview";
-                div.innerHTML = `<div style="font-weight:bold; border-bottom:1px solid #000; margin-bottom:5px;">${p[0]}</div><div>OC: ${p[1]}</div>${extras}<svg id="barcode-et-${i}"></svg><div style="font-size:10px;">${p[2]}</div>`;
-                cont.appendChild(div);
-                JsBarcode(`#barcode-et-${i}`, p[2], {format: "CODE128", height: 40, displayValue: false});
+                let extras = ""; idxs.forEach(ix => { extras += `<div>${res.encabezados[ix]}: <b>${p[ix]}</b></div>`; });
+                const div = document.createElement('div'); div.className = "etiqueta-preview";
+                div.innerHTML = `<b>LOTE: ${id}</b><br>OC: ${p[0]}${extras}<svg id="barcode-et-${i}"></svg><div style="font-size:10px">${p[1]}</div>`;
+                cont.appendChild(div); JsBarcode(`#barcode-et-${i}`, p[1], {format: "CODE128", height: 40, displayValue: false});
             });
         });
     }
 
-    // --- GESTIÓN DE USUARIOS Y ESTACIONES ---
+    // --- GESTIÓN COMPLETA ---
     function guardarUsuario() {
         const d = { nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value, legajo: document.getElementById('u-legajo').value, nac: document.getElementById('u-nac').value, dir: document.getElementById('u-dir').value };
         callServer("crearNuevoUsuario", {d: d}, res => {
@@ -293,14 +277,13 @@
         });
     }
 
-    function abrirGestor(tipo) {
+    function abrirGestor(t) {
         mostrar('pantalla-gestor');
-        document.getElementById('titulo-gestor').innerText = "GESTIONAR " + tipo;
-        callServer("obtenerListaGestion", {tipo: tipo}, res => {
-            const cont = document.getElementById('lista-gestor'); cont.innerHTML = "";
+        callServer("listaGestion", {tipo: t}, res => {
+            const c = document.getElementById('lista-gestor'); c.innerHTML = "";
             res.forEach(item => {
                 const act = item.estado === "ACTIVO";
-                cont.innerHTML += `<div class="item-lista"><span>${item.nombre}</span><button style="background:${act?'#e74c3c':'#27ae60'}; width:auto; padding:8px;" onclick="toggleEstado('${tipo}','${item.nombre}','${act?'INACTIVO':'ACTIVO'}')">${act?'OFF':'ON'}</button></div>`;
+                c.innerHTML += `<div class="item-lista"><span>${item.nombre}</span><button style="background:${act?'#e74c3c':'#27ae60'}; width:auto; padding:8px;" onclick="toggleEstado('${t}','${item.nombre}','${act?'INACTIVO':'ACTIVO'}')">${act?'OFF':'ON'}</button></div>`;
             });
         });
     }
