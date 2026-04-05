@@ -128,14 +128,31 @@
     let datosExcelRaw = [], listaColumnasExcel = [];
 
     function callServer(action, params, callback) {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-            google.script.run.withSuccessHandler(callback)[action](...Object.values(params));
-        } else {
-            let url = API_URL + "?action=" + action;
-            for (let key in params) { url += "&" + key + "=" + encodeURIComponent(params[key]); }
-            fetch(url).then(r => r.json()).then(callback).catch(e => alert("Error de conexión API"));
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        // Entorno Google Sheets
+        google.script.run.withSuccessHandler(callback)[action](...Object.values(params));
+    } else {
+        // Entorno GitHub API - AGREGAMOS MODO NO-CORS PARA EVITAR EL BLOQUEO
+        let url = API_URL + "?action=" + action;
+        for (let key in params) { 
+            url += "&" + key + "=" + encodeURIComponent(params[key]); 
         }
+
+        fetch(url, {
+            method: 'GET',
+            mode: 'no-cors', // ESTA LÍNEA ES VITAL
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(() => {
+            // Como usamos no-cors, no podemos leer la respuesta directamente aquí por seguridad del navegador.
+            // Para sistemas como el tuyo, la mejor forma de saltear esto es usar un tag de <script> dinámico
+            // o simplemente asegurar que la URL sea la correcta y los permisos sean "Cualquier persona".
+            
+            // INTENTO DE LECTURA ESTÁNDAR
+            fetch(url).then(r => r.json()).then(callback).catch(e => console.error("Error de parseo", e));
+        });
     }
+}
 
     function mostrar(id) {
         document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
