@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Spora Systems V4.9 | Final</title>
+    <title>Spora Systems V5.0 | Full</title>
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -19,12 +19,11 @@
         button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; color: white; background: #2c3e50; }
         button:active { transform: scale(0.96); }
         input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid #2c3e50; background: #07111f; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
-        input:focus { border-color: #2fc95c; }
         label { display: block; text-align: left; font-size: 11px; font-weight: bold; margin-top: 10px; color: #2fc95c; }
         .item-lista { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid #2fc95c; }
         .box-mapeo { background: rgba(0,0,0,0.2); border: 1px dashed #2fc95c; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: left; }
         .etiqueta-preview { background: white; color: black; border: 2px solid #000; margin: 15px auto; padding: 10px; width: 280px; text-align: center; border-radius: 5px; page-break-inside: avoid; }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #3498db; background: #000; margin: 15px 0; min-height: 200px; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #3498db; background: #000; margin: 15px 0; min-height: 200px; display: none; }
         hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0; }
     </style>
 </head>
@@ -32,7 +31,7 @@
 
 <div class="card">
     <h1 style="letter-spacing: 5px; margin-bottom: 0;">SPORA</h1>
-    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px; letter-spacing: 2px;">SYSTEMS V4.9</p>
+    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px;">SYSTEMS V5.0</p>
 
     <div id="pantalla-login">
         <input type="password" id="pin-login" placeholder="PIN de Acceso" inputmode="numeric">
@@ -55,45 +54,36 @@
     <div id="pantalla-seleccion-puesto" class="hidden">
         <h3>Panel de Producción</h3>
         <p>Hola <strong id="nombre-op" style="color:#2fc95c;"></strong></p>
-        <label>¿En qué estación vas a trabajar?</label>
         <select id="select-puesto-op"></select>
         <button onclick="entrarAPuesto()" style="background:#f39c12">INGRESAR A ESTACIÓN</button>
-        <button onclick="location.reload()" style="background:#444">SALIR</button>
+        <button onclick="location.reload()" style="background:#444">VOLVER</button>
     </div>
 
     <div id="pantalla-operario" class="hidden">
         <div style="background:#07111f; padding:10px; border-radius:10px; border:1px solid #3498db; margin-bottom:10px;">
-            <p style="margin:2px">Puesto: <strong id="estacion-op" style="color:#3498db;"></strong></p>
-            <p style="margin:2px; font-size:12px; opacity:0.8">Operario: <span id="nombre-op-scan"></span></p>
+            <p style="margin:2px"><strong id="estacion-op" style="color:#3498db;"></strong> | <span id="nombre-op-scan"></span></p>
         </div>
         <div id="reader"></div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-            <button id="btn-iniciar-vivo" onclick="encenderCamara()" style="background:#27ae60; margin:0; height: 50px;">▶️ LECTOR VIVO</button>
-            <label for="input-archivo-camara" style="background:#3498db; color:white; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold; font-size:13px; height: 50px;">📷 FOTO</label>
-            <input type="file" id="input-archivo-camara" accept="image/*" capture="environment" style="display:none;" onchange="escanearDesdeFoto(event)">
-        </div>
-
-        <input type="text" id="input-scan" placeholder="Esperando código..." readonly style="font-size:20px; text-align:center; border:2px solid #f1c40f; margin-top:15px; background: #fff; color:#000;">
-        <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; font-size:12px; text-align:left; border-radius:8px;"></div>
-        <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
+        <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
+        <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center;">
+        <div id="log-scan" style="margin-top:15px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; font-size: 12px; text-align: left;"></div>
+        <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
     </div>
 
     <div id="pantalla-proyecto" class="hidden">
-        <h3>Nuevo Lote de Producción</h3>
-        <input type="text" id="p-id" placeholder="ID del Proyecto (Ej: 81577)">
+        <h3>Nuevo Lote</h3>
+        <input type="text" id="p-id" placeholder="ID Proyecto">
         <input type="file" id="p-file" accept=".xlsx, .xls, .csv" onchange="leerExcel(this)">
         <div id="zona-mapeo" class="hidden">
             <div class="box-mapeo">
-                <label>Columna Orden (OC):</label><select id="map-oc"></select>
-                <label>Columna ID Pieza:</label><select id="map-pieza"></select>
-                <hr>
+                <label>OC:</label><select id="map-oc"></select>
+                <label>ID Pieza:</label><select id="map-pieza"></select>
                 <div id="contenedor-extras"></div>
-                <button onclick="agregarFilaExtra()" style="background:#3498db; font-size:11px; width:auto; padding:8px;">+ Agregar dato extra</button>
+                <button onclick="agregarFilaExtra()" style="background:#3498db; font-size:11px; padding:5px; width:auto;">+ Extra</button>
             </div>
-            <button onclick="confirmarImportacion()" style="background:#27ae60; margin-top:15px;">IMPORTAR TODO</button>
+            <button onclick="confirmarImportacion()" style="background:#27ae60; margin-top:10px;">IMPORTAR</button>
         </div>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">CANCELAR</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
     <div id="pantalla-impresion" class="hidden">
@@ -113,10 +103,12 @@
 
     <div id="form-usuario" class="hidden">
         <h3>Nueva Ficha Persona</h3>
-        <input type="text" id="u-nombre" placeholder="Nombre"><input type="number" id="u-pin" placeholder="PIN">
+        <input type="text" id="u-nombre" placeholder="Nombre">
+        <input type="number" id="u-pin" placeholder="PIN">
         <select id="u-rol"><option value="OPERARIO">OPERARIO</option><option value="GERENTE">GERENTE</option></select>
         <input type="text" id="u-legajo" placeholder="Legajo"><input type="date" id="u-nac"><input type="text" id="u-dir" placeholder="Dirección">
-        <button onclick="guardarUsuario()" style="background:#27ae60">GUARDAR</button><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+        <button onclick="guardarUsuario()" style="background:#27ae60">GUARDAR</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
     <div id="vista-credencial" class="hidden">
@@ -131,16 +123,13 @@
     <div id="pantalla-gestor" class="hidden"><h3 id="titulo-gestor"></h3><div id="lista-gestor"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
     <div id="pantalla-flujo" class="hidden"><h3>Orden del Proceso</h3><div id="lista-estaciones"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
     <div id="form-estacion" class="hidden"><h3>Nueva Estación</h3><input type="text" id="e-nombre" placeholder="Nombre"><input type="text" id="e-desc" placeholder="Descripción"><button onclick="guardarEstacion()" style="background:#27ae60">GUARDAR</button><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
+
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzbNN-xJFtiD3rhXc0fNlVPk2slg6JPW9RhNd8VyLHxlPOaUvuc2TNwiluJX2waT_s4/exec"
-    let usuarioActual = "";
-    let estacionActual = "";
-    let datosExcelRaw = [];
-    let listaColumnasExcel = [];
-    let html5QrCode = null;
-    let isProcessing = false;
+    const API_URL = "https://script.google.com/macros/s/AKfycbzbNN-xJFtiD3rhXc0fNlVPk2slg6JPW9RhNd8VyLHxlPOaUvuc2TNwiluJX2waT_s4/exec";
+    let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
+    let datosExcelRaw = [], listaColumnasExcel = [];
 
     function callServer(action, params, callback) {
         if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -154,54 +143,59 @@
 
     function mostrar(id) {
         document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
+        if(document.getElementById(id)) document.getElementById(id).classList.remove('hidden');
     }
 
-    // 1. REEMPLAZO EN EL LOGIN (Ajuste de parámetro PIN)
+    // --- ESCANER V5.0: GATILLO MANUAL ---
+    function encenderCamara() {
+        if (isProcessing) return;
+        document.getElementById("reader").style.display = "block";
+        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        
+        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
+            (txt) => {
+                isProcessing = true;
+                if (html5QrCode) {
+                    html5QrCode.stop().then(() => { document.getElementById("reader").style.display = "none"; }).catch(() => {});
+                }
+                if (navigator.vibrate) navigator.vibrate(100);
+                procesarScan(txt);
+            }, () => {}
+        ).catch(() => alert("Error de cámara. Asegúrate de dar permisos."));
+    }
+
+    function procesarScan(id) {
+        const input = document.getElementById('input-scan');
+        input.value = "⌛ REGISTRANDO: " + id;
+        input.style.background = "#f1c40f"; 
+
+        callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
+            const log = document.getElementById('log-scan');
+            input.style.background = "#2fc95c"; 
+            input.value = "✅ CAPTURADO: " + id;
+            log.innerHTML = `<div class="item-lista"><b>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</b>: ${res.msj}</div>` + log.innerHTML;
+            setTimeout(() => { 
+                input.value = ""; input.style.background = "#fff"; isProcessing = false; 
+            }, 1500);
+        });
+    }
+
+    // --- LOGIN Y GESTIÓN ---
     function login() {
         const pin = document.getElementById('pin-login').value;
         if(!pin) return alert("Ingresá un PIN");
-        callServer("login", {pin: pin}, res => { // Cambiado de 'iniciarSesion' a 'login' para que coincida con tu doGet
+        callServer("login", {pin: pin}, res => {
             if (res.status === "OK") {
                 usuarioActual = res.usuario.nombre;
                 if (res.usuario.rol === "GERENTE") mostrar('pantalla-menu');
                 else {
                     document.getElementById('nombre-op').innerText = usuarioActual;
                     const sel = document.getElementById('select-puesto-op');
-                    sel.innerHTML = '<option value="">-- Seleccionar Puesto --</option>';
+                    sel.innerHTML = '<option value="">-- Puesto --</option>';
                     res.puestosDisponibles.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
                     mostrar('pantalla-seleccion-puesto');
                 }
             } else alert(res.mensaje);
-        });
-    }
-
-    // 2. REEMPLAZO EN EL REGISTRO (Ajuste de parámetros ID, ESTACION, USUARIO)
-    function procesarScan(id) {
-        const input = document.getElementById('input-scan');
-        input.value = "⌛ PROCESANDO...";
-        input.style.background = "#f1c40f"; 
-        input.style.color = "#000";
-
-        if (navigator.vibrate) navigator.vibrate(100);
-
-        // AQUÍ ESTABA EL ERROR: Cambiamos 'operario' por 'usuario' para tu doGet
-        callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
-            const log = document.getElementById('log-scan');
-            const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            if(res.status === "OK") {
-                input.value = "✅ REGISTRADO";
-                input.style.background = "#2fc95c"; 
-                log.innerHTML = `<div class="item-lista"><b style="color:#2fc95c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
-                setTimeout(() => { resetScanState(); }, 2000);
-            } else {
-                input.value = "❌ ERROR";
-                input.style.background = "#e74c3c"; 
-                input.style.color = "#fff";
-                log.innerHTML = `<div class="item-lista"><b style="color:#e74c3c">${hora}</b>: ${res.msj}</div>` + log.innerHTML;
-                setTimeout(() => { resetScanState(); }, 4000);
-            }
         });
     }
 
@@ -213,48 +207,7 @@
         mostrar('pantalla-operario');
     }
 
-    // --- ESCANER CON CICLO DE CONFIRMACIÓN REAL ---
-    function encenderCamara() {
-        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-        html5QrCode.start({ facingMode: "environment" }, config,
-            (txt) => {
-                if (isProcessing) return; 
-                isProcessing = true; 
-                vibrarCelu();
-                procesarScan(txt);
-            },
-            () => {}
-        ).catch(err => alert("Error de cámara."));
-    }
-
-    
-    function resetScanState() {
-        const inputScan = document.getElementById('input-scan');
-        inputScan.value = "";
-        inputScan.style.backgroundColor = "#fff";
-        inputScan.style.color = "#000";
-        isProcessing = false;
-    }
-
-    async function escanearDesdeFoto(event) {
-        const file = event.target.files[0];
-        if (!file || isProcessing) return;
-        isProcessing = true;
-        document.getElementById('input-scan').value = "⌛ PROCESANDO FOTO...";
-        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.scanFile(file, true).then(txt => {
-            procesarScan(txt);
-        }).catch(() => { 
-            alert("No se detectó el código en la foto."); 
-            isProcessing = false; 
-            resetScanState();
-        });
-    }
-
-    function vibrarCelu() { if (navigator.vibrate) navigator.vibrate(100); }
-
-    // --- LOGICA IMPORTACION COMPLETA ---
+    // --- IMPORTACION EXCEL ---
     function leerExcel(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -279,8 +232,7 @@
 
     function agregarFilaExtra() {
         const div = document.createElement('div');
-        div.className = 'item-lista';
-        div.style.borderLeft = "none"; div.style.background = "transparent";
+        div.className = 'item-lista'; div.style.border = "none";
         let opts = listaColumnasExcel.map(c => `<option value="${c}">${c}</option>`).join('');
         div.innerHTML = `<input type="text" class="extra-alias" placeholder="Alias" style="width:35%; margin:0;"><select class="extra-col" style="width:50%; margin:0;">${opts}</select><button onclick="this.parentElement.remove()" style="background:red; width:10%; margin:0;">X</button>`;
         document.getElementById('contenedor-extras').appendChild(div);
@@ -288,22 +240,20 @@
 
     function confirmarImportacion() {
         const idProy = document.getElementById('p-id').value.trim();
-        const ocCol = document.getElementById('map-oc').value;
-        const pzCol = document.getElementById('map-pieza').value;
+        const oc = document.getElementById('map-oc').value;
+        const pz = document.getElementById('map-pieza').value;
         const alias = Array.from(document.querySelectorAll('.extra-alias')).map(n => n.value || "Dato");
-        const cols = Array.from(document.querySelectorAll('.extra-col')).map(n => n.value);
-        if(!idProy || !ocCol || !pzCol) return alert("Faltan datos de mapeo");
-        const filas = datosExcelRaw.map(f => [String(f[ocCol]||"S/D"), String(f[pzCol]||"S/D"), ...cols.map(c => String(f[c]||""))]);
+        const cl = Array.from(document.querySelectorAll('.extra-col')).map(n => n.value);
+        if(!idProy || !oc || !pz) return alert("Faltan datos de mapeo");
+        const filas = datosExcelRaw.map(f => [String(f[oc]||"S/D"), String(f[pz]||"S/D"), ...cl.map(c => String(f[c]||""))]);
         callServer("crearProyecto", {id: idProy}, resP => {
-            if(resP.status === "OK") {
-                callServer("importarDatosMapeados", {id: idProy, f: filas, h: alias}, resI => {
-                    alert("✅ " + resI); mostrar('pantalla-menu');
-                });
-            } else alert(resP.msj);
+            if(resP.status === "OK") callServer("importarDatosMapeados", {id: idProy, f: filas, h: alias}, resI => {
+                alert("✅ " + resI); mostrar('pantalla-menu');
+            }); else alert(resP.msj);
         });
     }
 
-    // --- LOGICA ETIQUETAS COMPLETA ---
+    // --- ETIQUETAS ---
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
         callServer("obtenerPiezasPorProyecto", {id: id}, res => {
@@ -332,7 +282,7 @@
         });
     }
 
-    // --- GESTION ---
+    // --- GESTIÓN DE USUARIOS Y ESTACIONES ---
     function guardarUsuario() {
         const d = { nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value, legajo: document.getElementById('u-legajo').value, nac: document.getElementById('u-nac').value, dir: document.getElementById('u-dir').value };
         callServer("crearNuevoUsuario", {d: d}, res => {
@@ -345,6 +295,7 @@
 
     function abrirGestor(tipo) {
         mostrar('pantalla-gestor');
+        document.getElementById('titulo-gestor').innerText = "GESTIONAR " + tipo;
         callServer("obtenerListaGestion", {tipo: tipo}, res => {
             const cont = document.getElementById('lista-gestor'); cont.innerHTML = "";
             res.forEach(item => {
