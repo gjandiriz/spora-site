@@ -70,7 +70,7 @@
             <button onclick="cargarColumnasProyecto()" style="background:#3498db; width:auto;">🔍</button>
         </div>
         <div id="selector-campos-etiqueta" class="hidden">
-            <div id="lista-checks-campos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; text-align: left; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px; margin-top:10px;"></div>
+            <div id="lista-checks-campos" style="background:rgba(0,0,0,0.2); border-radius:8px; margin-top:10px;"></div>
             <button onclick="generarVistaEtiquetasFlex()" style="background:#27ae60; margin-top:10px;">GENERAR ETIQUETAS</button>
         </div>
         <div id="contenedor-etiquetas" style="margin-top:20px;"></div>
@@ -119,18 +119,16 @@
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
     let datosExcelRaw = [], listaColumnasExcel = [];
 
-    // MOTOR REFORZADO (Soporta datos pesados)
     function callServer(action, params, callback) {
         params.action = action;
         const formData = new FormData();
         for (const key in params) { formData.append(key, params[key]); }
-
         fetch(API_URL, { method: 'POST', body: formData })
             .then(r => r.json())
             .then(callback)
             .catch(e => {
                 console.error("Error API:", e);
-                alert("Falla de conexión. Verifica si actualizaste la Implementación en Google.");
+                alert("Falla de conexión.");
             });
     }
 
@@ -216,14 +214,22 @@
         cont.appendChild(div);
     }
 
+    // --- FUNCIÓN REEMPLAZADA: MEJORA DEL BOTÓN IMPORTAR ---
     function confirmarImportacion() {
+        const btn = event.target;
         const idProy = document.getElementById('p-id').value.trim();
         const oc = document.getElementById('map-oc').value;
         const pz = document.getElementById('map-pieza').value;
+        
         if(!idProy || !oc || !pz) return alert("Completa ID, OC y Pieza");
 
+        // Bloqueamos el botón para evitar doble envío
+        btn.disabled = true;
+        btn.innerText = "⌛ PROCESANDO LOTE...";
+
         const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value).filter(v => v !== "");
-        const headersParaSheet = ["PROYECTO_ID", "ORDEN_COMPRA", "ID_SPORA", "ESTADO", "FECHA", pz, ...extras];
+        // Headers reales para la Fila 1
+        const headersParaSheet = ["ID_PROYECTO", "OC", "CODIGO_ESCANEO", "ESTADO", "FECHA", pz, ...extras];
 
         const filas = datosExcelRaw.map(r => {
             const f = [String(r[oc]||""), String(r[pz]||"")];
@@ -233,19 +239,35 @@
 
         callServer("crearProyecto", {id: idProy}, resP => {
             callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(headersParaSheet)}, resI => {
-                alert(resI.msj); mostrar('pantalla-menu');
+                alert(resI.msj);
+                btn.disabled = false;
+                btn.innerText = "IMPORTAR";
+                mostrar('pantalla-menu');
             });
         });
     }
 
+    // --- FUNCIÓN REEMPLAZADA: VISOR DE SELECCIÓN INTUITIVO ---
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
             const lista = document.getElementById('lista-checks-campos');
             lista.innerHTML = "";
+            lista.style.display = "block"; 
+            
             res.encabezados.forEach((h, i) => {
-                if(i > 0) {
-                    lista.innerHTML += `<label><input type="checkbox" class="check-col-print" value="${i}"> ${h} <input type="checkbox" class="check-con-titulo" data-col="${i}"> (T)</label>`;
+                if(i > 0) { // Saltamos el ID de Proyecto interno
+                    lista.innerHTML += `
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #2c3e50;">
+                            <div style="text-align:left;">
+                                <input type="checkbox" class="check-col-print" id="col-${i}" value="${i}">
+                                <label for="col-${i}" style="display:inline; font-size:14px; margin-left:8px;">${h}</label>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <span style="font-size:10px; color:#aaa;">Título</span>
+                                <input type="checkbox" class="check-con-titulo" data-col="${i}">
+                            </div>
+                        </div>`;
                 }
             });
             document.getElementById('selector-campos-etiqueta').classList.remove('hidden');
