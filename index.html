@@ -43,7 +43,7 @@
         <hr style="opacity:0.1">
         <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
         <button onclick="abrirGestor('USUARIO')" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
-        <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
+        <button onclick="form-estacion" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
         <button onclick="abrirGestor('ESTACION')" style="background:#16a085">📋 GESTIONAR ESTACIONES</button>
         <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ CONFIGURAR FLUJO</button>
         <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
@@ -162,12 +162,10 @@
         html5QrCode.start(
             { facingMode: "environment" }, 
             { fps: 10, qrbox: 250 },
-            (txt) => { // <-- Cuando detecta código:
+            (txt) => { 
                 isProcessing = true;
-                // 1. Apaga la cámara inmediatamente
                 html5QrCode.stop().then(() => { 
                     document.getElementById("reader").style.display = "none";
-                    // 2. Procesa el dato
                     procesarScan(txt);
                 });
             }, 
@@ -185,13 +183,11 @@
         });
     }
 
-    // --- CORRECCIÓN CRÍTICA DE ETIQUETAS ---
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
         if(!id) return alert("Ingresá un ID");
         
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
-            // SEGURIDAD: Verificamos si res y res.encabezados existen antes de usar forEach
             if (!res || !res.encabezados) {
                 console.error("Datos recibidos mal formados:", res);
                 return alert("No se encontraron datos para este proyecto.");
@@ -200,24 +196,52 @@
             const lista = document.getElementById('lista-checks-campos');
             lista.innerHTML = "";
             res.encabezados.forEach((h, i) => { 
-                if(i >= 2) lista.innerHTML += `<label><input type="checkbox" class="check-col-print" value="${i}"> ${h}</label>`; 
+                if(i >= 1) lista.innerHTML += `<label><input type="checkbox" class="check-col-print" value="${i}"> ${h}</label>`; 
             });
             document.getElementById('selector-campos-etiqueta').classList.remove('hidden');
         });
     }
 
+    // --- FUNCIÓN REEMPLAZADA PARA ETIQUETAS Y CÓDIGO DE BARRAS ---
     function generarVistaEtiquetasFlex() {
         const idxs = Array.from(document.querySelectorAll('.check-col-print:checked')).map(cb => parseInt(cb.value));
         const id = document.getElementById('id-proy-print').value;
+        
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
             if (!res || !res.piezas) return alert("Error al obtener piezas.");
             const cont = document.getElementById('contenedor-etiquetas'); cont.innerHTML = "";
+            
             res.piezas.forEach((p, i) => {
-                let extras = ""; 
-                idxs.forEach(ix => { extras += `<div>${res.encabezados[ix]}: <b>${p[ix]}</b></div>`; });
+                const oc = p[1];
+                const idEtiquetaUnico = p[2];
+                let extrasHtml = "";
+
+                let datosAdicionalesArr = [];
+                try { datosAdicionalesArr = JSON.parse(p[5] || "[]"); } catch(e) { datosAdicionalesArr = []; }
+
+                idxs.forEach(ix => { 
+                    if(ix === 1) extrasHtml += `<div>OC: <b>${oc}</b></div>`;
+                    if(ix === 2) extrasHtml += `<div>ID: <b>${idEtiquetaUnico}</b></div>`;
+                    // Nota: El manejo de índices adicionales p[5] se podría expandir aquí.
+                });
+
                 const div = document.createElement('div'); div.className = "etiqueta-preview";
-                div.innerHTML = `<b>LOTE: ${id}</b><br>OC: ${p[0]}${extras}<svg id="barcode-et-${i}"></svg><div style="font-size:10px">${p[1]}</div>`;
-                cont.appendChild(div); JsBarcode(`#barcode-et-${i}`, p[1], {format: "CODE128", height: 40, displayValue: false});
+                
+                div.innerHTML = `
+                    <b>LOTE: ${id}</b><br>
+                    OC: ${oc}<br>
+                    ID PIEZA: ${idEtiquetaUnico}
+                    ${extrasHtml}
+                    <svg id="barcode-et-${i}"></svg>
+                `;
+                cont.appendChild(div);
+
+                JsBarcode(`#barcode-et-${i}`, idEtiquetaUnico, {
+                    format: "CODE128", 
+                    height: 50, 
+                    displayValue: true,
+                    fontSize: 12
+                });
             });
         });
     }
