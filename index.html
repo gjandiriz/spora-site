@@ -301,27 +301,41 @@
     }
 
     function confirmarImportacion() {
-        const idProy = document.getElementById('p-id').value.trim();
-        const ocCol = document.getElementById('map-oc').value;
-        const pzCol = document.getElementById('map-pieza').value;
-        const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value);
-        const encabezadosParaSheet = ["PROYECTO_ID", "ORDEN_COMPRA", "ID_SPORA", "ESTADO", "FECHA", pzCol, ...extras];
+    const idProy = document.getElementById('p-id').value.trim();
+    const ocCol = document.getElementById('map-oc').value;
+    const pzCol = document.getElementById('map-pieza').value;
+    
+    if(!idProy || !ocCol || !pzCol) return alert("Faltan campos obligatorios (ID, OC o Pieza)");
 
-        const filas = datosExcelRaw.map(r => {
-            const fila = [r[ocCol] || "S/D", r[pzCol] || "S/D"];
-            extras.forEach(ex => fila.push(r[ex] || ""));
-            return fila;
-        });
+    const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value);
+    
+    // Mapeamos las filas
+    const filas = datosExcelRaw.map(r => {
+        const fila = [String(r[ocCol] || "S/D"), String(r[pzCol] || "S/D")];
+        extras.forEach(ex => { if(ex) fila.push(String(r[ex] || "")); });
+        return fila;
+    });
 
-        callServer("crearProyecto", {id: idProy}, resP => {
-            if(resP.status === "OK") {
-                callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(encabezadosParaSheet)}, resI => { 
-                    alert("Importación Exitosa"); 
-                    mostrar('pantalla-menu'); 
-                });
-            } else alert(resP.msj);
-        });
-    }
+    // Importante: No enviamos encabezados complejos por ahora para evitar errores de red
+    callServer("crearProyecto", {id: idProy}, resP => {
+        if(resP.status === "OK" || resP.msj.includes("existe")) {
+            callServer("importarDatosMapeados", {
+                id: idProy, 
+                f: JSON.stringify(filas), 
+                h: "[]" 
+            }, resI => { 
+                if(resI.status === "OK") {
+                    alert("¡Éxito! Piezas cargadas.");
+                    mostrar('pantalla-menu');
+                } else {
+                    alert("Error: " + resI.msj);
+                }
+            });
+        } else {
+            alert("Error al crear proyecto: " + resP.msj);
+        }
+    });
+}
 
     function abrirGestor(t) {
         mostrar('pantalla-gestor');
