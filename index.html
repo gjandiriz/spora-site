@@ -185,62 +185,74 @@
 
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
-        if(!id) return alert("Ingresá un ID");
+        if(!id) return alert("Ingresá un ID de Proyecto");
         
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
-            if (!res || !res.encabezados) {
-                console.error("Datos recibidos mal formados:", res);
-                return alert("No se encontraron datos para este proyecto.");
-            }
+            if (!res || !res.encabezados) return alert("No se encontraron datos.");
             
             const lista = document.getElementById('lista-checks-campos');
             lista.innerHTML = "";
+            
+            // Recorremos los encabezados reales que vienen del Sheet
             res.encabezados.forEach((h, i) => { 
-                if(i >= 1) lista.innerHTML += `<label><input type="checkbox" class="check-col-print" value="${i}"> ${h}</label>`; 
+                // Saltamos las columnas técnicas (Proyecto, Estado, Fecha) para no marear al usuario
+                if(i !== 0 && i !== 3 && i !== 4 && i !== 5) { 
+                    lista.innerHTML += `
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px; background:rgba(255,255,255,0.05); padding:5px; border-radius:5px;">
+                            <input type="checkbox" class="check-col-print" value="${i}"> 
+                            <span style="flex-grow:1; font-size:13px;">${h}</span>
+                            <label style="font-size:9px; margin:0; color:#aaa;">
+                                <input type="checkbox" class="check-con-titulo" data-col="${i}"> Título
+                            </label>
+                        </div>`; 
+                }
             });
             document.getElementById('selector-campos-etiqueta').classList.remove('hidden');
         });
     }
-
     // --- FUNCIÓN REEMPLAZADA PARA ETIQUETAS Y CÓDIGO DE BARRAS ---
     function generarVistaEtiquetasFlex() {
-        const idxs = Array.from(document.querySelectorAll('.check-col-print:checked')).map(cb => parseInt(cb.value));
         const id = document.getElementById('id-proy-print').value;
         
+        // 1. Obtenemos qué columnas quiere imprimir
+        const checksDato = Array.from(document.querySelectorAll('.check-col-print:checked'));
+        
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
-            if (!res || !res.piezas) return alert("Error al obtener piezas.");
+            if (!res || !res.piezas) return alert("Error.");
             const cont = document.getElementById('contenedor-etiquetas'); cont.innerHTML = "";
             
             res.piezas.forEach((p, i) => {
-                const oc = p[1];
-                const idEtiquetaUnico = p[2];
-                let extrasHtml = "";
+                let cuerpoEtiqueta = "";
+                const idEtiquetaUnico = p[2]; // El ID único siempre es la Columna C (índice 2)
 
-                let datosAdicionalesArr = [];
-                try { datosAdicionalesArr = JSON.parse(p[5] || "[]"); } catch(e) { datosAdicionalesArr = []; }
-
-                idxs.forEach(ix => { 
-                    if(ix === 1) extrasHtml += `<div>OC: <b>${oc}</b></div>`;
-                    if(ix === 2) extrasHtml += `<div>ID: <b>${idEtiquetaUnico}</b></div>`;
-                    // Nota: El manejo de índices adicionales p[5] se podría expandir aquí.
+                // 2. Construimos el contenido basado en los checks
+                checksDato.forEach(cb => {
+                    const colIndex = parseInt(cb.value);
+                    const nombreColumna = res.encabezados[colIndex];
+                    const valorDato = p[colIndex] || "";
+                    
+                    // Verificamos si marcó "Incluir Título" para esta columna específica
+                    const conTitulo = document.querySelector(`.check-con-titulo[data-col="${colIndex}"]`).checked;
+                    
+                    if (conTitulo) {
+                        cuerpoEtiqueta += `<div style="font-size:12px;">${nombreColumna}: <b>${valorDato}</b></div>`;
+                    } else {
+                        cuerpoEtiqueta += `<div style="font-size:14px; font-weight:bold;">${valorDato}</div>`;
+                    }
                 });
 
-                const div = document.createElement('div'); div.className = "etiqueta-preview";
-                
+                const div = document.createElement('div'); 
+                div.className = "etiqueta-preview";
                 div.innerHTML = `
-                    <b>LOTE: ${id}</b><br>
-                    OC: ${oc}<br>
-                    ID PIEZA: ${idEtiquetaUnico}
-                    ${extrasHtml}
+                    <div style="font-size:10px; border-bottom:1px solid #eee; margin-bottom:5px;">PROY: ${id}</div>
+                    ${cuerpoEtiqueta}
                     <svg id="barcode-et-${i}"></svg>
                 `;
                 cont.appendChild(div);
 
+                // Generamos el código de barras con el ID ÚNICO
                 JsBarcode(`#barcode-et-${i}`, idEtiquetaUnico, {
-                    format: "CODE128", 
-                    height: 50, 
-                    displayValue: true,
-                    fontSize: 12
+                    format: "CODE128", height: 40, displayValue: true, fontSize: 10
                 });
             });
         });
