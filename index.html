@@ -192,7 +192,6 @@
             
             const lista = document.getElementById('lista-checks-campos');
             lista.innerHTML = "";
-            
             res.encabezados.forEach((h, i) => { 
                 if(i !== 0 && i !== 3 && i !== 4 && i !== 5) { 
                     lista.innerHTML += `
@@ -250,22 +249,25 @@
         });
     }
 
-    // --- FUNCIONES ACTUALIZADAS: LECTURA EXCEL Y BOTÓN EXTRA ---
+    // --- FUNCIONES ACTUALIZADAS PARA MAPEO DINÁMICO ---
     function leerExcel(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
-            datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            // Leemos la primera hoja
+            const primeraHoja = workbook.Sheets[workbook.SheetNames[0]];
+            datosExcelRaw = XLSX.utils.sheet_to_json(primeraHoja);
             
             if(datosExcelRaw.length > 0) {
+                // Extraemos los nombres de las columnas (Ancho, Alto, etc.)
                 listaColumnasExcel = Object.keys(datosExcelRaw[0]);
                 
-                // Llenamos los selectores base
+                // Llenamos OC y Pieza
                 llenarSelect('map-oc', listaColumnasExcel); 
                 llenarSelect('map-pieza', listaColumnasExcel);
                 
-                // Limpiamos extras anteriores y mostramos la zona de mapeo
+                // Limpiamos mapeos anteriores y mostramos el panel
                 document.getElementById('contenedor-extras').innerHTML = "";
                 document.getElementById('zona-mapeo').classList.remove('hidden');
             }
@@ -280,14 +282,15 @@
         div.style.gap = "5px";
         div.style.marginTop = "5px";
 
+        // Creamos el desplegable con las columnas que el sistema leyó del Excel
         let opciones = '<option value="">-- Seleccionar Extra --</option>';
         listaColumnasExcel.forEach(col => {
             opciones += `<option value="${col}">${col}</option>`;
         });
 
         div.innerHTML = `
-            <select class="select-extra" style="margin:0;">${opciones}</select>
-            <button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0;">X</button>
+            <select class="select-extra" style="flex-grow:1; margin:0;">${opciones}</select>
+            <button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0; padding:10px;">X</button>
         `;
         cont.appendChild(div);
     }
