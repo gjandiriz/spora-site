@@ -193,9 +193,7 @@
             const lista = document.getElementById('lista-checks-campos');
             lista.innerHTML = "";
             
-            // Recorremos los encabezados reales que vienen del Sheet
             res.encabezados.forEach((h, i) => { 
-                // Saltamos las columnas técnicas (Proyecto, Estado, Fecha) para no marear al usuario
                 if(i !== 0 && i !== 3 && i !== 4 && i !== 5) { 
                     lista.innerHTML += `
                         <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px; background:rgba(255,255,255,0.05); padding:5px; border-radius:5px;">
@@ -210,11 +208,9 @@
             document.getElementById('selector-campos-etiqueta').classList.remove('hidden');
         });
     }
-    // --- FUNCIÓN REEMPLAZADA PARA ETIQUETAS Y CÓDIGO DE BARRAS ---
+
     function generarVistaEtiquetasFlex() {
         const id = document.getElementById('id-proy-print').value;
-        
-        // 1. Obtenemos qué columnas quiere imprimir
         const checksDato = Array.from(document.querySelectorAll('.check-col-print:checked'));
         
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
@@ -223,15 +219,12 @@
             
             res.piezas.forEach((p, i) => {
                 let cuerpoEtiqueta = "";
-                const idEtiquetaUnico = p[2]; // El ID único siempre es la Columna C (índice 2)
+                const idEtiquetaUnico = p[2];
 
-                // 2. Construimos el contenido basado en los checks
                 checksDato.forEach(cb => {
                     const colIndex = parseInt(cb.value);
                     const nombreColumna = res.encabezados[colIndex];
                     const valorDato = p[colIndex] || "";
-                    
-                    // Verificamos si marcó "Incluir Título" para esta columna específica
                     const conTitulo = document.querySelector(`.check-con-titulo[data-col="${colIndex}"]`).checked;
                     
                     if (conTitulo) {
@@ -250,7 +243,6 @@
                 `;
                 cont.appendChild(div);
 
-                // Generamos el código de barras con el ID ÚNICO
                 JsBarcode(`#barcode-et-${i}`, idEtiquetaUnico, {
                     format: "CODE128", height: 40, displayValue: true, fontSize: 10
                 });
@@ -258,19 +250,46 @@
         });
     }
 
+    // --- FUNCIONES ACTUALIZADAS: LECTURA EXCEL Y BOTÓN EXTRA ---
     function leerExcel(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
             datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            
             if(datosExcelRaw.length > 0) {
                 listaColumnasExcel = Object.keys(datosExcelRaw[0]);
-                llenarSelect('map-oc', listaColumnasExcel); llenarSelect('map-pieza', listaColumnasExcel);
+                
+                // Llenamos los selectores base
+                llenarSelect('map-oc', listaColumnasExcel); 
+                llenarSelect('map-pieza', listaColumnasExcel);
+                
+                // Limpiamos extras anteriores y mostramos la zona de mapeo
+                document.getElementById('contenedor-extras').innerHTML = "";
                 document.getElementById('zona-mapeo').classList.remove('hidden');
             }
         };
         reader.readAsArrayBuffer(input.files[0]);
+    }
+
+    function agregarFilaExtra() {
+        const cont = document.getElementById('contenedor-extras');
+        const div = document.createElement('div');
+        div.style.display = "flex";
+        div.style.gap = "5px";
+        div.style.marginTop = "5px";
+
+        let opciones = '<option value="">-- Seleccionar Extra --</option>';
+        listaColumnasExcel.forEach(col => {
+            opciones += `<option value="${col}">${col}</option>`;
+        });
+
+        div.innerHTML = `
+            <select class="select-extra" style="margin:0;">${opciones}</select>
+            <button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0;">X</button>
+        `;
+        cont.appendChild(div);
     }
 
     function llenarSelect(id, cols) {
@@ -282,14 +301,9 @@
         const idProy = document.getElementById('p-id').value.trim();
         const ocCol = document.getElementById('map-oc').value;
         const pzCol = document.getElementById('map-pieza').value;
-        
-        // Obtenemos los nombres de las columnas extras mapeadas
         const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value);
-        
-        // Creamos los encabezados para la Fila 1 del Sheet
         const encabezadosParaSheet = ["PROYECTO_ID", "ORDEN_COMPRA", "ID_SPORA", "ESTADO", "FECHA", pzCol, ...extras];
 
-        // Mapeamos las filas de datos
         const filas = datosExcelRaw.map(r => {
             const fila = [r[ocCol] || "S/D", r[pzCol] || "S/D"];
             extras.forEach(ex => fila.push(r[ex] || ""));
@@ -298,7 +312,6 @@
 
         callServer("crearProyecto", {id: idProy}, resP => {
             if(resP.status === "OK") {
-                // Enviamos todo: ID, Datos y Encabezados
                 callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(encabezadosParaSheet)}, resI => { 
                     alert("Importación Exitosa"); 
                     mostrar('pantalla-menu'); 
