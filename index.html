@@ -357,29 +357,25 @@
         estacionesParaFlujo.forEach((est, i) => {
             const activa = est.estado === "ACTIVO";
             cont.innerHTML += `
-                <div class="item-lista" style="border-left-color: ${activa ? '#2fc95c' : '#e74c3c'}; opacity: ${activa ? '1' : '0.5'}">
+                <div class="item-lista" style="border-left: 5px solid ${activa ? '#2fc95c' : '#e74c3c'};">
                     <div style="text-align:left;">
-                        <b style="font-size:14px;">${i+1}. ${est.nombre}</b><br>
-                        <small>${est.desc}</small>
+                        <b style="font-size:14px;">${est.nombre}</b><br>
+                        <small>Orden actual: ${est.orden}</small>
                     </div>
-                    <div style="display:flex; gap:5px;">
-                        <button onclick="moverEstacion(${i}, -1)" style="width:35px; padding:5px; margin:0; background:#34495e;">↑</button>
-                        <button onclick="moverEstacion(${i}, 1)" style="width:35px; padding:5px; margin:0; background:#34495e;">↓</button>
-                        <button onclick="toggleEstacion(${i})" style="width:70px; padding:5px; margin:0; background:${activa ? '#27ae60' : '#c0392b'}; font-size:10px;">
-                            ${activa ? 'ACTIVA' : 'OFF'}
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <input type="number" value="${est.orden}" 
+                               onchange="actualizarOrdenDinamico(${i}, this.value)" 
+                               style="width:50px; margin:0; text-align:center; padding:5px; background:#07111f; color:white; border:1px solid #3498db;">
+                        <button onclick="toggleEstacion(${i})" style="width:70px; padding:8px; margin:0; background:${activa ? '#27ae60' : '#c0392b'}; font-size:10px;">
+                            ${activa ? 'ON' : 'OFF'}
                         </button>
                     </div>
                 </div>`;
         });
     }
 
-    function moverEstacion(index, delta) {
-        const nuevaPos = index + delta;
-        if (nuevaPos < 0 || nuevaPos >= estacionesParaFlujo.length) return;
-        const temp = estacionesParaFlujo[index];
-        estacionesParaFlujo[index] = estacionesParaFlujo[nuevaPos];
-        estacionesParaFlujo[nuevaPos] = temp;
-        renderizarFlujo();
+    function actualizarOrdenDinamico(index, valor) {
+        estacionesParaFlujo[index].orden = parseInt(valor);
     }
 
     function toggleEstacion(index) {
@@ -389,12 +385,12 @@
 
     function salvarFlujo() {
         const btn = event.target;
-        btn.disabled = true;
-        btn.innerText = "⌛ GUARDANDO...";
+        btn.disabled = true; btn.innerText = "⌛ GUARDANDO...";
+        // Ordenamos antes de mandar al server para que el Sheet quede prolijo
+        estacionesParaFlujo.sort((a, b) => a.orden - b.orden);
         callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => {
             alert(res.msj);
-            btn.disabled = false;
-            btn.innerText = "GUARDAR ORDEN DE PROCESO";
+            btn.disabled = false; btn.innerText = "GUARDAR ORDEN DE PROCESO";
             mostrar('pantalla-menu');
         });
     }
