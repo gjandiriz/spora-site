@@ -95,12 +95,32 @@
     </div>
 
     <div id="form-usuario" class="hidden">
-        <h3>Nueva Ficha</h3>
-        <input type="text" id="u-nombre" placeholder="Nombre completo">
-        <input type="number" id="u-pin" placeholder="PIN">
-        <select id="u-rol"><option value="OPERARIO">OPERARIO</option><option value="GERENTE">GERENTE</option></select>
-        <button onclick="guardarUsuario()" style="background:#27ae60">GUARDAR</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+        <h3>Ficha de Personal</h3>
+        <div style="text-align:left;">
+            <label>Nro. de Legajo (ID Único):</label>
+            <input type="text" id="u-legajo" placeholder="Ej: 1024">
+            
+            <label>Nombre Completo:</label>
+            <input type="text" id="u-nombre" placeholder="Juan Pérez">
+            
+            <label>PIN de Acceso (4 dígitos):</label>
+            <input type="number" id="u-pin" placeholder="1234">
+            
+            <label>Rol en Planta:</label>
+            <select id="u-rol">
+                <option value="OPERARIO">OPERARIO</option>
+                <option value="GERENTE">GERENTE / ADMIN</option>
+            </select>
+            
+            <label>Fecha de Nacimiento:</label>
+            <input type="date" id="u-nac">
+            
+            <label>Dirección de Residencia:</label>
+            <input type="text" id="u-dir" placeholder="Calle 123, Ciudad">
+        </div>
+        
+        <button onclick="guardarUsuario()" style="background:#27ae60; margin-top:20px;">CREAR USUARIO</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">CANCELAR</button>
     </div>
 
     <div id="form-estacion" class="hidden">
@@ -215,7 +235,6 @@
         cont.appendChild(div);
     }
 
-    // --- 1. IMPORTACIÓN CON FEEDBACK ---
     function confirmarImportacion() {
         const idProy = document.getElementById('p-id').value.trim();
         const oc = document.getElementById('map-oc').value;
@@ -224,7 +243,6 @@
 
         if(!idProy || !oc || !pz) return alert("Completa ID, OC y Pieza");
 
-        // UI: Deshabilitar y mostrar carga
         btn.disabled = true;
         btn.innerText = "⌛ SUBIENDO DATOS...";
         btn.style.background = "#555";
@@ -249,7 +267,6 @@
         });
     }
 
-    // --- 2. CONSTRUCTOR DE ETIQUETAS LINEAL ---
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
@@ -269,9 +286,7 @@
         const div = document.createElement('div');
         div.className = "fila-etiqueta";
         div.style = "display:flex; gap:5px; margin-bottom:8px; align-items:center;";
-
         let opciones = columnasProyectoActual.map((h, i) => `<option value="${i}">${h}</option>`).join('');
-        
         div.innerHTML = `
             <select class="sel-col-et" style="flex:2; margin:0;">${opciones}</select>
             <select class="sel-tit-et" style="flex:1; margin:0;">
@@ -286,7 +301,6 @@
     function generarVistaEtiquetasFlex() {
         const id = document.getElementById('id-proy-print').value;
         const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
-        
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
             const cont = document.getElementById('contenedor-etiquetas'); cont.innerHTML = "";
             res.piezas.forEach((p, i) => {
@@ -298,7 +312,6 @@
                     const valor = p[idx];
                     htmlCampos += `<div>${conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
                 });
-
                 const div = document.createElement('div'); div.className = "etiqueta-preview";
                 div.innerHTML = `${htmlCampos}<svg id="bar-${i}"></svg>`;
                 cont.appendChild(div);
@@ -307,9 +320,31 @@
         });
     }
 
+    // REEMPLAZO PASO 3: FUNCIÓN DE ENVÍO ACTUALIZADA
     function guardarUsuario() {
-        const d = { nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value };
-        callServer("crearUsuario", d, res => { alert("Usuario Creado: PIN " + res.pin); mostrar('pantalla-menu'); });
+        const d = { 
+            legajo: document.getElementById('u-legajo').value.trim(),
+            nombre: document.getElementById('u-nombre').value.trim(), 
+            pin: document.getElementById('u-pin').value.trim(), 
+            rol: document.getElementById('u-rol').value,
+            nacimiento: document.getElementById('u-nac').value,
+            direccion: document.getElementById('u-dir').value.trim()
+        };
+
+        if(!d.legajo || !d.nombre || !d.pin) {
+            return alert("Legajo, Nombre y PIN son obligatorios.");
+        }
+
+        callServer("crearNuevoUsuario", d, res => { 
+            if(res.status === "OK") {
+                alert("✅ Usuario " + res.nombre + " (Legajo: " + res.legajo + ") creado con éxito.");
+                mostrar('pantalla-menu'); 
+                // Limpiamos los campos para la próxima
+                document.querySelectorAll('#form-usuario input').forEach(i => i.value = "");
+            } else {
+                alert("❌ Error: " + res.msj);
+            }
+        });
     }
 
     function guardarEstacion() {
