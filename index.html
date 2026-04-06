@@ -70,7 +70,7 @@
             <button onclick="cargarColumnasProyecto()" style="background:#3498db; width:auto;">🔍</button>
         </div>
         <div id="selector-campos-etiqueta" class="hidden">
-            <div id="lista-checks-campos" style="background:rgba(0,0,0,0.2); border-radius:8px; margin-top:10px;"></div>
+            <div id="lista-checks-campos" style="background:rgba(0,0,0,0.2); border-radius:8px; margin-top:10px; padding:10px;"></div>
             <button onclick="generarVistaEtiquetasFlex()" style="background:#27ae60; margin-top:10px;">GENERAR ETIQUETAS</button>
         </div>
         <div id="contenedor-etiquetas" style="margin-top:20px;"></div>
@@ -118,6 +118,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbzbNN-xJFtiD3rhXc0fNlVPk2slg6JPW9RhNd8VyLHxlPOaUvuc2TNwiluJX2waT_s4/exec";
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
     let datosExcelRaw = [], listaColumnasExcel = [];
+    let columnasProyectoActual = [];
 
     function callServer(action, params, callback) {
         params.action = action;
@@ -214,21 +215,21 @@
         cont.appendChild(div);
     }
 
-    // --- FUNCIÓN REEMPLAZADA: MEJORA DEL BOTÓN IMPORTAR ---
+    // --- 1. IMPORTACIÓN CON FEEDBACK ---
     function confirmarImportacion() {
-        const btn = event.target;
         const idProy = document.getElementById('p-id').value.trim();
         const oc = document.getElementById('map-oc').value;
         const pz = document.getElementById('map-pieza').value;
-        
+        const btn = event.target; 
+
         if(!idProy || !oc || !pz) return alert("Completa ID, OC y Pieza");
 
-        // Bloqueamos el botón para evitar doble envío
+        // UI: Deshabilitar y mostrar carga
         btn.disabled = true;
-        btn.innerText = "⌛ PROCESANDO LOTE...";
+        btn.innerText = "⌛ SUBIENDO DATOS...";
+        btn.style.background = "#555";
 
         const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value).filter(v => v !== "");
-        // Headers reales para la Fila 1
         const headersParaSheet = ["ID_PROYECTO", "OC", "CODIGO_ESCANEO", "ESTADO", "FECHA", pz, ...extras];
 
         const filas = datosExcelRaw.map(r => {
@@ -242,52 +243,64 @@
                 alert(resI.msj);
                 btn.disabled = false;
                 btn.innerText = "IMPORTAR";
-                mostrar('pantalla-menu');
+                btn.style.background = "#27ae60";
+                if(resI.status === "OK") mostrar('pantalla-menu');
             });
         });
     }
 
-    // --- FUNCIÓN REEMPLAZADA: VISOR DE SELECCIÓN INTUITIVO ---
+    // --- 2. CONSTRUCTOR DE ETIQUETAS LINEAL ---
     function cargarColumnasProyecto() {
         const id = document.getElementById('id-proy-print').value;
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
+            if (!res.encabezados) return alert("No se encontró el proyecto.");
+            columnasProyectoActual = res.encabezados;
             const lista = document.getElementById('lista-checks-campos');
-            lista.innerHTML = "";
-            lista.style.display = "block"; 
-            
-            res.encabezados.forEach((h, i) => {
-                if(i > 0) { // Saltamos el ID de Proyecto interno
-                    lista.innerHTML += `
-                        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #2c3e50;">
-                            <div style="text-align:left;">
-                                <input type="checkbox" class="check-col-print" id="col-${i}" value="${i}">
-                                <label for="col-${i}" style="display:inline; font-size:14px; margin-left:8px;">${h}</label>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:5px;">
-                                <span style="font-size:10px; color:#aaa;">Título</span>
-                                <input type="checkbox" class="check-con-titulo" data-col="${i}">
-                            </div>
-                        </div>`;
-                }
-            });
+            lista.innerHTML = `
+                <div id="constructor-etiqueta" style="text-align:left; margin-bottom:10px;"></div>
+                <button onclick="agregarFilaEtiqueta()" style="background:#3498db; width:auto; font-size:12px; padding:8px;">+ AGREGAR CAMPO A ETIQUETA</button>
+            `;
             document.getElementById('selector-campos-etiqueta').classList.remove('hidden');
         });
     }
 
+    function agregarFilaEtiqueta() {
+        const cont = document.getElementById('constructor-etiqueta');
+        const div = document.createElement('div');
+        div.className = "fila-etiqueta";
+        div.style = "display:flex; gap:5px; margin-bottom:8px; align-items:center;";
+
+        let opciones = columnasProyectoActual.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+        
+        div.innerHTML = `
+            <select class="sel-col-et" style="flex:2; margin:0;">${opciones}</select>
+            <select class="sel-tit-et" style="flex:1; margin:0;">
+                <option value="NO">Sin Título</option>
+                <option value="SI">Con Título</option>
+            </select>
+            <button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0; padding:10px;">X</button>
+        `;
+        cont.appendChild(div);
+    }
+
     function generarVistaEtiquetasFlex() {
         const id = document.getElementById('id-proy-print').value;
-        const checks = Array.from(document.querySelectorAll('.check-col-print:checked'));
+        const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
+        
         callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
             const cont = document.getElementById('contenedor-etiquetas'); cont.innerHTML = "";
             res.piezas.forEach((p, i) => {
-                let html = "";
-                checks.forEach(c => {
-                    const idx = parseInt(c.value);
-                    const tit = document.querySelector(`.check-con-titulo[data-col="${idx}"]`).checked;
-                    html += `<div>${tit ? res.encabezados[idx]+': ' : ''}<b>${p[idx]}</b></div>`;
+                let htmlCampos = "";
+                filasConfig.forEach(fila => {
+                    const idx = fila.querySelector('.sel-col-et').value;
+                    const conTitulo = fila.querySelector('.sel-tit-et').value === "SI";
+                    const nombreCol = res.encabezados[idx];
+                    const valor = p[idx];
+                    htmlCampos += `<div>${conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
                 });
+
                 const div = document.createElement('div'); div.className = "etiqueta-preview";
-                div.innerHTML = `${html}<svg id="bar-${i}"></svg>`;
+                div.innerHTML = `${htmlCampos}<svg id="bar-${i}"></svg>`;
                 cont.appendChild(div);
                 JsBarcode(`#bar-${i}`, p[2], {format: "CODE128", height: 40, displayValue: true, fontSize: 10});
             });
