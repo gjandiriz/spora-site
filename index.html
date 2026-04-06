@@ -41,7 +41,7 @@
         <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
         <hr style="opacity:0.1">
         <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
-        <button onclick="abrirGestor('USUARIO')" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
+        <button onclick="abrirGestorUsuarios()" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
         <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
         <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
     </div>
@@ -400,6 +400,41 @@
     function llenarSelect(id, cols) {
         const sel = document.getElementById(id); sel.innerHTML = '<option value="">--</option>';
         cols.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+    }
+
+    function abrirGestorUsuarios() {
+        mostrar('pantalla-gestor');
+        document.getElementById('titulo-gestor').innerText = "Gestión de Personal";
+        const cont = document.getElementById('lista-gestor');
+        cont.innerHTML = "⌛ Cargando personal...";
+
+        callServer("obtenerListaUsuariosDetalle", {}, res => {
+            cont.innerHTML = "";
+            res.forEach(u => {
+                const esActivo = u.estado === "ACTIVO";
+                cont.innerHTML += `
+                    <div class="item-lista" style="border-left-color: ${esActivo ? '#2fc95c' : '#e74c3c'}">
+                        <div style="text-align:left;">
+                            <b>${u.nombre}</b><br>
+                            <small>Legajo: ${u.legajo} | ${u.rol}</small>
+                        </div>
+                        <button onclick="toggleUsuario('${u.legajo}', '${u.estado}')" 
+                                style="width:auto; padding:8px 12px; margin:0; font-size:10px; background:${esActivo ? '#c0392b' : '#27ae60'}">
+                            ${esActivo ? 'DAR BAJA' : 'ACTIVAR'}
+                        </button>
+                    </div>`;
+            });
+        });
+    }
+
+    function toggleUsuario(legajo, estadoActual) {
+        const nuevoEstado = (estadoActual === "ACTIVO") ? "INACTIVO" : "ACTIVO";
+        if(!confirm(`¿Seguro que querés pasar a ${nuevoEstado} el legajo ${legajo}?`)) return;
+        
+        callServer("cambiarEstadoUsuario", { legajo: legajo, nuevoEstado: nuevoEstado }, res => {
+            alert(res.msj);
+            abrirGestorUsuarios(); // Recargamos la lista
+        });
     }
 
     function abrirGestor(t) {
