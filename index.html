@@ -42,6 +42,7 @@
         <button onclick="abrirGestor('USUARIO')" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
         <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
         <button onclick="abrirGestor('ESTACION')" style="background:#16a085">📋 GESTIONAR ESTACIONES</button>
+        <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ CONFIGURAR FLUJO</button>
         <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
     </div>
 
@@ -99,26 +100,20 @@
         <div style="text-align:left;">
             <label>Nro. de Legajo (ID Único):</label>
             <input type="text" id="u-legajo" placeholder="Ej: 1024">
-            
             <label>Nombre Completo:</label>
             <input type="text" id="u-nombre" placeholder="Juan Pérez">
-            
             <label>PIN de Acceso (4 dígitos):</label>
             <input type="number" id="u-pin" placeholder="1234">
-            
             <label>Rol en Planta:</label>
             <select id="u-rol">
                 <option value="OPERARIO">OPERARIO</option>
                 <option value="GERENTE">GERENTE / ADMIN</option>
             </select>
-            
             <label>Fecha de Nacimiento:</label>
             <input type="date" id="u-nac">
-            
             <label>Dirección de Residencia:</label>
             <input type="text" id="u-dir" placeholder="Calle 123, Ciudad">
         </div>
-        
         <button onclick="guardarUsuario()" style="background:#27ae60; margin-top:20px;">CREAR USUARIO</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">CANCELAR</button>
     </div>
@@ -131,6 +126,14 @@
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
+    <div id="pantalla-flujo" class="hidden">
+        <h3>Configurador de Flujo</h3>
+        <p style="font-size: 11px; color: #aaa;">Ordená las estaciones según el proceso real de tu fábrica.</p>
+        <div id="lista-flujo-estaciones" style="margin-top:20px;"></div>
+        <button onclick="salvarFlujo()" style="background:#2fc95c; margin-top:20px;">GUARDAR ORDEN DE PROCESO</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
+
     <div id="pantalla-gestor" class="hidden"><h3 id="titulo-gestor"></h3><div id="lista-gestor"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
 </div>
 
@@ -139,6 +142,7 @@
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
     let datosExcelRaw = [], listaColumnasExcel = [];
     let columnasProyectoActual = [];
+    let estacionesParaFlujo = [];
 
     function callServer(action, params, callback) {
         params.action = action;
@@ -240,22 +244,17 @@
         const oc = document.getElementById('map-oc').value;
         const pz = document.getElementById('map-pieza').value;
         const btn = event.target; 
-
         if(!idProy || !oc || !pz) return alert("Completa ID, OC y Pieza");
-
         btn.disabled = true;
         btn.innerText = "⌛ SUBIENDO DATOS...";
         btn.style.background = "#555";
-
         const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value).filter(v => v !== "");
         const headersParaSheet = ["ID_PROYECTO", "OC", "CODIGO_ESCANEO", "ESTADO", "FECHA", pz, ...extras];
-
         const filas = datosExcelRaw.map(r => {
             const f = [String(r[oc]||""), String(r[pz]||"")];
             extras.forEach(ex => f.push(String(r[ex]||"")));
             return f;
         });
-
         callServer("crearProyecto", {id: idProy}, resP => {
             callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(headersParaSheet)}, resI => {
                 alert(resI.msj);
@@ -320,7 +319,6 @@
         });
     }
 
-    // REEMPLAZO PASO 3: FUNCIÓN DE ENVÍO ACTUALIZADA
     function guardarUsuario() {
         const d = { 
             legajo: document.getElementById('u-legajo').value.trim(),
@@ -330,26 +328,75 @@
             nacimiento: document.getElementById('u-nac').value,
             direccion: document.getElementById('u-dir').value.trim()
         };
-
-        if(!d.legajo || !d.nombre || !d.pin) {
-            return alert("Legajo, Nombre y PIN son obligatorios.");
-        }
-
+        if(!d.legajo || !d.nombre || !d.pin) return alert("Legajo, Nombre y PIN son obligatorios.");
         callServer("crearNuevoUsuario", d, res => { 
             if(res.status === "OK") {
-                alert("✅ Usuario " + res.nombre + " (Legajo: " + res.legajo + ") creado con éxito.");
+                alert("✅ Usuario " + res.nombre + " creado.");
                 mostrar('pantalla-menu'); 
-                // Limpiamos los campos para la próxima
                 document.querySelectorAll('#form-usuario input').forEach(i => i.value = "");
-            } else {
-                alert("❌ Error: " + res.msj);
-            }
+            } else alert("❌ Error: " + res.msj);
         });
     }
 
     function guardarEstacion() {
         const d = { nombre: document.getElementById('est-nombre').value, desc: document.getElementById('est-desc').value };
         callServer("crearEstacion", d, res => { alert(res); mostrar('pantalla-menu'); });
+    }
+
+    function cargarFlujograma() {
+        mostrar('pantalla-flujo');
+        callServer("obtenerEstacionesFlujo", {}, res => {
+            estacionesParaFlujo = res;
+            renderizarFlujo();
+        });
+    }
+
+    function renderizarFlujo() {
+        const cont = document.getElementById('lista-flujo-estaciones');
+        cont.innerHTML = "";
+        estacionesParaFlujo.forEach((est, i) => {
+            const activa = est.estado === "ACTIVO";
+            cont.innerHTML += `
+                <div class="item-lista" style="border-left-color: ${activa ? '#2fc95c' : '#e74c3c'}; opacity: ${activa ? '1' : '0.5'}">
+                    <div style="text-align:left;">
+                        <b style="font-size:14px;">${i+1}. ${est.nombre}</b><br>
+                        <small>${est.desc}</small>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="moverEstacion(${i}, -1)" style="width:35px; padding:5px; margin:0; background:#34495e;">↑</button>
+                        <button onclick="moverEstacion(${i}, 1)" style="width:35px; padding:5px; margin:0; background:#34495e;">↓</button>
+                        <button onclick="toggleEstacion(${i})" style="width:70px; padding:5px; margin:0; background:${activa ? '#27ae60' : '#c0392b'}; font-size:10px;">
+                            ${activa ? 'ACTIVA' : 'OFF'}
+                        </button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function moverEstacion(index, delta) {
+        const nuevaPos = index + delta;
+        if (nuevaPos < 0 || nuevaPos >= estacionesParaFlujo.length) return;
+        const temp = estacionesParaFlujo[index];
+        estacionesParaFlujo[index] = estacionesParaFlujo[nuevaPos];
+        estacionesParaFlujo[nuevaPos] = temp;
+        renderizarFlujo();
+    }
+
+    function toggleEstacion(index) {
+        estacionesParaFlujo[index].estado = estacionesParaFlujo[index].estado === "ACTIVO" ? "INACTIVO" : "ACTIVO";
+        renderizarFlujo();
+    }
+
+    function salvarFlujo() {
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerText = "⌛ GUARDANDO...";
+        callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => {
+            alert(res.msj);
+            btn.disabled = false;
+            btn.innerText = "GUARDAR ORDEN DE PROCESO";
+            mostrar('pantalla-menu');
+        });
     }
 
     function llenarSelect(id, cols) {
