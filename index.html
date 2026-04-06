@@ -385,13 +385,15 @@
 
     function salvarFlujo() {
         const btn = event.target;
-        btn.disabled = true; btn.innerText = "⌛ GUARDANDO...";
-        // Ordenamos antes de mandar al server para que el Sheet quede prolijo
-        estacionesParaFlujo.sort((a, b) => a.orden - b.orden);
+        btn.disabled = true;
+        btn.innerText = "⌛ GUARDANDO...";
+
+        // Enviamos los datos tal cual están en la lista estacionesParaFlujo
         callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => {
             alert(res.msj);
-            btn.disabled = false; btn.innerText = "GUARDAR ORDEN DE PROCESO";
-            mostrar('pantalla-menu');
+            btn.disabled = false;
+            btn.innerText = "GUARDAR ORDEN DE PROCESO";
+            if(res.status === "OK") mostrar('pantalla-menu');
         });
     }
 
