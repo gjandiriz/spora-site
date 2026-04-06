@@ -158,12 +158,20 @@
         if (isProcessing) return;
         document.getElementById("reader").style.display = "block";
         if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
-            (txt) => {
+        
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: 250 },
+            (txt) => { // <-- Cuando detecta código:
                 isProcessing = true;
-                html5QrCode.stop().then(() => { document.getElementById("reader").style.display = "none"; });
-                procesarScan(txt);
-            }, () => {}
+                // 1. Apaga la cámara inmediatamente
+                html5QrCode.stop().then(() => { 
+                    document.getElementById("reader").style.display = "none";
+                    // 2. Procesa el dato
+                    procesarScan(txt);
+                });
+            }, 
+            () => {}
         );
     }
 
