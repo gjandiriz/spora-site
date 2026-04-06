@@ -280,12 +280,30 @@
 
     function confirmarImportacion() {
         const idProy = document.getElementById('p-id').value.trim();
-        const oc = document.getElementById('map-oc').value;
-        const pz = document.getElementById('map-pieza').value;
-        const f = datosExcelRaw.map(r => [String(r[oc]||"S/D"), String(r[pz]||"S/D")]);
+        const ocCol = document.getElementById('map-oc').value;
+        const pzCol = document.getElementById('map-pieza').value;
+        
+        // Obtenemos los nombres de las columnas extras mapeadas
+        const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value);
+        
+        // Creamos los encabezados para la Fila 1 del Sheet
+        const encabezadosParaSheet = ["PROYECTO_ID", "ORDEN_COMPRA", "ID_SPORA", "ESTADO", "FECHA", pzCol, ...extras];
+
+        // Mapeamos las filas de datos
+        const filas = datosExcelRaw.map(r => {
+            const fila = [r[ocCol] || "S/D", r[pzCol] || "S/D"];
+            extras.forEach(ex => fila.push(r[ex] || ""));
+            return fila;
+        });
+
         callServer("crearProyecto", {id: idProy}, resP => {
-            if(resP.status === "OK") callServer("importarDatosMapeados", {id: idProy, f: f, h: []}, resI => { alert("Exito"); mostrar('pantalla-menu'); });
-            else alert(resP.msj);
+            if(resP.status === "OK") {
+                // Enviamos todo: ID, Datos y Encabezados
+                callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(encabezadosParaSheet)}, resI => { 
+                    alert("Importación Exitosa"); 
+                    mostrar('pantalla-menu'); 
+                });
+            } else alert(resP.msj);
         });
     }
 
