@@ -37,6 +37,7 @@
     <div id="pantalla-menu" class="hidden">
         <button onclick="mostrar('pantalla-proyecto')" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
         <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
+        <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 BUSCADOR / REIMPRESIÓN</button>
         <hr style="opacity:0.1">
         <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
         <hr style="opacity:0.1">
@@ -73,6 +74,16 @@
         <div id="contenedor-etiquetas" style="margin-top:20px;"></div>
         <button onclick="window.print()" style="background:#2c3e50">🖨️ IMPRIMIR</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
+
+    <div id="pantalla-reimpresion" class="hidden">
+        <h3>Buscador de Piezas</h3>
+        <div style="display:flex; gap:5px; margin-bottom:15px;">
+            <input type="text" id="input-busqueda-universal" placeholder="Cliente, OC o ID...">
+            <button onclick="ejecutarBusquedaUniversal()" style="width:50px; margin:0;">🔍</button>
+        </div>
+        <div id="lista-resultados-busqueda" style="max-height:350px; overflow-y:auto;"></div>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444; margin-top:15px;">VOLVER</button>
     </div>
 
     <div id="pantalla-proyecto" class="hidden">
@@ -134,7 +145,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwikCD9yHpSMKhiJ1J92Bt6ATVACizgmTFYr2nZ64F2FhfX1Iug6FsaKnnQdtGWpV49/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzbNN-xJFtiD3rhXc0fNlVPk2slg6JPW9RhNd8VyLHxlPOaUvuc2TNwiluJX2waT_s4/exec";
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
     let datosExcelRaw = [], listaColumnasExcel = [];
     let columnasProyectoActual = [];
@@ -262,12 +273,44 @@
         });
     }
 
+    function abrirBuscadorReimpresion() {
+        mostrar('pantalla-reimpresion');
+        document.getElementById('lista-resultados-busqueda').innerHTML = "";
+        document.getElementById('input-busqueda-universal').value = "";
+    }
+
+    function ejecutarBusquedaUniversal() {
+        const q = document.getElementById('input-busqueda-universal').value;
+        if(q.length < 2) return alert("Escribí algo más para buscar...");
+        
+        const cont = document.getElementById('lista-resultados-busqueda');
+        cont.innerHTML = "⌛ Buscando...";
+        
+        callServer("buscarPiezasUniversal", { query: q }, res => {
+            cont.innerHTML = "";
+            if(res.piezas.length === 0) return cont.innerHTML = "❌ No se encontró nada.";
+            
+            res.piezas.forEach(p => {
+                cont.innerHTML += `
+                    <div class="item-lista" style="flex-direction:column; align-items:flex-start;">
+                        <div style="width:100%; display:flex; justify-content:space-between;">
+                            <b>${p[1]} | ${p[2]}</b>
+                            <small>${p[3]}</small>
+                        </div>
+                        <div style="font-size:10px; color:#aaa;">Cliente/OC: ${p[5] || '---'} | Proyecto: ${p[0]}</div>
+                        <button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" 
+                                style="background:#27ae60; padding:5px; margin-top:5px; font-size:10px; width:auto;">
+                            🖨️ REIMPRIMIR
+                        </button>
+                    </div>`;
+            });
+        });
+    }
+
     function imprimirLoteCompleto(idProy) {
         callServer("obtenerConfiguracionMaestra", {}, configJSON => {
             if(!configJSON) return alert("❌ Primero debés configurar y guardar una 'Plantilla Maestra' en el menú de Configuración.");
-            
             const config = JSON.parse(configJSON);
-            
             callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
                 if(!res.piezas) return alert("No se encontró el proyecto.");
                 generarEtiquetasConConfig(res.piezas, res.encabezados, config);
@@ -278,40 +321,18 @@
     function guardarDisenoMaestro() {
         const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
         if(filasConfig.length === 0) return alert("Agregá al menos un campo.");
-
         const config = filasConfig.map(fila => ({
             colIndex: fila.querySelector('.sel-col-et').value,
             conTitulo: fila.querySelector('.sel-tit-et').value === "SI"
         }));
-
         callServer("guardarConfiguracionMaestra", { config: JSON.stringify(config) }, res => {
             alert(res.msj);
-        });
-    }
-
-    function ejecutarBusquedaUniversal() {
-        const q = document.getElementById('input-busqueda-universal').value;
-        const cont = document.getElementById('resultados-busqueda');
-        cont.innerHTML = "⌛ Buscando...";
-        
-        callServer("buscarPiezasUniversal", { query: q }, res => {
-            cont.innerHTML = "";
-            if(res.piezas.length === 0) return cont.innerHTML = "❌ Sin resultados.";
-            
-            res.piezas.forEach((p, i) => {
-                cont.innerHTML += `
-                    <div class="item-lista" style="font-size:12px; flex-direction:column; align-items:flex-start;">
-                        <b>${p[1]} | ${p[2]}</b> <small>Cliente/Extra: ${p[5] || ''}</small>
-                        <button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" style="background:#2fc95c; padding:5px; margin-top:5px; font-size:10px; width:auto;">GENERAR ETIQUETA</button>
-                    </div>`;
-            });
         });
     }
 
     function generarEtiquetasConConfig(piezas, headers, config) {
         const cont = document.getElementById('contenedor-etiquetas');
         cont.innerHTML = "";
-        
         piezas.forEach((p, i) => {
             let htmlCampos = "";
             config.forEach(item => {
@@ -319,14 +340,12 @@
                 const valor = p[item.colIndex];
                 htmlCampos += `<div>${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
             });
-
             const div = document.createElement('div');
             div.className = "etiqueta-preview";
             div.innerHTML = `${htmlCampos}<svg id="bar-gen-${i}"></svg>`;
             cont.appendChild(div);
             JsBarcode(`#bar-gen-${i}`, p[2], {format: "CODE128", height: 40, displayValue: true, fontSize: 10});
         });
-        
         alert("Etiquetas generadas. Ya podés imprimir.");
     }
 
@@ -398,7 +417,6 @@
         const btn = event.target;
         btn.disabled = true;
         btn.innerText = "⌛ GUARDANDO...";
-
         callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => {
             alert(res.msj);
             btn.disabled = false;
@@ -417,7 +435,6 @@
         document.getElementById('titulo-gestor').innerText = "Gestión de Personal";
         const cont = document.getElementById('lista-gestor');
         cont.innerHTML = "⌛ Cargando...";
-
         callServer("obtenerListaUsuariosDetalle", {}, res => {
             cont.innerHTML = "";
             res.forEach(u => {
@@ -427,7 +444,6 @@
                 div.style.borderLeftColor = esActivo ? '#2fc95c' : '#e74c3c';
                 div.style.flexDirection = "column";
                 div.style.alignItems = "flex-start";
-
                 div.innerHTML = `
                     <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
                         <div>
