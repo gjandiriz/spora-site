@@ -275,6 +275,39 @@
         });
     }
 
+    function guardarDisenoMaestro() {
+        const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
+        if(filasConfig.length === 0) return alert("Agregá al menos un campo.");
+
+        const config = filasConfig.map(fila => ({
+            colIndex: fila.querySelector('.sel-col-et').value,
+            conTitulo: fila.querySelector('.sel-tit-et').value === "SI"
+        }));
+
+        callServer("guardarConfiguracionMaestra", { config: JSON.stringify(config) }, res => {
+            alert(res.msj);
+        });
+    }
+
+    function ejecutarBusquedaUniversal() {
+        const q = document.getElementById('input-busqueda-universal').value;
+        const cont = document.getElementById('resultados-busqueda');
+        cont.innerHTML = "⌛ Buscando...";
+        
+        callServer("buscarPiezasUniversal", { query: q }, res => {
+            cont.innerHTML = "";
+            if(res.piezas.length === 0) return cont.innerHTML = "❌ Sin resultados.";
+            
+            res.piezas.forEach((p, i) => {
+                cont.innerHTML += `
+                    <div class="item-lista" style="font-size:12px; flex-direction:column; align-items:flex-start;">
+                        <b>${p[1]} | ${p[2]}</b> <small>Cliente/Extra: ${p[5] || ''}</small>
+                        <button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" style="background:#2fc95c; padding:5px; margin-top:5px; font-size:10px; width:auto;">GENERAR ETIQUETA</button>
+                    </div>`;
+            });
+        });
+    }
+
     function generarEtiquetasConConfig(piezas, headers, config) {
         const cont = document.getElementById('contenedor-etiquetas');
         cont.innerHTML = "";
