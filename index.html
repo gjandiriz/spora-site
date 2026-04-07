@@ -114,8 +114,18 @@
         </div>
         <div id="reader"></div>
         <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
-        <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center;">
+        
+        <div style="margin-top: 15px; padding: 10px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px;">
+            <p style="font-size: 10px; margin-bottom: 5px; color: #aaa;">⌨️ INGRESO MANUAL (SI EL QR/BARRA FALLA)</p>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="input-manual" placeholder="Escribir ID Pieza..." style="margin:0; flex: 1;">
+                <button onclick="registrarManual()" style="width: auto; margin:0; background: #3498db; padding: 0 20px;">OK</button>
+            </div>
+        </div>
+
+        <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center; margin-top:20px;">
         <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;"></div>
+        
         <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
     </div>
 
@@ -240,6 +250,19 @@
             console.error("Error cámara:", err);
             alert("No se pudo iniciar la cámara. Verificá los permisos del navegador.");
         });
+    }
+
+    function registrarManual() {
+        const inputMan = document.getElementById('input-manual');
+        const id = inputMan.value.trim();
+        
+        if (!id) return alert("Por favor, escribí un ID válido");
+        
+        // Usamos la misma lógica que el escáner para que impacte en todo el sistema
+        procesarScan(id);
+        
+        // Limpiamos el campo manual para el próximo
+        inputMan.value = "";
     }
 
     function procesarScan(id) {
