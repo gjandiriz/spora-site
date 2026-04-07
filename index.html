@@ -199,7 +199,79 @@
         document.getElementById('estacion-op').innerText = estacionActual;
         mostrar('pantalla-operario');
     }
+// --- MOTOR DEL ESCÁNER ---
+    function encenderCamara() {
+        if (isProcessing) return;
+        
+        const readerDiv = document.getElementById("reader");
+        readerDiv.style.display = "block"; 
+        
+        if(html5QrCode) {
+            html5QrCode.clear();
+        }
+        
+        html5QrCode = new Html5Qrcode("reader");
+        
+        const config = { 
+            fps: 15, // Un poquito más rápido para que no sea lento
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0 
+        };
 
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config,
+            (txt) => {
+                isProcessing = true;
+                // Detenemos cámara para ahorrar batería y procesar
+                html5QrCode.stop().then(() => {
+                    readerDiv.style.display = "none";
+                    procesarScan(txt);
+                }).catch(err => console.error("Error al detener:", err));
+            },
+            (errorMessage) => { /* Silencio para no saturar la consola */ }
+        ).catch(err => {
+            console.error("Error cámara:", err);
+            alert("No se pudo iniciar la cámara. Verificá los permisos del navegador.");
+        });
+    }
+
+    function procesarScan(id) {
+        const input = document.getElementById('input-scan');
+        const log = document.getElementById('log-scan');
+        
+        input.value = "⌛ REGISTRANDO..."; 
+        input.style.background = "#f1c40f"; 
+        input.style.color = "#000";
+
+        // Llamamos a tu nueva función registrarEscaneo (la que ya tiene el Historial)
+        callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
+            if(res.status === "OK") {
+                input.style.background = "#2fc95c";
+                input.style.color = "#07111f";
+                input.value = "✅ " + id;
+            } else {
+                input.style.background = "#e74c3c";
+                input.style.color = "#fff";
+                input.value = "❌ ERROR";
+            }
+            
+            // Agregamos al log visual del operario
+            const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            log.innerHTML = `<div style="border-bottom:1px solid rgba(255,255,255,0.1); padding:5px; font-size:12px;">
+                <b>${hora}</b> - ${id}: ${res.msj}
+            </div>` + log.innerHTML;
+
+            // Limpiamos el mensaje después de 2 segundos para el próximo scan
+            setTimeout(() => { 
+                input.value = "LISTO PARA ESCANEAR"; 
+                input.style.background = "#07111f"; 
+                input.style.color = "white";
+                isProcessing = false; 
+            }, 2000);
+        });
+    }
+    
     // --- CONFIGURADOR DE ETIQUETAS ---
     function cargarConfigurador() {
         const idProy = document.getElementById('id-proy-print').value;
