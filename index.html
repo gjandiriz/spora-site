@@ -374,44 +374,62 @@
 }
 
     function ejecutarImportacionFinal(idProyecto, filas) {
-    // 1. Si NO hay contrato, lo capturamos y lo guardamos PRIMERO
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value : "";
+    };
+
     if (!contratoVigente) {
+        // Captura blindada: si el elemento no existe, no rompe el código
         const nuevoContrato = {
-            oc: document.getElementById('sel-oc').value,
-            nroPieza: document.getElementById('sel-nroPieza').value,
-            cliente: document.getElementById('sel-cliente').value,
-            extra_1: document.getElementById('sel-extra_1').value,
-            extra_2: document.getElementById('sel-extra_2').value,
-            extra_3: document.getElementById('sel-extra_3').value,
-            extra_4: document.getElementById('sel-extra_4').value,
-            extra_5: document.getElementById('sel-extra_5').value,
-            extra_6: document.getElementById('sel-extra_6').value,
-            extra_7: document.getElementById('sel-extra_7').value,
-            extra_8: document.getElementById('sel-extra_8').value,
-            extra_9: document.getElementById('sel-extra_9').value,
-            extra_10: document.getElementById('sel-extra_10').value
+            oc: getVal('sel-oc'),
+            nroPieza: getVal('sel-nroPieza'),
+            cliente: getVal('sel-cliente'),
+            extra_1: getVal('sel-extra_1'),
+            extra_2: getVal('sel-extra_2'),
+            extra_3: getVal('sel-extra_3'),
+            extra_4: getVal('sel-extra_4'),
+            extra_5: getVal('sel-extra_5'),
+            extra_6: getVal('sel-extra_6'),
+            extra_7: getVal('sel-extra_7'),
+            extra_8: getVal('sel-extra_8'),
+            extra_9: getVal('sel-extra_9'),
+            extra_10: getVal('sel-extra_10')
         };
 
-        // Validamos que los obligatorios tengan algo seleccionado
-        if (nuevoContrato.oc === "" || nuevoContrato.nroPieza === "") {
-            return alert("❌ Error: Debés seleccionar qué columnas son la OC y el Nro de Pieza.");
+        if (!nuevoContrato.oc || !nuevoContrato.nroPieza) {
+            return alert("❌ Error: Debés seleccionar las columnas de OC y Nro de Pieza.");
         }
 
-        console.log("Guardando nuevo contrato...", nuevoContrato);
-        
-        // GUARDAMOS EL CONTRATO
+        // 1. Guardar Contrato
         callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, (res) => {
             if (res.status === "OK") {
-                // Una vez guardado el contrato, recién ahí mandamos las filas
-                enviarFilasAlServidor(idProyecto, filas);
+                // 2. Importar Datos (solo si el contrato se guardó bien)
+                enviarDatosAlServidor(idProyecto, filas);
             } else {
-                alert("Error al guardar el contrato: " + res.msj);
+                alert("Error al guardar configuración: " + res.msj);
             }
         });
     } else {
-        // 2. Si YA había contrato, mandamos directo
-        enviarFilasAlServidor(idProyecto, filas);
+        enviarDatosAlServidor(idProyecto, filas);
     }
+}
+
+function enviarDatosAlServidor(idProy, filas) {
+    // IMPORTANTE: Convertimos a String antes de enviar
+    const payload = {
+        idProyecto: idProy,
+        filasJSON: JSON.stringify(filas)
+    };
+
+    callServer("importarDatosMapeados", payload, (res) => {
+        if (res.status === "OK") {
+            alert("🚀 " + res.msj);
+            location.reload();
+        } else {
+            alert("❌ Error: " + res.msj);
+        }
+    });
 }
 
 // Función auxiliar para no repetir código
