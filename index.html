@@ -35,7 +35,7 @@
     </div>
 
     <div id="pantalla-menu" class="hidden">
-        <button onclick="mostrar('pantalla-proyecto')" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
+        <button onclick="abrirPantallaProyecto()" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
         <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
         <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 BUSCADOR / REIMPRESIÓN</button>
         
@@ -86,18 +86,22 @@
     </div>
 
     <div id="pantalla-proyecto" class="hidden">
-        <h3>Nuevo Lote</h3>
-        <input type="text" id="p-id" placeholder="ID Proyecto">
-        <input type="file" id="p-file" accept=".xlsx, .xls, .csv" onchange="leerExcel(this)">
-        <div id="zona-mapeo" class="hidden">
-            <div class="box-mapeo">
-                <label>OC:</label><select id="map-oc"></select>
-                <label>ID Pieza:</label><select id="map-pieza"></select>
-                <div id="contenedor-extras"></div>
-                <button onclick="agregarFilaExtra()" style="background:#3498db; font-size:11px; padding:5px; width:auto;">+ Extra</button>
-            </div>
-            <button onclick="confirmarImportacion()" style="background:#27ae60; margin-top:10px;">IMPORTAR</button>
+        <h3>🚀 Nuevo Proyecto / Lote</h3>
+        <input type="text" id="id-proyecto-nuevo" placeholder="Nombre del Proyecto (Ej: Torre Madero)">
+        
+        <div id="status-contrato" style="font-size: 12px; margin: 10px 0; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05);">
+            Verificando configuración de importación...
         </div>
+
+        <input type="file" id="archivo-excel" accept=".xlsx, .xls" style="margin-top:10px;">
+        
+        <div id="mapeador-columnas" class="hidden" style="margin-top:15px; border: 1px solid #555; padding: 10px;">
+            <p style="font-size: 11px; color: #f1c40f;">⚠️ PRIMERA IMPORTACIÓN: Mapeá las columnas de tu Excel.</p>
+            <div id="selector-mapeo"></div>
+        </div>
+
+        <button onclick="procesarYSubir()" style="background:#27ae60; margin-top:20px;">SUBIR E IMPORTAR</button>
+        <button onclick="borrarContrato()" id="btn-reset-contrato" class="hidden" style="background:#c0392b; font-size: 10px;">🔄 RESETEAR FORMATO EXCEL</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
@@ -193,6 +197,7 @@
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
     let datosExcelRaw = [], listaColumnasExcel = [], estacionesParaFlujo = [];
     let piezaDeMuestra = null;
+    let contratoVigente = null;
 
     function callServer(action, params, callback) {
         params.action = action;
@@ -255,13 +260,8 @@
     function registrarManual() {
         const inputMan = document.getElementById('input-manual');
         const id = inputMan.value.trim();
-        
         if (!id) return alert("Por favor, escribí un ID válido");
-        
-        // Usamos la misma lógica que el escáner para que impacte en todo el sistema
         procesarScan(id);
-        
-        // Limpiamos el campo manual para el próximo
         inputMan.value = "";
     }
 
@@ -285,6 +285,69 @@
         });
     }
 
+    // --- IMPORTACION DE PROYECTO ---
+    function abrirPantallaProyecto() {
+        const status = document.getElementById('status-contrato');
+        const btnReset = document.getElementById('btn-reset-contrato');
+        const mapeador = document.getElementById('mapeador-columnas');
+
+        callServer("obtenerContratoImportacion", {}, (res) => {
+            if (res && res.status !== "SIN_CONTRATO") {
+                contratoVigente = res;
+                status.innerHTML = "✅ FORMATO DETECTADO: El sistema ya conoce el orden de tus columnas.";
+                status.style.color = "#2ecc71";
+                btnReset.classList.remove('hidden');
+                mapeador.classList.add('hidden');
+            } else {
+                contratoVigente = null;
+                status.innerHTML = "ℹ️ SIN FORMATO: Deberás mapear las columnas en esta primera carga.";
+                status.style.color = "#f1c40f";
+                btnReset.classList.add('hidden');
+                mapeador.classList.remove('hidden');
+            }
+            mostrar('pantalla-proyecto');
+        });
+    }
+
+    function procesarYSubir() {
+        const fileInput = document.getElementById('archivo-excel');
+        const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
+        
+        if (!idProy) return alert("Poné un nombre al proyecto.");
+        if (fileInput.files.length === 0) return alert("Seleccioná un archivo.");
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+
+            const headers = json[0];
+            const filas = json.slice(1);
+
+            if (!contratoVigente) {
+                const nuevoContrato = capturarMapeoManual(headers);
+                callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, () => {
+                    ejecutarImportacionFinal(idProy, filas, headers);
+                });
+            } else {
+                ejecutarImportacionFinal(idProy, filas, headers);
+            }
+        };
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+
+    function borrarContrato() {
+        if (confirm("¿Estás seguro? Esto borrará la memoria del orden de las columnas y tendrás que mapear de nuevo.")) {
+            callServer("guardarContratoImportacion", { contrato: "" }, () => {
+                abrirPantallaProyecto();
+            });
+        }
+    }
+
+    // --- CONFIGURADOR DE ETIQUETAS ---
     function cargarConfigurador() {
         const idProy = document.getElementById('id-proy-print').value;
         if (!idProy) return alert("Ingresa un ID de Proyecto");
@@ -412,54 +475,6 @@
                 document.getElementById('btn-imprimir-ahora').classList.remove('hidden');
             });
         });
-    }
-
-    function leerExcel(input) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            if(datosExcelRaw.length > 0) {
-                listaColumnasExcel = Object.keys(datosExcelRaw[0]);
-                llenarSelect('map-oc', listaColumnasExcel); llenarSelect('map-pieza', listaColumnasExcel);
-                document.getElementById('zona-mapeo').classList.remove('hidden');
-            }
-        };
-        reader.readAsArrayBuffer(input.files[0]);
-    }
-
-    function confirmarImportacion() {
-        const idProy = document.getElementById('p-id').value.trim();
-        const oc = document.getElementById('map-oc').value;
-        const pz = document.getElementById('map-pieza').value;
-        if(!idProy || !oc || !pz) return alert("Completa OC y Pieza");
-        const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value).filter(v => v !== "");
-        const headersParaSheet = ["ID_PROYECTO", "OC", "CODIGO_ESCANEO", "ESTADO", "FECHA", pz, ...extras];
-        const filas = datosExcelRaw.map(r => {
-            const f = [String(r[oc]||""), String(r[pz]||"")];
-            extras.forEach(ex => f.push(String(r[ex]||"")));
-            return f;
-        });
-        callServer("crearProyecto", {id: idProy}, () => {
-            callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(headersParaSheet)}, res => {
-                alert(res.msj); if(res.status === "OK") mostrar('pantalla-menu');
-            });
-        });
-    }
-
-    function llenarSelect(id, cols) {
-        const sel = document.getElementById(id); sel.innerHTML = '<option value="">--</option>';
-        cols.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
-    }
-
-    function agregarFilaExtra() {
-        const cont = document.getElementById('contenedor-extras');
-        const div = document.createElement('div'); div.style = "display:flex; gap:5px; margin-top:5px;";
-        let ops = '<option value="">-- Extra --</option>';
-        listaColumnasExcel.forEach(c => ops += `<option value="${c}">${c}</option>`);
-        div.innerHTML = `<select class="select-extra">${ops}</select><button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0;">X</button>`;
-        cont.appendChild(div);
     }
 
     function guardarUsuario() {
