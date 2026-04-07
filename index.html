@@ -545,6 +545,51 @@
     function borrarUsuarioDefinitivo(legajo) {
         if(confirm("¿Borrar?")) callServer("eliminarUsuario", {legajo: legajo}, res => { alert(res.msj); abrirGestorUsuarios(); });
     }
+    function abrirConfigEmpresa() {
+    const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
+    const cont = document.getElementById('contenedor-horarios');
+    cont.innerHTML = "";
+    
+    dias.forEach(d => {
+        cont.innerHTML += `
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                <span style="width:40px; font-weight:bold;">${d}</span>
+                <input type="time" id="h-${d}-INI" style="margin:0; padding:5px;">
+                <span>a</span>
+                <input type="time" id="h-${d}-FIN" style="margin:0; padding:5px;">
+            </div>`;
+    });
+
+    callServer("obtenerDatosEmpresa", {}, res => {
+        if(res.RAZON_SOCIAL) {
+            document.getElementById('emp-nombre').value = res.RAZON_SOCIAL;
+            document.getElementById('emp-logo').value = res.LOGO_URL;
+            dias.forEach(d => {
+                document.getElementById(`h-${d}-INI`).value = res[d+"_INI"] || "08:00";
+                document.getElementById(`h-${d}-FIN`).value = res[d+"_FIN"] || "17:00";
+            });
+        }
+        mostrar('pantalla-config-empresa');
+    });
+}
+
+function salvarConfigEmpresa() {
+    const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
+    let config = {
+        RAZON_SOCIAL: document.getElementById('emp-nombre').value,
+        LOGO_URL: document.getElementById('emp-logo').value
+    };
+    
+    dias.forEach(d => {
+        config[d+"_INI"] = document.getElementById(`h-${d}-INI`).value;
+        config[d+"_FIN"] = document.getElementById(`h-${d}-FIN`).value;
+    });
+
+    callServer("guardarDatosEmpresa", { config: JSON.stringify(config) }, res => {
+        alert(res.msj);
+        mostrar('pantalla-menu');
+    });
+}
 </script>
 </body>
 </html>
