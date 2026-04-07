@@ -146,6 +146,15 @@
     <div id="pantalla-gestor" class="hidden"><h3 id="titulo-gestor"></h3><div id="lista-gestor"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
 </div>
 
+<div id="modal-reimpresion" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+    <div id="area-ticket-reimpresion" style="background:white; padding:20px; border-radius:10px;">
+        </div>
+    <div style="margin-top:20px; display:flex; gap:10px;">
+        <button onclick="lanzarImpresionUnica()" style="background:#2fc95c; width:150px;">Confirmar e Imprimir</button>
+        <button onclick="document.getElementById('modal-reimpresion').classList.add('hidden')" style="background:#e74c3c; width:150px;">Cancelar</button>
+    </div>
+</div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzSMWJgJfe7BETkD6dYtMo0qTfShM3LJHBNtb-Yuv5VdXAPYADhc_OBjXqmgBr5fttW/exec";
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
@@ -296,28 +305,53 @@
 
     function reimprimirEtiquetaUnica(idProy, idPieza) {
         callServer("obtenerConfiguracionMaestra", {}, configJSON => {
-            if(!configJSON) return alert("⚠️ No hay plantilla maestra guardada.");
+            if(!configJSON) return alert("⚠️ No hay plantilla maestra guardada. Configurá una en el menú de etiquetas.");
+            
             const config = JSON.parse(configJSON);
+
             callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
                 const pieza = res.piezas.find(p => String(p[2]) === String(idPieza));
                 if(!pieza) return alert("No se encontró la pieza.");
-                mostrar('pantalla-impresion');
-                const cont = document.getElementById('contenedor-etiquetas');
+
+                // Mostramos el modal
+                const modal = document.getElementById('modal-reimpresion');
+                const cont = document.getElementById('area-ticket-reimpresion');
+                modal.classList.remove('hidden');
                 cont.innerHTML = "";
+
                 let htmlCampos = "";
                 config.forEach(item => {
                     const nombreCol = res.encabezados[item.colIndex];
                     const valor = pieza[item.colIndex];
-                    htmlCampos += `<div>${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+                    htmlCampos += `<div style="color:black; font-family:Arial; font-size:14px; margin-bottom:2px;">${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
                 });
+
                 const div = document.createElement('div');
-                div.className = "etiqueta-preview";
-                div.innerHTML = `${htmlCampos}<svg id="bar-reimp"></svg>`;
+                div.style = "background:white; padding:10px; border:1px solid #000; width:280px; text-align:center;";
+                div.innerHTML = `${htmlCampos}<svg id="bar-modal-reimp"></svg>`;
                 cont.appendChild(div);
-                JsBarcode("#bar-reimp", idPieza, {format: "CODE128", height: 40, displayValue: true});
-                document.getElementById('btn-imprimir-ahora').classList.remove('hidden');
+
+                // Código de barras
+                JsBarcode("#bar-modal-reimp", idPieza, {format: "CODE128", height: 40, displayValue: true});
             });
         });
+    }
+
+    function lanzarImpresionUnica() {
+        // Obtenemos la etiqueta
+        const ticket = document.getElementById('area-ticket-reimpresion').innerHTML;
+        
+        // Abrimos una ventana nueva solo con la etiqueta para imprimir
+        const ventanaPrent = window.open('', '_blank');
+        ventanaPrent.document.write('<html><head><title>Imprimir Etiqueta</title>');
+        ventanaPrent.document.write('<style>body{margin:0; display:flex; justify-content:center;} @page{size: auto; margin: 0mm;}</style>');
+        ventanaPrent.document.write('</head><body onload="window.print(); window.close();">');
+        ventanaPrent.document.write(ticket);
+        ventanaPrent.document.write('</body></html>');
+        ventanaPrent.document.close();
+        
+        // Cerramos el modal
+        document.getElementById('modal-reimpresion').classList.add('hidden');
     }
 
     function imprimirLoteCompleto(idProy) {
