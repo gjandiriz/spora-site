@@ -47,32 +47,24 @@
         <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
     </div>
 
-    <div id="pantalla-seleccion-puesto" class="hidden">
-        <h3>Panel de Producción</h3>
-        <p>Hola <strong id="nombre-op" style="color:#2fc95c;"></strong></p>
-        <select id="select-puesto-op"></select>
-        <button onclick="entrarAPuesto()" style="background:#f39c12">INGRESAR A ESTACIÓN</button>
-    </div>
-
-    <div id="pantalla-operario" class="hidden">
-        <div style="background:#07111f; padding:10px; border-radius:10px; border:1px solid #3498db; margin-bottom:10px;">
-            <p style="margin:2px"><strong id="estacion-op" style="color:#3498db;"></strong> | <span id="nombre-op-scan"></span></p>
-        </div>
-        <div id="reader"></div>
-        <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
-        <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center;">
-        <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;"></div>
-        <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
-    </div>
-
     <div id="pantalla-impresion" class="hidden">
-        <h3>Configurador de Etiquetas</h3>
+        <h3>Etiquetas y Diseño</h3>
+        <label>1. Buscar Proyecto para diseñar:</label>
         <div style="display:flex; gap:5px;">
             <input type="text" id="id-proy-print" placeholder="ID Proyecto">
-            <button onclick="imprimirLoteCompleto(document.getElementById('id-proy-print').value)" style="background:#3498db; width:auto;">🔍</button>
+            <button onclick="cargarConfigurador()" style="background:#3498db; width:auto;">BUSCAR</button>
         </div>
+        
+        <div id="config-campos-etiqueta" style="margin-top:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+            </div>
+
+        <button onclick="guardarDisenoMaestro()" style="background:#8e44ad;">💾 GUARDAR DISEÑO MAESTRO</button>
+        <hr style="opacity:0.1">
+        <button onclick="imprimirLoteCompleto(document.getElementById('id-proy-print').value)" style="background:#27ae60;">🖨️ GENERAR LOTE COMPLETO</button>
+        
         <div id="contenedor-etiquetas" style="margin-top:20px;"></div>
-        <button onclick="window.print()" style="background:#2c3e50">🖨️ IMPRIMIR</button>
+        
+        <button onclick="window.print()" style="background:#2c3e50" id="btn-imprimir-ahora" class="hidden">IMPRIMIR AHORA</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
@@ -102,24 +94,31 @@
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
+    <div id="pantalla-seleccion-puesto" class="hidden">
+        <h3>Panel de Producción</h3>
+        <p>Hola <strong id="nombre-op" style="color:#2fc95c;"></strong></p>
+        <select id="select-puesto-op"></select>
+        <button onclick="entrarAPuesto()" style="background:#f39c12">INGRESAR A ESTACIÓN</button>
+    </div>
+
+    <div id="pantalla-operario" class="hidden">
+        <div style="background:#07111f; padding:10px; border-radius:10px; border:1px solid #3498db; margin-bottom:10px;">
+            <p style="margin:2px"><strong id="estacion-op" style="color:#3498db;"></strong> | <span id="nombre-op-scan"></span></p>
+        </div>
+        <div id="reader"></div>
+        <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
+        <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center;">
+        <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;"></div>
+        <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
+    </div>
+
     <div id="form-usuario" class="hidden">
         <h3>Ficha de Personal</h3>
         <div style="text-align:left;">
-            <label>Nro. de Legajo (ID Único):</label>
-            <input type="text" id="u-legajo" placeholder="Ej: 1024">
-            <label>Nombre Completo:</label>
-            <input type="text" id="u-nombre" placeholder="Juan Pérez">
-            <label>PIN de Acceso (4 dígitos):</label>
-            <input type="number" id="u-pin" placeholder="1234">
-            <label>Rol en Planta:</label>
-            <select id="u-rol">
-                <option value="OPERARIO">OPERARIO</option>
-                <option value="GERENTE">GERENTE / ADMIN</option>
-            </select>
-            <label>Fecha de Nacimiento:</label>
-            <input type="date" id="u-nac">
-            <label>Dirección de Residencia:</label>
-            <input type="text" id="u-dir" placeholder="Calle 123, Ciudad">
+            <label>Nro. de Legajo:</label><input type="text" id="u-legajo">
+            <label>Nombre:</label><input type="text" id="u-nombre">
+            <label>PIN (4 dígitos):</label><input type="number" id="u-pin">
+            <label>Rol:</label><select id="u-rol"><option value="OPERARIO">OPERARIO</option><option value="GERENTE">GERENTE</option></select>
         </div>
         <button onclick="guardarUsuario()" style="background:#27ae60; margin-top:20px;">CREAR USUARIO</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">CANCELAR</button>
@@ -127,17 +126,16 @@
 
     <div id="form-estacion" class="hidden">
         <h3>Nueva Estación</h3>
-        <input type="text" id="est-nombre" placeholder="Nombre Estación (Ej: Lijado)">
-        <input type="text" id="est-desc" placeholder="Descripción corta">
+        <input type="text" id="est-nombre" placeholder="Nombre Estación">
+        <input type="text" id="est-desc" placeholder="Descripción">
         <button onclick="guardarEstacion()" style="background:#27ae60">GUARDAR</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
     <div id="pantalla-flujo" class="hidden">
         <h3>Configurador de Flujo</h3>
-        <p style="font-size: 11px; color: #aaa;">Ordená las estaciones según el proceso real de tu fábrica.</p>
-        <div id="lista-flujo-estaciones" style="margin-top:20px;"></div>
-        <button onclick="salvarFlujo()" style="background:#2fc95c; margin-top:20px;">GUARDAR ORDEN DE PROCESO</button>
+        <div id="lista-flujo-estaciones"></div>
+        <button onclick="salvarFlujo()" style="background:#2fc95c; margin-top:20px;">GUARDAR ORDEN</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
@@ -147,9 +145,7 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzSMWJgJfe7BETkD6dYtMo0qTfShM3LJHBNtb-Yuv5VdXAPYADhc_OBjXqmgBr5fttW/exec";
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
-    let datosExcelRaw = [], listaColumnasExcel = [];
-    let columnasProyectoActual = [];
-    let estacionesParaFlujo = [];
+    let datosExcelRaw = [], listaColumnasExcel = [], estacionesParaFlujo = [];
 
     function callServer(action, params, callback) {
         params.action = action;
@@ -158,16 +154,12 @@
         fetch(API_URL, { method: 'POST', body: formData })
             .then(r => r.json())
             .then(callback)
-            .catch(e => {
-                console.error("Error API:", e);
-                alert("Falla de conexión.");
-            });
+            .catch(e => { console.error("Error API:", e); alert("Falla de conexión."); });
     }
 
     function mostrar(id) {
         document.querySelectorAll('.card > div').forEach(d => d.classList.add('hidden'));
-        const el = document.getElementById(id);
-        if(el) el.classList.remove('hidden');
+        const el = document.getElementById(id); if(el) el.classList.remove('hidden');
     }
 
     function login() {
@@ -194,339 +186,20 @@
         mostrar('pantalla-operario');
     }
 
-    function encenderCamara() {
-        if (isProcessing) return;
-        document.getElementById("reader").style.display = "block";
-        if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
-            (txt) => {
-                isProcessing = true;
-                html5QrCode.stop().then(() => {
-                    document.getElementById("reader").style.display = "none";
-                    procesarScan(txt);
-                });
-            }, () => {}
-        );
-    }
-
-    function procesarScan(id) {
-        const input = document.getElementById('input-scan');
-        input.value = "⌛ REGISTRANDO..."; input.style.background = "#f1c40f"; 
-        callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
-            input.style.background = "#2fc95c"; input.value = "✅ CAPTURADO: " + id;
-            document.getElementById('log-scan').innerHTML = `<div><b>${new Date().toLocaleTimeString()}</b>: ${res.msj}</div>` + document.getElementById('log-scan').innerHTML;
-            setTimeout(() => { input.value = ""; input.style.background = "#fff"; isProcessing = false; }, 1500);
-        });
-    }
-
-    function leerExcel(input) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            if(datosExcelRaw.length > 0) {
-                listaColumnasExcel = Object.keys(datosExcelRaw[0]);
-                llenarSelect('map-oc', listaColumnasExcel); 
-                llenarSelect('map-pieza', listaColumnasExcel);
-                document.getElementById('contenedor-extras').innerHTML = "";
-                document.getElementById('zona-mapeo').classList.remove('hidden');
-            }
-        };
-        reader.readAsArrayBuffer(input.files[0]);
-    }
-
-    function agregarFilaExtra() {
-        const cont = document.getElementById('contenedor-extras');
-        const div = document.createElement('div');
-        div.style.display = "flex"; div.style.gap = "5px"; div.style.marginTop = "5px";
-        let ops = '<option value="">-- Extra --</option>';
-        listaColumnasExcel.forEach(c => ops += `<option value="${c}">${c}</option>`);
-        div.innerHTML = `<select class="select-extra" style="margin:0;">${ops}</select><button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0;">X</button>`;
-        cont.appendChild(div);
-    }
-
-    function confirmarImportacion() {
-        const idProy = document.getElementById('p-id').value.trim();
-        const oc = document.getElementById('map-oc').value;
-        const pz = document.getElementById('map-pieza').value;
-        const btn = event.target; 
-        if(!idProy || !oc || !pz) return alert("Completa ID, OC y Pieza");
-        btn.disabled = true;
-        btn.innerText = "⌛ SUBIENDO DATOS...";
-        btn.style.background = "#555";
-        const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value).filter(v => v !== "");
-        const headersParaSheet = ["ID_PROYECTO", "OC", "CODIGO_ESCANEO", "ESTADO", "FECHA", pz, ...extras];
-        const filas = datosExcelRaw.map(r => {
-            const f = [String(r[oc]||""), String(r[pz]||"")];
-            extras.forEach(ex => f.push(String(r[ex]||"")));
-            return f;
-        });
-        callServer("crearProyecto", {id: idProy}, resP => {
-            callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(headersParaSheet)}, resI => {
-                alert(resI.msj);
-                btn.disabled = false;
-                btn.innerText = "IMPORTAR";
-                btn.style.background = "#27ae60";
-                if(resI.status === "OK") mostrar('pantalla-menu');
-            });
-        });
-    }
-
-    function abrirBuscadorReimpresion() {
-        mostrar('pantalla-reimpresion');
-        document.getElementById('lista-resultados-busqueda').innerHTML = "";
-        document.getElementById('input-busqueda-universal').value = "";
-    }
-
-    function ejecutarBusquedaUniversal() {
-        const q = document.getElementById('input-busqueda-universal').value;
-        if(q.length < 2) return alert("Escribí algo más para buscar...");
-        
-        const cont = document.getElementById('lista-resultados-busqueda');
-        cont.innerHTML = "⌛ Buscando...";
-        
-        callServer("buscarPiezasUniversal", { query: q }, res => {
-            cont.innerHTML = "";
-            if(res.piezas.length === 0) return cont.innerHTML = "❌ No se encontró nada.";
-            
-            res.piezas.forEach(p => {
-                cont.innerHTML += `
-                    <div class="item-lista" style="flex-direction:column; align-items:flex-start;">
-                        <div style="width:100%; display:flex; justify-content:space-between;">
-                            <b>${p[1]} | ${p[2]}</b>
-                            <small>${p[3]}</small>
-                        </div>
-                        <div style="font-size:10px; color:#aaa;">Cliente/OC: ${p[5] || '---'} | Proyecto: ${p[0]}</div>
-                        <button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" 
-                                style="background:#27ae60; padding:5px; margin-top:5px; font-size:10px; width:auto;">
-                            🖨️ REIMPRIMIR
-                        </button>
-                    </div>`;
-            });
-        });
-    }
-
-    function imprimirLoteCompleto(idProy) {
-        callServer("obtenerConfiguracionMaestra", {}, configJSON => {
-            if(!configJSON) return alert("❌ Primero debés configurar y guardar una 'Plantilla Maestra' en el menú de Configuración.");
-            const config = JSON.parse(configJSON);
-            callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
-                if(!res.piezas) return alert("No se encontró el proyecto.");
-                generarEtiquetasConConfig(res.piezas, res.encabezados, config);
-            });
-        });
-    }
-
-    function guardarDisenoMaestro() {
-        const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
-        if(filasConfig.length === 0) return alert("Agregá al menos un campo.");
-        const config = filasConfig.map(fila => ({
-            colIndex: fila.querySelector('.sel-col-et').value,
-            conTitulo: fila.querySelector('.sel-tit-et').value === "SI"
-        }));
-        callServer("guardarConfiguracionMaestra", { config: JSON.stringify(config) }, res => {
-            alert(res.msj);
-        });
-    }
-
-    function generarEtiquetasConConfig(piezas, headers, config) {
-        const cont = document.getElementById('contenedor-etiquetas');
-        cont.innerHTML = "";
-        piezas.forEach((p, i) => {
-            let htmlCampos = "";
-            config.forEach(item => {
-                const nombreCol = headers[item.colIndex];
-                const valor = p[item.colIndex];
-                htmlCampos += `<div>${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
-            });
-            const div = document.createElement('div');
-            div.className = "etiqueta-preview";
-            div.innerHTML = `${htmlCampos}<svg id="bar-gen-${i}"></svg>`;
-            cont.appendChild(div);
-            JsBarcode(`#bar-gen-${i}`, p[2], {format: "CODE128", height: 40, displayValue: true, fontSize: 10});
-        });
-        alert("Etiquetas generadas. Ya podés imprimir.");
-    }
-
-    function guardarUsuario() {
-        const d = { 
-            legajo: document.getElementById('u-legajo').value.trim(),
-            nombre: document.getElementById('u-nombre').value.trim(), 
-            pin: document.getElementById('u-pin').value.trim(), 
-            rol: document.getElementById('u-rol').value,
-            nacimiento: document.getElementById('u-nac').value,
-            direccion: document.getElementById('u-dir').value.trim()
-        };
-        if(!d.legajo || !d.nombre || !d.pin) return alert("Legajo, Nombre y PIN son obligatorios.");
-        callServer("crearNuevoUsuario", d, res => { 
-            if(res.status === "OK") {
-                alert("✅ Usuario " + res.nombre + " creado.");
-                mostrar('pantalla-menu'); 
-                document.querySelectorAll('#form-usuario input').forEach(i => i.value = "");
-            } else alert("❌ Error: " + res.msj);
-        });
-    }
-
-    function guardarEstacion() {
-        const d = { nombre: document.getElementById('est-nombre').value, desc: document.getElementById('est-desc').value };
-        callServer("crearEstacion", d, res => { alert(res); mostrar('pantalla-menu'); });
-    }
-
-    function cargarFlujograma() {
-        mostrar('pantalla-flujo');
-        callServer("obtenerEstacionesFlujo", {}, res => {
-            estacionesParaFlujo = res;
-            renderizarFlujo();
-        });
-    }
-
-    function renderizarFlujo() {
-        const cont = document.getElementById('lista-flujo-estaciones');
-        cont.innerHTML = "";
-        estacionesParaFlujo.forEach((est, i) => {
-            const activa = est.estado === "ACTIVO";
-            cont.innerHTML += `
-                <div class="item-lista" style="border-left: 5px solid ${activa ? '#2fc95c' : '#e74c3c'};">
-                    <div style="text-align:left;">
-                        <b style="font-size:14px;">${est.nombre}</b><br>
-                        <small>Orden actual: ${est.orden}</small>
-                    </div>
-                    <div style="display:flex; gap:5px; align-items:center;">
-                        <input type="number" value="${est.orden}" 
-                               onchange="actualizarOrdenDinamico(${i}, this.value)" 
-                               style="width:50px; margin:0; text-align:center; padding:5px; background:#07111f; color:white; border:1px solid #3498db;">
-                        <button onclick="toggleEstacion(${i})" style="width:70px; padding:8px; margin:0; background:${activa ? '#27ae60' : '#c0392b'}; font-size:10px;">
-                            ${activa ? 'ON' : 'OFF'}
-                        </button>
-                    </div>
-                </div>`;
-        });
-    }
-
-    function actualizarOrdenDinamico(index, valor) {
-        estacionesParaFlujo[index].orden = parseInt(valor);
-    }
-
-    function toggleEstacion(index) {
-        estacionesParaFlujo[index].estado = estacionesParaFlujo[index].estado === "ACTIVO" ? "INACTIVO" : "ACTIVO";
-        renderizarFlujo();
-    }
-
-    function salvarFlujo() {
-        const btn = event.target;
-        btn.disabled = true;
-        btn.innerText = "⌛ GUARDANDO...";
-        callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => {
-            alert(res.msj);
-            btn.disabled = false;
-            btn.innerText = "GUARDAR ORDEN DE PROCESO";
-            if(res.status === "OK") mostrar('pantalla-menu');
-        });
-    }
-
-    function llenarSelect(id, cols) {
-        const sel = document.getElementById(id); sel.innerHTML = '<option value="">--</option>';
-        cols.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
-    }
-
-    function abrirGestorUsuarios() {
-        mostrar('pantalla-gestor');
-        document.getElementById('titulo-gestor').innerText = "Gestión de Personal";
-        const cont = document.getElementById('lista-gestor');
-        cont.innerHTML = "⌛ Cargando...";
-        callServer("obtenerListaUsuariosDetalle", {}, res => {
-            cont.innerHTML = "";
-            res.forEach(u => {
-                const esActivo = u.estado === "ACTIVO";
-                const div = document.createElement('div');
-                div.className = "item-lista";
-                div.style.borderLeftColor = esActivo ? '#2fc95c' : '#e74c3c';
-                div.style.flexDirection = "column";
-                div.style.alignItems = "flex-start";
-                div.innerHTML = `
-                    <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <b>${u.nombre}</b> <small>(${u.estado})</small><br>
-                            <small>Legajo: ${u.legajo} | Rol: ${u.rol}</small>
-                        </div>
-                        <div style="display:flex; gap:5px;">
-                            <button onclick="mostrarEdicion('${u.legajo}')" style="width:auto; padding:5px 10px; background:#3498db; font-size:10px;">EDITAR</button>
-                            <button onclick="borrarUsuarioDefinitivo('${u.legajo}')" style="width:auto; padding:5px 10px; background:#c0392b; font-size:10px;">ELIMINAR</button>
-                        </div>
-                    </div>
-                    <div id="edit-panel-${u.legajo}" class="hidden" style="width:100%; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">
-                        <select id="rol-${u.legajo}" style="padding:5px; font-size:12px;">
-                            <option value="OPERARIO" ${u.rol=='OPERARIO'?'selected':''}>OPERARIO</option>
-                            <option value="GERENTE" ${u.rol=='GERENTE'?'selected':''}>GERENTE</option>
-                        </select>
-                        <select id="est-${u.legajo}" style="padding:5px; font-size:12px;">
-                            <option value="ACTIVO" ${u.estado=='ACTIVO'?'selected':''}>ACTIVO</option>
-                            <option value="INACTIVO" ${u.estado=='INACTIVO'?'selected':''}>INACTIVO</option>
-                        </select>
-                        <button onclick="guardarCambiosUsuario('${u.legajo}')" style="background:#2fc95c; padding:5px; margin-top:5px; font-size:10px;">GUARDAR CAMBIOS</button>
-                    </div>
-                `;
-                cont.appendChild(div);
-            });
-        });
-    }
-
-    function mostrarEdicion(legajo) {
-        const p = document.getElementById(`edit-panel-${legajo}`);
-        p.classList.toggle('hidden');
-    }
-
-    function guardarCambiosUsuario(legajo) {
-        const rol = document.getElementById(`rol-${legajo}`).value;
-        const estado = document.getElementById(`est-${legajo}`).value;
-        callServer("editarUsuario", { legajo: legajo, rol: rol, estado: estado }, res => {
-            alert(res.msj);
-            abrirGestorUsuarios();
-        });
-    }
-
-    function borrarUsuarioDefinitivo(legajo) {
-        if (!confirm("⚠️ ¿ESTÁS SEGURO? Esta acción borrará al usuario de la base de datos y no se puede deshacer.")) return;
-        callServer("eliminarUsuario", { legajo: legajo }, res => {
-            alert(res.msj);
-            abrirGestorUsuarios();
-        });
-    }
-
-    function abrirGestor(t) {
-        mostrar('pantalla-gestor');
-        callServer("listaGestion", {tipo: t}, res => {
-            const c = document.getElementById('lista-gestor'); c.innerHTML = "";
-            res.forEach(i => c.innerHTML += `<div class="item-lista"><span>${i.nombre} (${i.estado})</span></div>`);
-        });
-    }
-
+    // --- CONFIGURADOR DE ETIQUETAS ---
     function cargarConfigurador() {
-        const idProy = document.getElementById('sel-proyecto-etiquetas').value;
-        if (!idProy) return;
-
+        const idProy = document.getElementById('id-proy-print').value;
+        if (!idProy) return alert("Ingresa un ID de Proyecto");
         const cont = document.getElementById('config-campos-etiqueta');
         cont.innerHTML = "⌛ Cargando columnas...";
 
-        // Llamamos al servidor
         callServer("listaGestion", { tipo: "PIEZAS_PROYECTO", id: idProy }, res => {
-            // CHEQUEO DE SEGURIDAD
-            if (!res || res.status === "ERROR") {
-                alert("Error al traer piezas: " + (res ? res.msj : "Sin respuesta"));
-                return;
-            }
-
-            // Guardamos los encabezados en una variable global para usarlos después
+            if (res.status === "ERROR") return alert(res.msj);
             window.headersActuales = res.encabezados;
-            
             cont.innerHTML = `
-                <p style="font-size:12px; color:#aaa;">Proyecto: ${idProy}</p>
                 <div id="filas-configuracion"></div>
-                <button onclick="agregarFilaConfig()" style="background:#34495e; margin-top:10px;">+ AGREGAR CAMPO</button>
+                <button onclick="agregarFilaConfig()" style="background:#34495e; font-size:11px; width:auto;">+ Agregar Campo</button>
             `;
-            
-            // Si ya tenías una fila por defecto, la agregamos
             agregarFilaConfig();
         });
     }
@@ -536,18 +209,195 @@
         const div = document.createElement('div');
         div.className = "fila-etiqueta";
         div.style = "display:flex; gap:5px; margin-bottom:5px;";
-
         let opciones = window.headersActuales.map((h, i) => `<option value="${i}">${h}</option>`).join('');
-
         div.innerHTML = `
             <select class="sel-col-et" style="flex:2">${opciones}</select>
-            <select class="sel-tit-et" style="flex:1">
-                <option value="NO">SIN TÍTULO</option>
-                <option value="SI">CON TÍTULO</option>
-            </select>
-            <button onclick="this.parentElement.remove()" style="background:#c0392b; width:40px;">X</button>
+            <select class="sel-tit-et" style="flex:1"><option value="NO">SIN TÍTULO</option><option value="SI">CON TÍTULO</option></select>
+            <button onclick="this.parentElement.remove()" style="background:#c0392b; width:40px; margin:0;">X</button>
         `;
         contenedor.appendChild(div);
+    }
+
+    function guardarDisenoMaestro() {
+        const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
+        if(filasConfig.length === 0) return alert("Agregá al menos un campo.");
+        const config = filasConfig.map(fila => ({
+            colIndex: fila.querySelector('.sel-col-et').value,
+            conTitulo: fila.querySelector('.sel-tit-et').value === "SI"
+        }));
+        callServer("guardarConfiguracionMaestra", { config: JSON.stringify(config) }, res => alert(res.msj));
+    }
+
+    // --- BUSCADOR Y REIMPRESION ---
+    function abrirBuscadorReimpresion() {
+        mostrar('pantalla-reimpresion');
+        document.getElementById('lista-resultados-busqueda').innerHTML = "";
+        document.getElementById('input-busqueda-universal').value = "";
+    }
+
+    function ejecutarBusquedaUniversal() {
+        const q = document.getElementById('input-busqueda-universal').value;
+        if(q.length < 2) return alert("Escribí algo más...");
+        const cont = document.getElementById('lista-resultados-busqueda');
+        cont.innerHTML = "⌛ Buscando...";
+        callServer("buscarPiezasUniversal", { query: q }, res => {
+            cont.innerHTML = "";
+            if(res.piezas.length === 0) return cont.innerHTML = "❌ No se encontró nada.";
+            res.piezas.forEach(p => {
+                cont.innerHTML += `
+                    <div class="item-lista" style="flex-direction:column; align-items:flex-start;">
+                        <div style="width:100%; display:flex; justify-content:space-between;"><b>${p[1]} | ${p[2]}</b><small>${p[3]}</small></div>
+                        <div style="font-size:10px; color:#aaa;">OC: ${p[1]} | Proyecto: ${p[0]}</div>
+                        <button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" style="background:#27ae60; padding:5px; margin-top:5px; font-size:10px; width:auto;">🖨️ REIMPRIMIR</button>
+                    </div>`;
+            });
+        });
+    }
+
+    function reimprimirEtiquetaUnica(idProy, idPieza) {
+        callServer("obtenerConfiguracionMaestra", {}, configJSON => {
+            if(!configJSON) return alert("⚠️ No hay plantilla maestra guardada.");
+            const config = JSON.parse(configJSON);
+            callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
+                const pieza = res.piezas.find(p => String(p[2]) === String(idPieza));
+                if(!pieza) return alert("No se encontró la pieza.");
+                mostrar('pantalla-impresion');
+                const cont = document.getElementById('contenedor-etiquetas');
+                cont.innerHTML = "";
+                let htmlCampos = "";
+                config.forEach(item => {
+                    const nombreCol = res.encabezados[item.colIndex];
+                    const valor = pieza[item.colIndex];
+                    htmlCampos += `<div>${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+                });
+                const div = document.createElement('div');
+                div.className = "etiqueta-preview";
+                div.innerHTML = `${htmlCampos}<svg id="bar-reimp"></svg>`;
+                cont.appendChild(div);
+                JsBarcode("#bar-reimp", idPieza, {format: "CODE128", height: 40, displayValue: true});
+                document.getElementById('btn-imprimir-ahora').classList.remove('hidden');
+            });
+        });
+    }
+
+    function imprimirLoteCompleto(idProy) {
+        if(!idProy) return alert("ID Proyecto vacío.");
+        callServer("obtenerConfiguracionMaestra", {}, configJSON => {
+            if(!configJSON) return alert("❌ Primero debés guardar una Plantilla Maestra.");
+            const config = JSON.parse(configJSON);
+            callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
+                const cont = document.getElementById('contenedor-etiquetas');
+                cont.innerHTML = "";
+                res.piezas.forEach((p, i) => {
+                    let htmlCampos = "";
+                    config.forEach(item => {
+                        const valor = p[item.colIndex];
+                        const nombreCol = res.encabezados[item.colIndex];
+                        htmlCampos += `<div>${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+                    });
+                    const div = document.createElement('div');
+                    div.className = "etiqueta-preview";
+                    div.innerHTML = `${htmlCampos}<svg id="bar-gen-${i}"></svg>`;
+                    cont.appendChild(div);
+                    JsBarcode(`#bar-gen-${i}`, p[2], {format: "CODE128", height: 40, displayValue: true, fontSize: 10});
+                });
+                document.getElementById('btn-imprimir-ahora').classList.remove('hidden');
+            });
+        });
+    }
+
+    // --- IMPORTACION Y OTROS ---
+    function leerExcel(input) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            if(datosExcelRaw.length > 0) {
+                listaColumnasExcel = Object.keys(datosExcelRaw[0]);
+                llenarSelect('map-oc', listaColumnasExcel); llenarSelect('map-pieza', listaColumnasExcel);
+                document.getElementById('zona-mapeo').classList.remove('hidden');
+            }
+        };
+        reader.readAsArrayBuffer(input.files[0]);
+    }
+
+    function confirmarImportacion() {
+        const idProy = document.getElementById('p-id').value.trim();
+        const oc = document.getElementById('map-oc').value;
+        const pz = document.getElementById('map-pieza').value;
+        if(!idProy || !oc || !pz) return alert("Completa OC y Pieza");
+        const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value).filter(v => v !== "");
+        const headersParaSheet = ["ID_PROYECTO", "OC", "CODIGO_ESCANEO", "ESTADO", "FECHA", pz, ...extras];
+        const filas = datosExcelRaw.map(r => {
+            const f = [String(r[oc]||""), String(r[pz]||"")];
+            extras.forEach(ex => f.push(String(r[ex]||"")));
+            return f;
+        });
+        callServer("crearProyecto", {id: idProy}, () => {
+            callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(headersParaSheet)}, res => {
+                alert(res.msj); if(res.status === "OK") mostrar('pantalla-menu');
+            });
+        });
+    }
+
+    function llenarSelect(id, cols) {
+        const sel = document.getElementById(id); sel.innerHTML = '<option value="">--</option>';
+        cols.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+    }
+
+    function agregarFilaExtra() {
+        const cont = document.getElementById('contenedor-extras');
+        const div = document.createElement('div'); div.style = "display:flex; gap:5px; margin-top:5px;";
+        let ops = '<option value="">-- Extra --</option>';
+        listaColumnasExcel.forEach(c => ops += `<option value="${c}">${c}</option>`);
+        div.innerHTML = `<select class="select-extra">${ops}</select><button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0;">X</button>`;
+        cont.appendChild(div);
+    }
+
+    function guardarUsuario() {
+        const d = { legajo: document.getElementById('u-legajo').value, nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value };
+        callServer("crearNuevoUsuario", d, res => { alert(res.msj); if(res.status==="OK") mostrar('pantalla-menu'); });
+    }
+
+    function guardarEstacion() {
+        callServer("crearEstacion", { nombre: document.getElementById('est-nombre').value, desc: document.getElementById('est-desc').value }, res => { alert(res); mostrar('pantalla-menu'); });
+    }
+
+    function cargarFlujograma() {
+        callServer("obtenerEstacionesFlujo", {}, res => { estacionesParaFlujo = res; renderizarFlujo(); mostrar('pantalla-flujo'); });
+    }
+
+    function renderizarFlujo() {
+        const cont = document.getElementById('lista-flujo-estaciones'); cont.innerHTML = "";
+        estacionesParaFlujo.forEach((est, i) => {
+            const activa = est.estado === "ACTIVO";
+            cont.innerHTML += `<div class="item-lista" style="border-left: 5px solid ${activa ? '#2fc95c' : '#e74c3c'};">
+                <div style="text-align:left;"><b>${est.nombre}</b><br><small>Orden: ${est.orden}</small></div>
+                <div style="display:flex; gap:5px;"><input type="number" value="${est.orden}" onchange="estacionesParaFlujo[${i}].orden=this.value" style="width:50px; margin:0;"><button onclick="estacionesParaFlujo[${i}].estado=(activa?'INACTIVO':'ACTIVO');renderizarFlujo();" style="width:50px; background:${activa?'#27ae60':'#c0392b'};">${activa?'ON':'OFF'}</button></div>
+            </div>`;
+        });
+    }
+
+    function salvarFlujo() {
+        callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => { alert(res.msj); if(res.status==="OK") mostrar('pantalla-menu'); });
+    }
+
+    function abrirGestorUsuarios() {
+        mostrar('pantalla-gestor');
+        callServer("obtenerListaUsuariosDetalle", {}, res => {
+            const cont = document.getElementById('lista-gestor'); cont.innerHTML = "";
+            res.forEach(u => {
+                cont.innerHTML += `<div class="item-lista" style="border-left-color: ${u.estado==='ACTIVO'?'#2fc95c':'#e74c3c'}">
+                    <div style="text-align:left;"><b>${u.nombre}</b><br><small>Legajo: ${u.legajo}</small></div>
+                    <button onclick="borrarUsuarioDefinitivo('${u.legajo}')" style="width:auto; padding:5px; background:#c0392b; font-size:10px;">ELIMINAR</button>
+                </div>`;
+            });
+        });
+    }
+
+    function borrarUsuarioDefinitivo(legajo) {
+        if(confirm("¿Borrar?")) callServer("eliminarUsuario", {legajo: legajo}, res => { alert(res.msj); abrirGestorUsuarios(); });
     }
 </script>
 </body>
