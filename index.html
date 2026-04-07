@@ -198,6 +198,7 @@
     let datosExcelRaw = [], listaColumnasExcel = [], estacionesParaFlujo = [];
     let piezaDeMuestra = null;
     let contratoVigente = null;
+    let datosTemporalesFilas = [];
 
     function callServer(action, params, callback) {
         params.action = action;
@@ -313,30 +314,81 @@
         const fileInput = document.getElementById('archivo-excel');
         const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
         
-        if (!idProy) return alert("Poné un nombre al proyecto.");
-        if (fileInput.files.length === 0) return alert("Seleccioná un archivo.");
+        if (!idProy) return alert("Por favor, indicá el nombre del Proyecto.");
+        if (fileInput.files.length === 0) return alert("Seleccioná un archivo Excel.");
 
         const reader = new FileReader();
         reader.onload = function(e) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
 
             const headers = json[0];
-            const filas = json.slice(1);
+            datosTemporalesFilas = json.slice(1); 
 
             if (!contratoVigente) {
-                const nuevoContrato = capturarMapeoManual(headers);
-                callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, () => {
-                    ejecutarImportacionFinal(idProy, filas, headers);
-                });
+                // --- PRIMERA VEZ: Mostramos el mapeador ---
+                generarInterfazMapeo(headers);
             } else {
-                ejecutarImportacionFinal(idProy, filas, headers);
+                // --- YA HAY CONTRATO: Importamos directo ---
+                ejecutarImportacionFinal(idProy, datosTemporalesFilas);
             }
         };
         reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+
+    function generarInterfazMapeo(headers) {
+        const contenedor = document.getElementById('selector-mapeo');
+        const mapeadorDiv = document.getElementById('mapeador-columnas');
+        contenedor.innerHTML = "";
+        mapeadorDiv.classList.remove('hidden');
+
+        // Definimos qué campos necesita Spora obligatoriamente
+        const camposSpora = [
+            { id: "idPieza", etiqueta: "ID de Pieza / Unidad" },
+            { id: "cliente", etiqueta: "Nombre del Cliente" },
+            { id: "descripcion", etiqueta: "Descripción / Medidas" },
+            { id: "oc", etiqueta: "Orden de Compra (Opcional)" }
+        ];
+
+        camposSpora.forEach(campo => {
+            let options = headers.map((h, index) => `<option value="${index}">${h || 'Columna ' + index}</option>`).join('');
+            contenedor.innerHTML += `
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:12px; display:block;">${campo.etiqueta}:</label>
+                    <select id="sel-${campo.id}" style="width:100%; padding:5px;">${options}</select>
+                </div>
+            `;
+        });
+    }
+
+    function ejecutarImportacionFinal(idProyecto, filas) {
+        let contratoParaEnviar;
+
+        if (!contratoVigente) {
+            // Si es la primera vez, armamos el contrato con lo que eligió el usuario
+            contratoParaEnviar = {
+                idPieza: document.getElementById('sel-idPieza').value,
+                cliente: document.getElementById('sel-cliente').value,
+                descripcion: document.getElementById('sel-descripcion').value,
+                oc: document.getElementById('sel-oc').value
+            };
+            
+            // Guardamos el contrato en el servidor para la próxima
+            callServer("guardarContratoImportacion", { contrato: JSON.stringify(contratoParaEnviar) }, (res) => {
+                console.log("Contrato guardado con éxito");
+            });
+        }
+
+        // Enviamos a procesar al GS
+        callServer("importarDatosMapeados", { 
+            idProyecto: idProyecto, 
+            filasJSON: JSON.stringify(filas) 
+        }, (res) => {
+            alert(res.msj);
+            if(res.status === "OK") location.reload();
+        });
     }
 
     function borrarContrato() {
@@ -475,6 +527,35 @@
                 document.getElementById('btn-imprimir-ahora').classList.remove('hidden');
             });
         });
+    }
+
+    function leerExcel(input) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            if(datosExcelRaw.length > 0) {
+                listaColumnasExcel = Object.keys(datosExcelRaw[0]);
+                llenarSelect('map-oc', listaColumnasExcel); llenarSelect('map-pieza', listaColumnasExcel);
+                document.getElementById('zona-mapeo').classList.remove('hidden');
+            }
+        };
+        reader.readAsArrayBuffer(input.files[0]);
+    }
+
+    function llenarSelect(id, cols) {
+        const sel = document.getElementById(id); sel.innerHTML = '<option value="">--</option>';
+        cols.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+    }
+
+    function agregarFilaExtra() {
+        const cont = document.getElementById('contenedor-extras');
+        const div = document.createElement('div'); div.style = "display:flex; gap:5px; margin-top:5px;";
+        let ops = '<option value="">-- Extra --</option>';
+        listaColumnasExcel.forEach(c => ops += `<option value="${c}">${c}</option>`);
+        div.innerHTML = `<select class="select-extra">${ops}</select><button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0;">X</button>`;
+        cont.appendChild(div);
     }
 
     function guardarUsuario() {
