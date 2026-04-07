@@ -336,39 +336,42 @@
     }
 
     function generarInterfazMapeo(headers) {
-        const contenedor = document.getElementById('selector-mapeo');
-        const mapeadorDiv = document.getElementById('mapeador-columnas');
-        contenedor.innerHTML = `
-            <p style="font-size: 11px; color: #f1c40f; margin-bottom:10px;">
-                Asigná las columnas de tu Excel a los campos de Spora.
-            </p>
-        `;
-        mapeadorDiv.classList.remove('hidden');
+    const contenedor = document.getElementById('selector-mapeo');
+    const mapeadorDiv = document.getElementById('mapeador-columnas');
+    contenedor.innerHTML = `
+        <p style="font-size: 11px; color: #f1c40f; margin-bottom:10px;">
+            ⚠️ CONFIGURACIÓN DE CÓDIGO: Seleccioná las columnas que forman tu QR/Barra.
+        </p>
+    `;
+    mapeadorDiv.classList.remove('hidden');
 
-        const camposBase = [
-            { id: "idPieza", etiqueta: "🆔 ID Único de Pieza (Obligatorio)" },
-            { id: "cliente", etiqueta: "👤 Cliente / Proyecto" }
-        ];
+    // Definimos los campos OBLIGATORIOS que generan el código
+    const camposBase = [
+        { id: "oc", etiqueta: "📄 Número de OC (Obligatorio para Código)" },
+        { id: "nroPieza", etiqueta: "🔢 Nro de Pieza/Ítem (Obligatorio para Código)" },
+        { id: "cliente", etiqueta: "👤 Cliente / Proyecto" }
+    ];
 
-        const camposExtra = [];
-        for(let i=1; i<=10; i++) {
-            camposExtra.push({ id: `extra_${i}`, etiqueta: `📊 Dato Adicional ${i} (Ancho, Alto, Tela, etc.)` });
-        }
-
-        const todosLosCampos = [...camposBase, ...camposExtra];
-
-        todosLosCampos.forEach(campo => {
-            let options = `<option value="">-- Ignorar este campo --</option>`;
-            options += headers.map((h, index) => `<option value="${index}">${h || 'Columna ' + (index+1)}</option>`).join('');
-            
-            contenedor.innerHTML += `
-                <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
-                    <label style="font-size:11px; display:block; color:#aaa;">${campo.etiqueta}:</label>
-                    <select id="sel-${campo.id}" style="width:100%; padding:4px; background:#222; color:white; border:1px solid #444;">${options}</select>
-                </div>
-            `;
-        });
+    // Mantenemos los 10 extras para medidas, telas, etc.
+    const camposExtra = [];
+    for(let i=1; i<=10; i++) {
+        camposExtra.push({ id: `extra_${i}`, etiqueta: `📊 Dato Adicional ${i} (Ancho, Alto, etc.)` });
     }
+
+    const todosLosCampos = [...camposBase, ...camposExtra];
+
+    todosLosCampos.forEach(campo => {
+        let options = `<option value="">-- Seleccionar Columna --</option>`;
+        options += headers.map((h, index) => `<option value="${index}">${h || 'Columna ' + (index+1)}</option>`).join('');
+        
+        contenedor.innerHTML += `
+            <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
+                <label style="font-size:11px; display:block; color:${campo.id === 'oc' || campo.id === 'nroPieza' ? '#2fc95c' : '#aaa'}; font-weight:bold;">${campo.etiqueta}:</label>
+                <select id="sel-${campo.id}" style="width:100%; padding:4px; background:#222; color:white; border:1px solid #444;">${options}</select>
+            </div>
+        `;
+    });
+}
 
     function ejecutarImportacionFinal(idProyecto, filas) {
         let contratoParaEnviar;
