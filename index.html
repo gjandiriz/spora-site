@@ -501,6 +501,54 @@
             res.forEach(i => c.innerHTML += `<div class="item-lista"><span>${i.nombre} (${i.estado})</span></div>`);
         });
     }
+
+    function cargarConfigurador() {
+        const idProy = document.getElementById('sel-proyecto-etiquetas').value;
+        if (!idProy) return;
+
+        const cont = document.getElementById('config-campos-etiqueta');
+        cont.innerHTML = "⌛ Cargando columnas...";
+
+        // Llamamos al servidor
+        callServer("listaGestion", { tipo: "PIEZAS_PROYECTO", id: idProy }, res => {
+            // CHEQUEO DE SEGURIDAD
+            if (!res || res.status === "ERROR") {
+                alert("Error al traer piezas: " + (res ? res.msj : "Sin respuesta"));
+                return;
+            }
+
+            // Guardamos los encabezados en una variable global para usarlos después
+            window.headersActuales = res.encabezados;
+            
+            cont.innerHTML = `
+                <p style="font-size:12px; color:#aaa;">Proyecto: ${idProy}</p>
+                <div id="filas-configuracion"></div>
+                <button onclick="agregarFilaConfig()" style="background:#34495e; margin-top:10px;">+ AGREGAR CAMPO</button>
+            `;
+            
+            // Si ya tenías una fila por defecto, la agregamos
+            agregarFilaConfig();
+        });
+    }
+
+    function agregarFilaConfig() {
+        const contenedor = document.getElementById('filas-configuracion');
+        const div = document.createElement('div');
+        div.className = "fila-etiqueta";
+        div.style = "display:flex; gap:5px; margin-bottom:5px;";
+
+        let opciones = window.headersActuales.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+
+        div.innerHTML = `
+            <select class="sel-col-et" style="flex:2">${opciones}</select>
+            <select class="sel-tit-et" style="flex:1">
+                <option value="NO">SIN TÍTULO</option>
+                <option value="SI">CON TÍTULO</option>
+            </select>
+            <button onclick="this.parentElement.remove()" style="background:#c0392b; width:40px;">X</button>
+        `;
+        contenedor.appendChild(div);
+    }
 </script>
 </body>
 </html>
