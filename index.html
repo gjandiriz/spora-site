@@ -35,17 +35,20 @@
     </div>
 
     <div id="pantalla-menu" class="hidden">
-        <button onclick="mostrar('pantalla-proyecto')" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
-        <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
-        <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 BUSCADOR / REIMPRESIÓN</button>
-        <hr style="opacity:0.1">
-        <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
-        <hr style="opacity:0.1">
-        <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
-        <button onclick="abrirGestorUsuarios()" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
-        <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
-        <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
-    </div>
+    <button onclick="mostrar('pantalla-proyecto')" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
+    <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
+    <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 BUSCADOR / REIMPRESIÓN</button>
+    
+    <button onclick="abrirConfigEmpresa()" style="background:#16a085">⚙️ CONFIGURACIÓN DE PLANTA</button>
+    
+    <hr style="opacity:0.1">
+    <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
+    <hr style="opacity:0.1">
+    <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
+    <button onclick="abrirGestorUsuarios()" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
+    <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
+    <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
+</div>
 
     <div id="pantalla-impresion" class="hidden">
         <h3>Etiquetas y Diseño</h3>
