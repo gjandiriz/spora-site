@@ -68,11 +68,7 @@
         <h3>Configurador de Etiquetas</h3>
         <div style="display:flex; gap:5px;">
             <input type="text" id="id-proy-print" placeholder="ID Proyecto">
-            <button onclick="cargarColumnasProyecto()" style="background:#3498db; width:auto;">🔍</button>
-        </div>
-        <div id="selector-campos-etiqueta" class="hidden">
-            <div id="lista-checks-campos" style="background:rgba(0,0,0,0.2); border-radius:8px; margin-top:10px; padding:10px;"></div>
-            <button onclick="generarVistaEtiquetasFlex()" style="background:#27ae60; margin-top:10px;">GENERAR ETIQUETAS</button>
+            <button onclick="imprimirLoteCompleto(document.getElementById('id-proy-print').value)" style="background:#3498db; width:auto;">🔍</button>
         </div>
         <div id="contenedor-etiquetas" style="margin-top:20px;"></div>
         <button onclick="window.print()" style="background:#2c3e50">🖨️ IMPRIMIR</button>
@@ -266,57 +262,39 @@
         });
     }
 
-    function cargarColumnasProyecto() {
-        const id = document.getElementById('id-proy-print').value;
-        callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
-            if (!res.encabezados) return alert("No se encontró el proyecto.");
-            columnasProyectoActual = res.encabezados;
-            const lista = document.getElementById('lista-checks-campos');
-            lista.innerHTML = `
-                <div id="constructor-etiqueta" style="text-align:left; margin-bottom:10px;"></div>
-                <button onclick="agregarFilaEtiqueta()" style="background:#3498db; width:auto; font-size:12px; padding:8px;">+ AGREGAR CAMPO A ETIQUETA</button>
-            `;
-            document.getElementById('selector-campos-etiqueta').classList.remove('hidden');
-        });
-    }
-
-    function agregarFilaEtiqueta() {
-        const cont = document.getElementById('constructor-etiqueta');
-        const div = document.createElement('div');
-        div.className = "fila-etiqueta";
-        div.style = "display:flex; gap:5px; margin-bottom:8px; align-items:center;";
-        let opciones = columnasProyectoActual.map((h, i) => `<option value="${i}">${h}</option>`).join('');
-        div.innerHTML = `
-            <select class="sel-col-et" style="flex:2; margin:0;">${opciones}</select>
-            <select class="sel-tit-et" style="flex:1; margin:0;">
-                <option value="NO">Sin Título</option>
-                <option value="SI">Con Título</option>
-            </select>
-            <button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0; padding:10px;">X</button>
-        `;
-        cont.appendChild(div);
-    }
-
-    function generarVistaEtiquetasFlex() {
-        const id = document.getElementById('id-proy-print').value;
-        const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
-        callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: id}, res => {
-            const cont = document.getElementById('contenedor-etiquetas'); cont.innerHTML = "";
-            res.piezas.forEach((p, i) => {
-                let htmlCampos = "";
-                filasConfig.forEach(fila => {
-                    const idx = fila.querySelector('.sel-col-et').value;
-                    const conTitulo = fila.querySelector('.sel-tit-et').value === "SI";
-                    const nombreCol = res.encabezados[idx];
-                    const valor = p[idx];
-                    htmlCampos += `<div>${conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
-                });
-                const div = document.createElement('div'); div.className = "etiqueta-preview";
-                div.innerHTML = `${htmlCampos}<svg id="bar-${i}"></svg>`;
-                cont.appendChild(div);
-                JsBarcode(`#bar-${i}`, p[2], {format: "CODE128", height: 40, displayValue: true, fontSize: 10});
+    function imprimirLoteCompleto(idProy) {
+        callServer("obtenerConfiguracionMaestra", {}, configJSON => {
+            if(!configJSON) return alert("❌ Primero debés configurar y guardar una 'Plantilla Maestra' en el menú de Configuración.");
+            
+            const config = JSON.parse(configJSON);
+            
+            callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
+                if(!res.piezas) return alert("No se encontró el proyecto.");
+                generarEtiquetasConConfig(res.piezas, res.encabezados, config);
             });
         });
+    }
+
+    function generarEtiquetasConConfig(piezas, headers, config) {
+        const cont = document.getElementById('contenedor-etiquetas');
+        cont.innerHTML = "";
+        
+        piezas.forEach((p, i) => {
+            let htmlCampos = "";
+            config.forEach(item => {
+                const nombreCol = headers[item.colIndex];
+                const valor = p[item.colIndex];
+                htmlCampos += `<div>${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+            });
+
+            const div = document.createElement('div');
+            div.className = "etiqueta-preview";
+            div.innerHTML = `${htmlCampos}<svg id="bar-gen-${i}"></svg>`;
+            cont.appendChild(div);
+            JsBarcode(`#bar-gen-${i}`, p[2], {format: "CODE128", height: 40, displayValue: true, fontSize: 10});
+        });
+        
+        alert("Etiquetas generadas. Ya podés imprimir.");
     }
 
     function guardarUsuario() {
