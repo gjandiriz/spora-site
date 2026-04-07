@@ -96,7 +96,6 @@
         <input type="file" id="archivo-excel" accept=".xlsx, .xls" style="margin-top:10px;">
         
         <div id="mapeador-columnas" class="hidden" style="margin-top:15px; border: 1px solid #555; padding: 10px;">
-            <p style="font-size: 11px; color: #f1c40f;">⚠️ PRIMERA IMPORTACIÓN: Mapeá las columnas de tu Excel.</p>
             <div id="selector-mapeo"></div>
         </div>
 
@@ -328,10 +327,8 @@
             datosTemporalesFilas = json.slice(1); 
 
             if (!contratoVigente) {
-                // --- PRIMERA VEZ: Mostramos el mapeador ---
                 generarInterfazMapeo(headers);
             } else {
-                // --- YA HAY CONTRATO: Importamos directo ---
                 ejecutarImportacionFinal(idProy, datosTemporalesFilas);
             }
         };
@@ -341,23 +338,33 @@
     function generarInterfazMapeo(headers) {
         const contenedor = document.getElementById('selector-mapeo');
         const mapeadorDiv = document.getElementById('mapeador-columnas');
-        contenedor.innerHTML = "";
+        contenedor.innerHTML = `
+            <p style="font-size: 11px; color: #f1c40f; margin-bottom:10px;">
+                Asigná las columnas de tu Excel a los campos de Spora.
+            </p>
+        `;
         mapeadorDiv.classList.remove('hidden');
 
-        // Definimos qué campos necesita Spora obligatoriamente
-        const camposSpora = [
-            { id: "idPieza", etiqueta: "ID de Pieza / Unidad" },
-            { id: "cliente", etiqueta: "Nombre del Cliente" },
-            { id: "descripcion", etiqueta: "Descripción / Medidas" },
-            { id: "oc", etiqueta: "Orden de Compra (Opcional)" }
+        const camposBase = [
+            { id: "idPieza", etiqueta: "🆔 ID Único de Pieza (Obligatorio)" },
+            { id: "cliente", etiqueta: "👤 Cliente / Proyecto" }
         ];
 
-        camposSpora.forEach(campo => {
-            let options = headers.map((h, index) => `<option value="${index}">${h || 'Columna ' + index}</option>`).join('');
+        const camposExtra = [];
+        for(let i=1; i<=10; i++) {
+            camposExtra.push({ id: `extra_${i}`, etiqueta: `📊 Dato Adicional ${i} (Ancho, Alto, Tela, etc.)` });
+        }
+
+        const todosLosCampos = [...camposBase, ...camposExtra];
+
+        todosLosCampos.forEach(campo => {
+            let options = `<option value="">-- Ignorar este campo --</option>`;
+            options += headers.map((h, index) => `<option value="${index}">${h || 'Columna ' + (index+1)}</option>`).join('');
+            
             contenedor.innerHTML += `
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:12px; display:block;">${campo.etiqueta}:</label>
-                    <select id="sel-${campo.id}" style="width:100%; padding:5px;">${options}</select>
+                <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
+                    <label style="font-size:11px; display:block; color:#aaa;">${campo.etiqueta}:</label>
+                    <select id="sel-${campo.id}" style="width:100%; padding:4px; background:#222; color:white; border:1px solid #444;">${options}</select>
                 </div>
             `;
         });
@@ -367,21 +374,19 @@
         let contratoParaEnviar;
 
         if (!contratoVigente) {
-            // Si es la primera vez, armamos el contrato con lo que eligió el usuario
             contratoParaEnviar = {
                 idPieza: document.getElementById('sel-idPieza').value,
-                cliente: document.getElementById('sel-cliente').value,
-                descripcion: document.getElementById('sel-descripcion').value,
-                oc: document.getElementById('sel-oc').value
+                cliente: document.getElementById('sel-cliente').value
             };
+            for(let i=1; i<=10; i++) {
+                contratoParaEnviar[`extra_${i}`] = document.getElementById(`sel-extra_${i}`).value;
+            }
             
-            // Guardamos el contrato en el servidor para la próxima
             callServer("guardarContratoImportacion", { contrato: JSON.stringify(contratoParaEnviar) }, (res) => {
                 console.log("Contrato guardado con éxito");
             });
         }
 
-        // Enviamos a procesar al GS
         callServer("importarDatosMapeados", { 
             idProyecto: idProyecto, 
             filasJSON: JSON.stringify(filas) 
@@ -542,6 +547,25 @@
             }
         };
         reader.readAsArrayBuffer(input.files[0]);
+    }
+
+    function confirmarImportacion() {
+        const idProy = document.getElementById('p-id').value.trim();
+        const oc = document.getElementById('map-oc').value;
+        const pz = document.getElementById('map-pieza').value;
+        if(!idProy || !oc || !pz) return alert("Completa OC y Pieza");
+        const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value).filter(v => v !== "");
+        const headersParaSheet = ["ID_PROYECTO", "OC", "CODIGO_ESCANEO", "ESTADO", "FECHA", pz, ...extras];
+        const filas = datosExcelRaw.map(r => {
+            const f = [String(r[oc]||""), String(r[pz]||"")];
+            extras.forEach(ex => f.push(String(r[ex]||"")));
+            return f;
+        });
+        callServer("crearProyecto", {id: idProy}, () => {
+            callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(headersParaSheet)}, res => {
+                alert(res.msj); if(res.status === "OK") mostrar('pantalla-menu');
+            });
+        });
     }
 
     function llenarSelect(id, cols) {
