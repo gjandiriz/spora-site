@@ -494,7 +494,9 @@
         callServer("obtenerDatosEmpresa", {}, res => {
             if(res.RAZON_SOCIAL) {
                 document.getElementById('emp-nombre').value = res.RAZON_SOCIAL;
-                document.getElementById('emp-logo').value = res.LOGO_URL;
+                document.getElementById('emp-cuit').value = res.CUIT || "";
+                document.getElementById('emp-direccion').value = res.DIRECCION || "";
+                document.getElementById('emp-logo').value = res.LOGO_URL || "";
                 dias.forEach(d => {
                     document.getElementById(`h-${d}-INI`).value = res[d+"_INI"] || "08:00";
                     document.getElementById(`h-${d}-FIN`).value = res[d+"_FIN"] || "17:00";
@@ -506,7 +508,12 @@
 
     function salvarConfigEmpresa() {
         const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
-        let config = { RAZON_SOCIAL: document.getElementById('emp-nombre').value, LOGO_URL: document.getElementById('emp-logo').value };
+        let config = { 
+            RAZON_SOCIAL: document.getElementById('emp-nombre').value, 
+            CUIT: document.getElementById('emp-cuit').value,
+            DIRECCION: document.getElementById('emp-direccion').value,
+            LOGO_URL: document.getElementById('emp-logo').value 
+        };
         dias.forEach(d => { config[d+"_INI"] = document.getElementById(`h-${d}-INI`).value; config[d+"_FIN"] = document.getElementById(`h-${d}-FIN`).value; });
         callServer("guardarDatosEmpresa", { config: JSON.stringify(config) }, res => { alert(res.msj); mostrar('pantalla-menu'); });
     }
