@@ -35,20 +35,20 @@
     </div>
 
     <div id="pantalla-menu" class="hidden">
-    <button onclick="mostrar('pantalla-proyecto')" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
-    <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
-    <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 BUSCADOR / REIMPRESIÓN</button>
-    
-    <button onclick="abrirConfigEmpresa()" style="background:#16a085">⚙️ CONFIGURACIÓN DE PLANTA</button>
-    
-    <hr style="opacity:0.1">
-    <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
-    <hr style="opacity:0.1">
-    <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
-    <button onclick="abrirGestorUsuarios()" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
-    <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
-    <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
-</div>
+        <button onclick="mostrar('pantalla-proyecto')" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
+        <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
+        <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 BUSCADOR / REIMPRESIÓN</button>
+        
+        <button onclick="abrirConfigEmpresa()" style="background:#16a085">⚙️ CONFIGURACIÓN DE PLANTA</button>
+        
+        <hr style="opacity:0.1">
+        <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
+        <hr style="opacity:0.1">
+        <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
+        <button onclick="abrirGestorUsuarios()" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
+        <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
+        <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
+    </div>
 
     <div id="pantalla-impresion" class="hidden">
         <h3>Etiquetas y Diseño</h3>
@@ -146,12 +146,32 @@
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
-    <div id="pantalla-gestor" class="hidden"><h3 id="titulo-gestor"></h3><div id="lista-gestor"></div><button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button></div>
+    <div id="pantalla-gestor" class="hidden">
+        <h3 id="titulo-gestor"></h3>
+        <div id="lista-gestor"></div>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
+
+    <div id="pantalla-config-empresa" class="hidden">
+        <h3>Configuración de Planta</h3>
+        <div style="text-align:left; background:rgba(255,255,255,0.05); padding:15px; border-radius:10px;">
+            <label>Razón Social:</label><input type="text" id="emp-nombre">
+            <label>Cuit:</label><input type="text" id="emp-cuit">
+            <label>Dirección:</label><input type="text" id="emp-direccion">
+            <label>URL Logo (PNG/JPG):</label><input type="text" id="emp-logo" placeholder="https://...">
+            
+            <p style="color:#2fc95c; font-size:12px; margin-top:20px; border-bottom:1px solid #2fc95c;">📅 HORARIOS LABORALES</p>
+            
+            <div id="contenedor-horarios" style="margin-top:10px;"></div>
+            
+        </div>
+        <button onclick="salvarConfigEmpresa()" style="background:#2fc95c; margin-top:20px;">GUARDAR CONFIGURACIÓN</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
 </div>
 
 <div id="modal-reimpresion" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column;">
-    <div id="area-ticket-reimpresion" style="background:white; padding:20px; border-radius:10px;">
-        </div>
+    <div id="area-ticket-reimpresion" style="background:white; padding:20px; border-radius:10px;"></div>
     <div style="margin-top:20px; display:flex; gap:10px;">
         <button onclick="lanzarImpresionUnica()" style="background:#2fc95c; width:150px;">Confirmar e Imprimir</button>
         <button onclick="document.getElementById('modal-reimpresion').classList.add('hidden')" style="background:#e74c3c; width:150px;">Cancelar</button>
@@ -202,38 +222,21 @@
         document.getElementById('estacion-op').innerText = estacionActual;
         mostrar('pantalla-operario');
     }
-// --- MOTOR DEL ESCÁNER ---
+
     function encenderCamara() {
         if (isProcessing) return;
-        
         const readerDiv = document.getElementById("reader");
         readerDiv.style.display = "block"; 
-        
-        if(html5QrCode) {
-            html5QrCode.clear();
-        }
-        
+        if(html5QrCode) { html5QrCode.clear(); }
         html5QrCode = new Html5Qrcode("reader");
-        
-        const config = { 
-            fps: 15, // Un poquito más rápido para que no sea lento
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0 
-        };
-
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            config,
-            (txt) => {
-                isProcessing = true;
-                // Detenemos cámara para ahorrar batería y procesar
-                html5QrCode.stop().then(() => {
-                    readerDiv.style.display = "none";
-                    procesarScan(txt);
-                }).catch(err => console.error("Error al detener:", err));
-            },
-            (errorMessage) => { /* Silencio para no saturar la consola */ }
-        ).catch(err => {
+        const config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+        html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
+            isProcessing = true;
+            html5QrCode.stop().then(() => {
+                readerDiv.style.display = "none";
+                procesarScan(txt);
+            }).catch(err => console.error("Error al detener:", err));
+        }, (errorMessage) => {}).catch(err => {
             console.error("Error cámara:", err);
             alert("No se pudo iniciar la cámara. Verificá los permisos del navegador.");
         });
@@ -242,55 +245,33 @@
     function procesarScan(id) {
         const input = document.getElementById('input-scan');
         const log = document.getElementById('log-scan');
-        
         input.value = "⌛ REGISTRANDO..."; 
         input.style.background = "#f1c40f"; 
         input.style.color = "#000";
-
-        // Llamamos a tu nueva función registrarEscaneo (la que ya tiene el Historial)
         callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
             if(res.status === "OK") {
-                input.style.background = "#2fc95c";
-                input.style.color = "#07111f";
-                input.value = "✅ " + id;
+                input.style.background = "#2fc95c"; input.style.color = "#07111f"; input.value = "✅ " + id;
             } else {
-                input.style.background = "#e74c3c";
-                input.style.color = "#fff";
-                input.value = "❌ ERROR";
+                input.style.background = "#e74c3c"; input.style.color = "#fff"; input.value = "❌ ERROR";
             }
-            
-            // Agregamos al log visual del operario
             const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            log.innerHTML = `<div style="border-bottom:1px solid rgba(255,255,255,0.1); padding:5px; font-size:12px;">
-                <b>${hora}</b> - ${id}: ${res.msj}
-            </div>` + log.innerHTML;
-
-            // Limpiamos el mensaje después de 2 segundos para el próximo scan
+            log.innerHTML = `<div style="border-bottom:1px solid rgba(255,255,255,0.1); padding:5px; font-size:12px;"><b>${hora}</b> - ${id}: ${res.msj}</div>` + log.innerHTML;
             setTimeout(() => { 
-                input.value = "LISTO PARA ESCANEAR"; 
-                input.style.background = "#07111f"; 
-                input.style.color = "white";
-                isProcessing = false; 
+                input.value = "LISTO PARA ESCANEAR"; input.style.background = "#07111f"; input.style.color = "white"; isProcessing = false; 
             }, 2000);
         });
     }
-    
-    // --- CONFIGURADOR DE ETIQUETAS ---
+
     function cargarConfigurador() {
         const idProy = document.getElementById('id-proy-print').value;
         if (!idProy) return alert("Ingresa un ID de Proyecto");
         const cont = document.getElementById('config-campos-etiqueta');
         cont.innerHTML = "⌛ Cargando columnas...";
-
         callServer("listaGestion", { tipo: "PIEZAS_PROYECTO", id: idProy }, res => {
             if (res.status === "ERROR") return alert(res.msj);
             window.headersActuales = res.encabezados;
-            piezaDeMuestra = res.piezas[0]; // Tomamos la primera pieza como ejemplo
-            
-            cont.innerHTML = `
-                <div id="filas-configuracion"></div>
-                <button onclick="agregarFilaConfig()" style="background:#34495e; font-size:11px; width:auto;">+ Agregar Campo</button>
-            `;
+            piezaDeMuestra = res.piezas[0];
+            cont.innerHTML = `<div id="filas-configuracion"></div><button onclick="agregarFilaConfig()" style="background:#34495e; font-size:11px; width:auto;">+ Agregar Campo</button>`;
             agregarFilaConfig();
         });
     }
@@ -300,28 +281,17 @@
         const div = document.createElement('div');
         div.className = "fila-etiqueta";
         div.style = "display:flex; gap:5px; margin-bottom:5px;";
-        
         let opciones = window.headersActuales.map((h, i) => `<option value="${i}">${h}</option>`).join('');
-        
-        div.innerHTML = `
-            <select class="sel-col-et" style="flex:2" onchange="actualizarPreviewLive()">${opciones}</select>
-            <select class="sel-tit-et" style="flex:1" onchange="actualizarPreviewLive()">
-                <option value="NO">SIN TÍTULO</option>
-                <option value="SI">CON TÍTULO</option>
-            </select>
-            <button onclick="this.parentElement.remove(); actualizarPreviewLive();" style="background:#c0392b; width:40px; margin:0;">X</button>
-        `;
+        div.innerHTML = `<select class="sel-col-et" style="flex:2" onchange="actualizarPreviewLive()">${opciones}</select><select class="sel-tit-et" style="flex:1" onchange="actualizarPreviewLive()"><option value="NO">SIN TÍTULO</option><option value="SI">CON TÍTULO</option></select><button onclick="this.parentElement.remove(); actualizarPreviewLive();" style="background:#c0392b; width:40px; margin:0;">X</button>`;
         contenedor.appendChild(div);
-        actualizarPreviewLive(); // Dibujamos la primera vez
+        actualizarPreviewLive();
     }
 
     function actualizarPreviewLive() {
         if(!piezaDeMuestra) return;
-        
         const cont = document.getElementById('etiqueta-preview-live');
         const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
         cont.innerHTML = "";
-        
         let htmlCampos = "";
         filasConfig.forEach(fila => {
             const idx = fila.querySelector('.sel-col-et').value;
@@ -330,29 +300,17 @@
             const valor = piezaDeMuestra[idx];
             htmlCampos += `<div>${conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
         });
-
         cont.innerHTML = `${htmlCampos}<svg id="bar-preview-live"></svg>`;
-        
-        // Generamos el código de barras de muestra (usando el ID de la pieza de muestra)
-        JsBarcode("#bar-preview-live", piezaDeMuestra[2], {
-            format: "CODE128", 
-            height: 30, 
-            displayValue: true, 
-            fontSize: 10
-        });
+        JsBarcode("#bar-preview-live", piezaDeMuestra[2], { format: "CODE128", height: 30, displayValue: true, fontSize: 10 });
     }
 
     function guardarDisenoMaestro() {
         const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
         if(filasConfig.length === 0) return alert("Agregá al menos un campo.");
-        const config = filasConfig.map(fila => ({
-            colIndex: fila.querySelector('.sel-col-et').value,
-            conTitulo: fila.querySelector('.sel-tit-et').value === "SI"
-        }));
+        const config = filasConfig.map(fila => ({ colIndex: fila.querySelector('.sel-col-et').value, conTitulo: fila.querySelector('.sel-tit-et').value === "SI" }));
         callServer("guardarConfiguracionMaestra", { config: JSON.stringify(config) }, res => alert(res.msj));
     }
 
-    // --- BUSCADOR Y REIMPRESION ---
     function abrirBuscadorReimpresion() {
         mostrar('pantalla-reimpresion');
         document.getElementById('lista-resultados-busqueda').innerHTML = "";
@@ -368,12 +326,7 @@
             cont.innerHTML = "";
             if(res.piezas.length === 0) return cont.innerHTML = "❌ No se encontró nada.";
             res.piezas.forEach(p => {
-                cont.innerHTML += `
-                    <div class="item-lista" style="flex-direction:column; align-items:flex-start;">
-                        <div style="width:100%; display:flex; justify-content:space-between;"><b>${p[1]} | ${p[2]}</b><small>${p[3]}</small></div>
-                        <div style="font-size:10px; color:#aaa;">OC: ${p[1]} | Proyecto: ${p[0]}</div>
-                        <button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" style="background:#27ae60; padding:5px; margin-top:5px; font-size:10px; width:auto;">🖨️ REIMPRIMIR</button>
-                    </div>`;
+                cont.innerHTML += `<div class="item-lista" style="flex-direction:column; align-items:flex-start;"><div style="width:100%; display:flex; justify-content:space-between;"><b>${p[1]} | ${p[2]}</b><small>${p[3]}</small></div><div style="font-size:10px; color:#aaa;">OC: ${p[1]} | Proyecto: ${p[0]}</div><button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" style="background:#27ae60; padding:5px; margin-top:5px; font-size:10px; width:auto;">🖨️ REIMPRIMIR</button></div>`;
             });
         });
     }
@@ -381,51 +334,34 @@
     function reimprimirEtiquetaUnica(idProy, idPieza) {
         callServer("obtenerConfiguracionMaestra", {}, configJSON => {
             if(!configJSON) return alert("⚠️ No hay plantilla maestra guardada. Configurá una en el menú de etiquetas.");
-            
             const config = JSON.parse(configJSON);
-
             callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
                 const pieza = res.piezas.find(p => String(p[2]) === String(idPieza));
                 if(!pieza) return alert("No se encontró la pieza.");
-
-                // Mostramos el modal
                 const modal = document.getElementById('modal-reimpresion');
                 const cont = document.getElementById('area-ticket-reimpresion');
                 modal.classList.remove('hidden');
                 cont.innerHTML = "";
-
                 let htmlCampos = "";
                 config.forEach(item => {
                     const nombreCol = res.encabezados[item.colIndex];
                     const valor = pieza[item.colIndex];
                     htmlCampos += `<div style="color:black; font-family:Arial; font-size:14px; margin-bottom:2px;">${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
                 });
-
                 const div = document.createElement('div');
                 div.style = "background:white; padding:10px; border:1px solid #000; width:280px; text-align:center;";
                 div.innerHTML = `${htmlCampos}<svg id="bar-modal-reimp"></svg>`;
                 cont.appendChild(div);
-
-                // Código de barras
                 JsBarcode("#bar-modal-reimp", idPieza, {format: "CODE128", height: 40, displayValue: true});
             });
         });
     }
 
     function lanzarImpresionUnica() {
-        // Obtenemos la etiqueta
         const ticket = document.getElementById('area-ticket-reimpresion').innerHTML;
-        
-        // Abrimos una ventana nueva solo con la etiqueta para imprimir
         const ventanaPrent = window.open('', '_blank');
-        ventanaPrent.document.write('<html><head><title>Imprimir Etiqueta</title>');
-        ventanaPrent.document.write('<style>body{margin:0; display:flex; justify-content:center;} @page{size: auto; margin: 0mm;}</style>');
-        ventanaPrent.document.write('</head><body onload="window.print(); window.close();">');
-        ventanaPrent.document.write(ticket);
-        ventanaPrent.document.write('</body></html>');
+        ventanaPrent.document.write('<html><head><title>Imprimir Etiqueta</title><style>body{margin:0; display:flex; justify-content:center;} @page{size: auto; margin: 0mm;}</style></head><body onload="window.print(); window.close();">' + ticket + '</body></html>');
         ventanaPrent.document.close();
-        
-        // Cerramos el modal
         document.getElementById('modal-reimpresion').classList.add('hidden');
     }
 
@@ -455,7 +391,6 @@
         });
     }
 
-    // --- IMPORTACION Y OTROS ---
     function leerExcel(input) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -548,51 +483,33 @@
     function borrarUsuarioDefinitivo(legajo) {
         if(confirm("¿Borrar?")) callServer("eliminarUsuario", {legajo: legajo}, res => { alert(res.msj); abrirGestorUsuarios(); });
     }
+
     function abrirConfigEmpresa() {
-    const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
-    const cont = document.getElementById('contenedor-horarios');
-    cont.innerHTML = "";
-    
-    dias.forEach(d => {
-        cont.innerHTML += `
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
-                <span style="width:40px; font-weight:bold;">${d}</span>
-                <input type="time" id="h-${d}-INI" style="margin:0; padding:5px;">
-                <span>a</span>
-                <input type="time" id="h-${d}-FIN" style="margin:0; padding:5px;">
-            </div>`;
-    });
+        const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
+        const cont = document.getElementById('contenedor-horarios');
+        cont.innerHTML = "";
+        dias.forEach(d => {
+            cont.innerHTML += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;"><span style="width:40px; font-weight:bold;">${d}</span><input type="time" id="h-${d}-INI" style="margin:0; padding:5px;"><span>a</span><input type="time" id="h-${d}-FIN" style="margin:0; padding:5px;"></div>`;
+        });
+        callServer("obtenerDatosEmpresa", {}, res => {
+            if(res.RAZON_SOCIAL) {
+                document.getElementById('emp-nombre').value = res.RAZON_SOCIAL;
+                document.getElementById('emp-logo').value = res.LOGO_URL;
+                dias.forEach(d => {
+                    document.getElementById(`h-${d}-INI`).value = res[d+"_INI"] || "08:00";
+                    document.getElementById(`h-${d}-FIN`).value = res[d+"_FIN"] || "17:00";
+                });
+            }
+            mostrar('pantalla-config-empresa');
+        });
+    }
 
-    callServer("obtenerDatosEmpresa", {}, res => {
-        if(res.RAZON_SOCIAL) {
-            document.getElementById('emp-nombre').value = res.RAZON_SOCIAL;
-            document.getElementById('emp-logo').value = res.LOGO_URL;
-            dias.forEach(d => {
-                document.getElementById(`h-${d}-INI`).value = res[d+"_INI"] || "08:00";
-                document.getElementById(`h-${d}-FIN`).value = res[d+"_FIN"] || "17:00";
-            });
-        }
-        mostrar('pantalla-config-empresa');
-    });
-}
-
-function salvarConfigEmpresa() {
-    const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
-    let config = {
-        RAZON_SOCIAL: document.getElementById('emp-nombre').value,
-        LOGO_URL: document.getElementById('emp-logo').value
-    };
-    
-    dias.forEach(d => {
-        config[d+"_INI"] = document.getElementById(`h-${d}-INI`).value;
-        config[d+"_FIN"] = document.getElementById(`h-${d}-FIN`).value;
-    });
-
-    callServer("guardarDatosEmpresa", { config: JSON.stringify(config) }, res => {
-        alert(res.msj);
-        mostrar('pantalla-menu');
-    });
-}
+    function salvarConfigEmpresa() {
+        const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
+        let config = { RAZON_SOCIAL: document.getElementById('emp-nombre').value, LOGO_URL: document.getElementById('emp-logo').value };
+        dias.forEach(d => { config[d+"_INI"] = document.getElementById(`h-${d}-INI`).value; config[d+"_FIN"] = document.getElementById(`h-${d}-FIN`).value; });
+        callServer("guardarDatosEmpresa", { config: JSON.stringify(config) }, res => { alert(res.msj); mostrar('pantalla-menu'); });
+    }
 </script>
 </body>
 </html>
