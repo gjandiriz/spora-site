@@ -55,8 +55,12 @@
             <button onclick="cargarConfigurador()" style="background:#3498db; width:auto;">BUSCAR</button>
         </div>
         
-        <div id="config-campos-etiqueta" style="margin-top:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
-            </div>
+        <div id="config-campos-etiqueta" style="margin-top:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"></div>
+
+        <div id="preview-maestra-container" style="margin: 20px 0; padding: 10px; border: 1px dashed #2fc95c; background: rgba(47, 201, 92, 0.05); border-radius: 10px;">
+            <p style="font-size: 10px; color: #2fc95c; margin-top: 0;">👁️ VISTA PREVIA EN VIVO</p>
+            <div id="etiqueta-preview-live" class="etiqueta-preview" style="margin: 0 auto;"></div>
+        </div>
 
         <button onclick="guardarDisenoMaestro()" style="background:#8e44ad;">💾 GUARDAR DISEÑO MAESTRO</button>
         <hr style="opacity:0.1">
@@ -146,6 +150,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbzSMWJgJfe7BETkD6dYtMo0qTfShM3LJHBNtb-Yuv5VdXAPYADhc_OBjXqmgBr5fttW/exec";
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
     let datosExcelRaw = [], listaColumnasExcel = [], estacionesParaFlujo = [];
+    let piezaDeMuestra = null;
 
     function callServer(action, params, callback) {
         params.action = action;
@@ -196,6 +201,8 @@
         callServer("listaGestion", { tipo: "PIEZAS_PROYECTO", id: idProy }, res => {
             if (res.status === "ERROR") return alert(res.msj);
             window.headersActuales = res.encabezados;
+            piezaDeMuestra = res.piezas[0]; // Tomamos la primera pieza como ejemplo
+            
             cont.innerHTML = `
                 <div id="filas-configuracion"></div>
                 <button onclick="agregarFilaConfig()" style="background:#34495e; font-size:11px; width:auto;">+ Agregar Campo</button>
@@ -209,13 +216,46 @@
         const div = document.createElement('div');
         div.className = "fila-etiqueta";
         div.style = "display:flex; gap:5px; margin-bottom:5px;";
+        
         let opciones = window.headersActuales.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+        
         div.innerHTML = `
-            <select class="sel-col-et" style="flex:2">${opciones}</select>
-            <select class="sel-tit-et" style="flex:1"><option value="NO">SIN TÍTULO</option><option value="SI">CON TÍTULO</option></select>
-            <button onclick="this.parentElement.remove()" style="background:#c0392b; width:40px; margin:0;">X</button>
+            <select class="sel-col-et" style="flex:2" onchange="actualizarPreviewLive()">${opciones}</select>
+            <select class="sel-tit-et" style="flex:1" onchange="actualizarPreviewLive()">
+                <option value="NO">SIN TÍTULO</option>
+                <option value="SI">CON TÍTULO</option>
+            </select>
+            <button onclick="this.parentElement.remove(); actualizarPreviewLive();" style="background:#c0392b; width:40px; margin:0;">X</button>
         `;
         contenedor.appendChild(div);
+        actualizarPreviewLive(); // Dibujamos la primera vez
+    }
+
+    function actualizarPreviewLive() {
+        if(!piezaDeMuestra) return;
+        
+        const cont = document.getElementById('etiqueta-preview-live');
+        const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
+        cont.innerHTML = "";
+        
+        let htmlCampos = "";
+        filasConfig.forEach(fila => {
+            const idx = fila.querySelector('.sel-col-et').value;
+            const conTitulo = fila.querySelector('.sel-tit-et').value === "SI";
+            const nombreCol = window.headersActuales[idx];
+            const valor = piezaDeMuestra[idx];
+            htmlCampos += `<div>${conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+        });
+
+        cont.innerHTML = `${htmlCampos}<svg id="bar-preview-live"></svg>`;
+        
+        // Generamos el código de barras de muestra (usando el ID de la pieza de muestra)
+        JsBarcode("#bar-preview-live", piezaDeMuestra[2], {
+            format: "CODE128", 
+            height: 30, 
+            displayValue: true, 
+            fontSize: 10
+        });
     }
 
     function guardarDisenoMaestro() {
