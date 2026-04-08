@@ -268,54 +268,43 @@
         });
     }
 
-   function procesarYSubir() {
-    console.log("1. Botón presionado...");
-    
-    const fileInput = document.getElementById('archivo-excel');
-    const idProyInput = document.getElementById('id-proyecto-nuevo');
-    const idProy = idProyInput ? idProyInput.value.trim() : "";
-    
-    // Verificamos si ya existen los selectores de mapeo en pantalla
-    const hayMapeoActivo = document.getElementById('sel-oc');
+  function procesarYSubir() {
+        const fileInput = document.getElementById('archivo-excel');
+        const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
+        const mapeadorDiv = document.getElementById('mapeador-columnas');
 
-    // SI YA HAY SELECTORES Y EL USUARIO YA ELIGIÓ ALGO (el valor no está vacío)
-    if (hayMapeoActivo && hayMapeoActivo.value !== "") {
-        console.log("Mapeo detectado. Enviando datos finales...");
         if (!idProy) return alert("Por favor, indicá el nombre del Proyecto.");
-        ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-        return; 
-    }
 
-    // SI NO HAY SELECTORES O ESTÁN VACÍOS, LEEMOS EL EXCEL PARA MOSTRARLOS
-    console.log("Iniciando lectura de archivo para mapeo...");
-    if (!idProy || fileInput.files.length === 0) {
-        alert("Por favor, indicá el nombre del Proyecto y seleccioná un archivo.");
-        return;
-    }
+        // --- EL CAMBIO ESTÁ AQUÍ ---
+        // Si el mapeador YA ESTÁ VISIBLE, significa que el usuario ya eligió las columnas.
+        // Entonces, en lugar de leer el Excel de nuevo, disparamos la importación.
+        if (mapeadorDiv && !mapeadorDiv.classList.contains('hidden')) {
+            console.log("Mapeo detectado, procediendo a importar...");
+            ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+            return; // Detenemos la función aquí para que no vuelva a leer el Excel
+        }
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
+        // Si el mapeador está oculto, procedemos a leer el archivo por primera vez
+        if (fileInput.files.length === 0) return alert("Seleccioná un archivo Excel.");
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
-            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
-            
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+
             const headers = json[0];
-            datosTemporalesFilas = json.slice(1);
-            console.log("Encabezados detectados:", headers);
+            datosTemporalesFilas = json.slice(1); 
 
             if (!contratoVigente) {
                 generarInterfazMapeo(headers);
             } else {
                 ejecutarImportacionFinal(idProy, datosTemporalesFilas);
             }
-        } catch (err) {
-            console.error("Error procesando el Excel:", err);
-            alert("Error al leer el Excel. Revisá el formato.");
-        }
-    };
-    reader.readAsArrayBuffer(fileInput.files[0]);
-}
+        };
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
     function generarInterfazMapeo(headers) {
         const contenedor = document.getElementById('selector-mapeo');
         contenedor.innerHTML = "<p style='font-size:10px; color:#f1c40f;'>Mapeá las columnas de tu Excel:</p>";
