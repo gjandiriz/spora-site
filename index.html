@@ -366,13 +366,20 @@
     }
 }
     function enviarDatosAlServidor(idProy, filas) {
-    console.log("Iniciando envío al servidor...");
+    console.log("Limpiando filas vacías antes de enviar...");
+    
+    // Filtramos para que solo mande filas que tengan al menos algún dato
+    // Así evitamos que te llene las 1000 filas del Sheet si el Excel tiene espacios en blanco
+    const filasLimpias = filas.filter(f => f.join('').trim() !== "");
+
+    console.log("Enviando " + filasLimpias.length + " filas reales.");
+
     callServer("importarDatosMapeados", { 
         idProyecto: idProy, 
-        filasJSON: JSON.stringify(filas) 
+        filasJSON: JSON.stringify(filasLimpias) 
     }, (res) => {
         if (res.status === "OK") {
-            alert("🚀 " + res.msj);
+            alert("🚀 Importación exitosa: " + res.msj);
             location.reload();
         } else {
             alert("❌ Error: " + res.msj);
