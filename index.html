@@ -268,139 +268,135 @@
         });
     }
 
-  <script>
-      
-function procesarYSubir() {
-    const fileInput = document.getElementById('archivo-excel');
-    const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
+    function procesarYSubir() {
+        const fileInput = document.getElementById('archivo-excel');
+        const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
 
-    if (!idProy) {
-        alert("Por favor, indicá el nombre del Proyecto.");
-        return;
-    }
-
-    // Si ya hay datos cargados temporalmente y además el mapeador está visible,
-    // interpretamos que ya se leyó el Excel y ahora el usuario quiere confirmar/importar.
-    if (
-        !contratoVigente &&
-        datosTemporalesFilas &&
-        datosTemporalesFilas.length > 0 &&
-        !document.getElementById('mapeador-columnas').classList.contains('hidden')
-    ) {
-        console.log("Confirmación de mapeo detectada, procediendo a importar...");
-        ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-        return;
-    }
-
-    // Si no hay archivo seleccionado, no seguimos
-    if (fileInput.files.length === 0) {
-        alert("Seleccioná un archivo Excel.");
-        return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-            if (!json || json.length === 0) {
-                alert("❌ El archivo Excel está vacío o no se pudo leer.");
-                return;
-            }
-
-            const headers = json[0] || [];
-            datosTemporalesFilas = json.slice(1);
-
-            if (!headers.length) {
-                alert("❌ No se encontraron encabezados en la primera fila del Excel.");
-                return;
-            }
-
-            if (!contratoVigente) {
-                console.log("No hay contrato vigente. Mostrando interfaz de mapeo...");
-                generarInterfazMapeo(headers);
-                return;
-            }
-
-            console.log("Contrato vigente detectado. Importando directamente...");
-            ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-
-        } catch (error) {
-            console.error("Error al leer Excel:", error);
-            alert("❌ Error al procesar el archivo Excel.");
+        if (!idProy) {
+            alert("Por favor, indicá el nombre del Proyecto.");
+            return;
         }
-    };
 
-    reader.readAsArrayBuffer(fileInput.files[0]);
-}
-</script>
-   function ejecutarImportacionFinal(idProyecto, filas) {
-    // Función auxiliar BLINDADA para leer selectores
-    const getV = (id) => {
-        const el = document.getElementById('sel-' + id);
-        return el ? el.value : ""; // Si el elemento no existe, devuelve vacío en lugar de romperse
-    };
+        if (
+            !contratoVigente &&
+            datosTemporalesFilas &&
+            datosTemporalesFilas.length > 0 &&
+            !document.getElementById('mapeador-columnas').classList.contains('hidden')
+        ) {
+            console.log("Confirmación de mapeo detectada, procediendo a importar...");
+            ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+            return;
+        }
 
-    if (!contratoVigente) {
-        console.log("Capturando nuevo contrato...");
-        const nuevoContrato = {
-            oc: getV('oc'),
-            nroPieza: getV('nroPieza'),
-            cliente: getV('cliente'),
-            extra_1: getV('extra_1'), 
-            extra_2: getV('extra_2'),
-            extra_3: getV('extra_3'), 
-            extra_4: getV('extra_4'),
-            extra_5: getV('extra_5'), 
-            extra_6: getV('extra_6'),
-            extra_7: getV('extra_7'), 
-            extra_8: getV('extra_8'),
-            extra_9: getV('extra_9'), 
-            extra_10: getV('extra_10')
+        if (fileInput.files.length === 0) {
+            alert("Seleccioná un archivo Excel.");
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                if (!json || json.length === 0) {
+                    alert("❌ El archivo Excel está vacío o no se pudo leer.");
+                    return;
+                }
+
+                const headers = json[0] || [];
+                datosTemporalesFilas = json.slice(1);
+
+                if (!headers.length) {
+                    alert("❌ No se encontraron encabezados en la primera fila del Excel.");
+                    return;
+                }
+
+                if (!contratoVigente) {
+                    console.log("No hay contrato vigente. Mostrando interfaz de mapeo...");
+                    generarInterfazMapeo(headers);
+                    return;
+                }
+
+                console.log("Contrato vigente detectado. Importando directamente...");
+                ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+
+            } catch (error) {
+                console.error("Error al leer Excel:", error);
+                alert("❌ Error al procesar el archivo Excel.");
+            }
         };
 
-        if (!nuevoContrato.oc || !nuevoContrato.nroPieza) {
-            return alert("❌ Error: Debés seleccionar al menos OC y Nro de Pieza.");
-        }
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
 
-        // Guardamos contrato y luego mandamos datos
-        callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, (res) => {
+    function ejecutarImportacionFinal(idProyecto, filas) {
+        // Función auxiliar BLINDADA para leer selectores
+        const getV = (id) => {
+            const el = document.getElementById('sel-' + id);
+            return el ? el.value : ""; // Si el elemento no existe, devuelve vacío en lugar de romperse
+        };
+
+        if (!contratoVigente) {
+            console.log("Capturando nuevo contrato...");
+            const nuevoContrato = {
+                oc: getV('oc'),
+                nroPieza: getV('nroPieza'),
+                cliente: getV('cliente'),
+                extra_1: getV('extra_1'), 
+                extra_2: getV('extra_2'),
+                extra_3: getV('extra_3'), 
+                extra_4: getV('extra_4'),
+                extra_5: getV('extra_5'), 
+                extra_6: getV('extra_6'),
+                extra_7: getV('extra_7'), 
+                extra_8: getV('extra_8'),
+                extra_9: getV('extra_9'), 
+                extra_10: getV('extra_10')
+            };
+
+            if (!nuevoContrato.oc || !nuevoContrato.nroPieza) {
+                return alert("❌ Error: Debés seleccionar al menos OC y Nro de Pieza.");
+            }
+
+            // Guardamos contrato y luego mandamos datos
+            callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, (res) => {
+                if (res.status === "OK") {
+                    enviarDatosAlServidor(idProyecto, filas);
+                } else {
+                    alert("Error al guardar contrato: " + res.msj);
+                }
+            });
+        } else {
+            // Si ya hay contrato (re-importación con formato conocido)
+            enviarDatosAlServidor(idProyecto, filas);
+        }
+    }
+
+    function enviarDatosAlServidor(idProy, filas) {
+        console.log("Limpiando filas vacías antes de enviar...");
+        
+        // Filtramos para que solo mande filas que tengan al menos algún dato
+        // Así evitamos que te llene las 1000 filas del Sheet si el Excel tiene espacios en blanco
+        const filasLimpias = filas.filter(f => f.join('').trim() !== "");
+
+        console.log("Enviando " + filasLimpias.length + " filas reales.");
+
+        callServer("importarDatosMapeados", { 
+            idProyecto: idProy, 
+            filasJSON: JSON.stringify(filasLimpias) 
+        }, (res) => {
             if (res.status === "OK") {
-                enviarDatosAlServidor(idProyecto, filas);
+                alert("🚀 Importación exitosa: " + res.msj);
+                location.reload();
             } else {
-                alert("Error al guardar contrato: " + res.msj);
+                alert("❌ Error: " + res.msj);
             }
         });
-    } else {
-        // Si ya hay contrato (re-importación con formato conocido)
-        enviarDatosAlServidor(idProyecto, filas);
     }
-}
-    function enviarDatosAlServidor(idProy, filas) {
-    console.log("Limpiando filas vacías antes de enviar...");
-    
-    // Filtramos para que solo mande filas que tengan al menos algún dato
-    // Así evitamos que te llene las 1000 filas del Sheet si el Excel tiene espacios en blanco
-    const filasLimpias = filas.filter(f => f.join('').trim() !== "");
-
-    console.log("Enviando " + filasLimpias.length + " filas reales.");
-
-    callServer("importarDatosMapeados", { 
-        idProyecto: idProy, 
-        filasJSON: JSON.stringify(filasLimpias) 
-    }, (res) => {
-        if (res.status === "OK") {
-            alert("🚀 Importación exitosa: " + res.msj);
-            location.reload();
-        } else {
-            alert("❌ Error: " + res.msj);
-        }
-    });
-}
 
     function mandar(idP, filas) {
         callServer("importarDatosMapeados", { idProyecto: idP, filasJSON: JSON.stringify(filas) }, res => {
