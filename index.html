@@ -269,69 +269,106 @@
     }
 
     function procesarYSubir() {
-        const fileInput = document.getElementById('archivo-excel');
-        const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
+    const fileInput = document.getElementById('archivo-excel');
+    const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
 
-        if (!idProy) {
-            alert("Por favor, indicá el nombre del Proyecto.");
-            return;
-        }
-
-        if (
-            !contratoVigente &&
-            datosTemporalesFilas &&
-            datosTemporalesFilas.length > 0 &&
-            !document.getElementById('mapeador-columnas').classList.contains('hidden')
-        ) {
-            console.log("Confirmación de mapeo detectada, procediendo a importar...");
-            ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-            return;
-        }
-
-        if (fileInput.files.length === 0) {
-            alert("Seleccioná un archivo Excel.");
-            return;
-        }
-
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-                if (!json || json.length === 0) {
-                    alert("❌ El archivo Excel está vacío o no se pudo leer.");
-                    return;
-                }
-
-                const headers = json[0] || [];
-                datosTemporalesFilas = json.slice(1);
-
-                if (!headers.length) {
-                    alert("❌ No se encontraron encabezados en la primera fila del Excel.");
-                    return;
-                }
-
-                if (!contratoVigente) {
-                    console.log("No hay contrato vigente. Mostrando interfaz de mapeo...");
-                    generarInterfazMapeo(headers);
-                    return;
-                }
-
-                console.log("Contrato vigente detectado. Importando directamente...");
-                ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-
-            } catch (error) {
-                console.error("Error al leer Excel:", error);
-                alert("❌ Error al procesar el archivo Excel.");
-            }
-        };
-
-        reader.readAsArrayBuffer(fileInput.files[0]);
+    if (!idProy) {
+        alert("Por favor, indicá el nombre del Proyecto.");
+        return;
     }
+
+    if (
+        !contratoVigente &&
+        datosTemporalesFilas &&
+        datosTemporalesFilas.length > 0 &&
+        !document.getElementById('mapeador-columnas').classList.contains('hidden')
+    ) {
+        console.log("Confirmación de mapeo detectada, procediendo a importar...");
+        ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+        return;
+    }
+
+    if (fileInput.files.length === 0) {
+        alert("Seleccioná un archivo Excel.");
+        return;
+    }
+
+    const archivo = fileInput.files[0];
+    console.log("Archivo seleccionado:", archivo ? archivo.name : "sin archivo");
+
+    const reader = new FileReader();
+
+    reader.onerror = function() {
+        alert("❌ Error al leer el archivo desde el navegador.");
+    };
+
+    reader.onload = function(e) {
+        try {
+            if (!e || !e.target || !e.target.result) {
+                alert("❌ No se pudo obtener el contenido del archivo.");
+                return;
+            }
+
+            if (typeof XLSX === "undefined") {
+                alert("❌ La librería XLSX no está cargada.");
+                return;
+            }
+
+            const data = new Uint8Array(e.target.result);
+            console.log("Bytes leídos:", data.length);
+
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+                alert("❌ El archivo no contiene hojas válidas.");
+                return;
+            }
+
+            const primeraHoja = workbook.SheetNames[0];
+            console.log("Primera hoja detectada:", primeraHoja);
+
+            const sheet = workbook.Sheets[primeraHoja];
+            if (!sheet) {
+                alert("❌ No se pudo acceder a la primera hoja del Excel.");
+                return;
+            }
+
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            console.log("Filas detectadas:", json.length);
+
+            if (!json || json.length === 0) {
+                alert("❌ El archivo Excel está vacío.");
+                return;
+            }
+
+            const headers = json[0] || [];
+            datosTemporalesFilas = json.slice(1);
+
+            console.log("Encabezados detectados:", headers);
+            console.log("Filas temporales:", datosTemporalesFilas.length);
+
+            if (!headers.length) {
+                alert("❌ No se encontraron encabezados en la primera fila del Excel.");
+                return;
+            }
+
+            if (!contratoVigente) {
+                console.log("No hay contrato vigente. Mostrando interfaz de mapeo...");
+                generarInterfazMapeo(headers);
+                return;
+            }
+
+            console.log("Contrato vigente detectado. Importando directamente...");
+            ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+
+        } catch (error) {
+            console.error("Error real al procesar Excel:", error);
+            alert("❌ Error al procesar el archivo Excel:\n" + error.message);
+        }
+    };
+
+    reader.readAsArrayBuffer(archivo);
+}
 
     function ejecutarImportacionFinal(idProyecto, filas) {
         // Función auxiliar BLINDADA para leer selectores
