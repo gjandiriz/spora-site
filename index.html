@@ -268,61 +268,75 @@
         });
     }
 
-  function procesarYSubir() {
-        const fileInput = document.getElementById('archivo-excel');
-        const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
-        const mapeadorDiv = document.getElementById('mapeador-columnas');
+  <script>
+function procesarYSubir() {
+    const fileInput = document.getElementById('archivo-excel');
+    const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
 
-        if (!idProy) return alert("Por favor, indicá el nombre del Proyecto.");
+    if (!idProy) {
+        alert("Por favor, indicá el nombre del Proyecto.");
+        return;
+    }
 
-        // --- EL CAMBIO ESTÁ AQUÍ ---
-        // Si el mapeador YA ESTÁ VISIBLE, significa que el usuario ya eligió las columnas.
-        // Entonces, en lugar de leer el Excel de nuevo, disparamos la importación.
-        if (mapeadorDiv && !mapeadorDiv.classList.contains('hidden')) {
-            console.log("Mapeo detectado, procediendo a importar...");
-            ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-            return; // Detenemos la función aquí para que no vuelva a leer el Excel
-        }
+    // Si ya hay datos cargados temporalmente y además el mapeador está visible,
+    // interpretamos que ya se leyó el Excel y ahora el usuario quiere confirmar/importar.
+    if (
+        !contratoVigente &&
+        datosTemporalesFilas &&
+        datosTemporalesFilas.length > 0 &&
+        !document.getElementById('mapeador-columnas').classList.contains('hidden')
+    ) {
+        console.log("Confirmación de mapeo detectada, procediendo a importar...");
+        ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+        return;
+    }
 
-        // Si el mapeador está oculto, procedemos a leer el archivo por primera vez
-        if (fileInput.files.length === 0) return alert("Seleccioná un archivo Excel.");
+    // Si no hay archivo seleccionado, no seguimos
+    if (fileInput.files.length === 0) {
+        alert("Seleccioná un archivo Excel.");
+        return;
+    }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
+            const workbook = XLSX.read(data, { type: 'array' });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            const headers = json[0];
-            datosTemporalesFilas = json.slice(1); 
+            if (!json || json.length === 0) {
+                alert("❌ El archivo Excel está vacío o no se pudo leer.");
+                return;
+            }
+
+            const headers = json[0] || [];
+            datosTemporalesFilas = json.slice(1);
+
+            if (!headers.length) {
+                alert("❌ No se encontraron encabezados en la primera fila del Excel.");
+                return;
+            }
 
             if (!contratoVigente) {
+                console.log("No hay contrato vigente. Mostrando interfaz de mapeo...");
                 generarInterfazMapeo(headers);
-            } else {
-                ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+                return;
             }
-        };
-        reader.readAsArrayBuffer(fileInput.files[0]);
-    }
-    function generarInterfazMapeo(headers) {
-        const contenedor = document.getElementById('selector-mapeo');
-        contenedor.innerHTML = "<p style='font-size:10px; color:#f1c40f;'>Mapeá las columnas de tu Excel:</p>";
-        document.getElementById('mapeador-columnas').classList.remove('hidden');
-        const campos = [
-            { id: "oc", et: "📄 Nro de OC (Obligatorio)" },
-            { id: "nroPieza", et: "🔢 Nro de Pieza (Obligatorio)" },
-            { id: "cliente", et: "👤 Cliente / Proyecto" }
-        ];
-        for(let i=1; i<=10; i++) campos.push({ id: `extra_${i}`, et: `📊 Dato Adicional ${i}` });
 
-        campos.forEach(c => {
-            let ops = `<option value="">-- Ignorar --</option>`;
-            headers.forEach((h, i) => ops += `<option value="${i}">${h || 'Columna '+(i+1)}</option>`);
-            contenedor.innerHTML += `<label style="color:#aaa;">${c.et}</label><select id="sel-${c.id}">${ops}</select>`;
-        });
-    }
+            console.log("Contrato vigente detectado. Importando directamente...");
+            ejecutarImportacionFinal(idProy, datosTemporalesFilas);
 
+        } catch (error) {
+            console.error("Error al leer Excel:", error);
+            alert("❌ Error al procesar el archivo Excel.");
+        }
+    };
+
+    reader.readAsArrayBuffer(fileInput.files[0]);
+}
+</script>
    function ejecutarImportacionFinal(idProyecto, filas) {
     // Función auxiliar BLINDADA para leer selectores
     const getV = (id) => {
