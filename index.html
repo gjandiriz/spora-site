@@ -386,6 +386,20 @@
         enviarDatosAlServidor(idProyecto, filas);
     }
 }
+    function enviarDatosAlServidor(idProy, filas) {
+    console.log("Iniciando envío al servidor...");
+    callServer("importarDatosMapeados", { 
+        idProyecto: idProy, 
+        filasJSON: JSON.stringify(filas) 
+    }, (res) => {
+        if (res.status === "OK") {
+            alert("🚀 " + res.msj);
+            location.reload();
+        } else {
+            alert("❌ Error: " + res.msj);
+        }
+    });
+}
 
     function mandar(idP, filas) {
         callServer("importarDatosMapeados", { idProyecto: idP, filasJSON: JSON.stringify(filas) }, res => {
