@@ -344,15 +344,48 @@
         });
     }
 
-    function ejecutarImportacionFinal(idP, filas) {
-        if (!contratoVigente) {
-            const getV = (id) => document.getElementById('sel-'+id).value;
-            const c = { oc: getV('oc'), nroPieza: getV('nroPieza'), cliente: getV('cliente') };
-            for(let i=1; i<=10; i++) c[`extra_${i}`] = getV(`extra_${i}`);
-            if (!c.oc || !c.nroPieza) return alert("OC y Pieza son obligatorios.");
-            callServer("guardarContratoImportacion", { contrato: JSON.stringify(c) }, () => mandar(idP, filas));
-        } else mandar(idP, filas);
+   function ejecutarImportacionFinal(idProyecto, filas) {
+    // Función auxiliar BLINDADA para leer selectores
+    const getV = (id) => {
+        const el = document.getElementById('sel-' + id);
+        return el ? el.value : ""; // Si el elemento no existe, devuelve vacío en lugar de romperse
+    };
+
+    if (!contratoVigente) {
+        console.log("Capturando nuevo contrato...");
+        const nuevoContrato = {
+            oc: getV('oc'),
+            nroPieza: getV('nroPieza'),
+            cliente: getV('cliente'),
+            extra_1: getV('extra_1'), 
+            extra_2: getV('extra_2'),
+            extra_3: getV('extra_3'), 
+            extra_4: getV('extra_4'),
+            extra_5: getV('extra_5'), 
+            extra_6: getV('extra_6'),
+            extra_7: getV('extra_7'), 
+            extra_8: getV('extra_8'),
+            extra_9: getV('extra_9'), 
+            extra_10: getV('extra_10')
+        };
+
+        if (!nuevoContrato.oc || !nuevoContrato.nroPieza) {
+            return alert("❌ Error: Debés seleccionar al menos OC y Nro de Pieza.");
+        }
+
+        // Guardamos contrato y luego mandamos datos
+        callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, (res) => {
+            if (res.status === "OK") {
+                enviarDatosAlServidor(idProyecto, filas);
+            } else {
+                alert("Error al guardar contrato: " + res.msj);
+            }
+        });
+    } else {
+        // Si ya hay contrato (re-importación con formato conocido)
+        enviarDatosAlServidor(idProyecto, filas);
     }
+}
 
     function mandar(idP, filas) {
         callServer("importarDatosMapeados", { idProyecto: idP, filasJSON: JSON.stringify(filas) }, res => {
