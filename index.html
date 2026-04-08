@@ -88,7 +88,7 @@
         <div id="mapeador-columnas" class="hidden" style="margin-top:15px; border: 1px solid #555; padding: 10px;">
             <div id="selector-mapeo"></div>
         </div>
-        <button type="button" onclick="event.preventDefault(); procesarYSubir();" style="background:#27ae60; margin-top:20px;">SUBIR E IMPORTAR</button>
+        <button type="button" onclick="procesarYSubir(); return false;" style="background:#27ae60; margin-top:20px;">SUBIR E IMPORTAR</button>
         <button onclick="borrarContrato()" id="btn-reset-contrato" class="hidden" style="background:#c0392b; font-size: 10px;">🔄 RESETEAR FORMATO EXCEL</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
