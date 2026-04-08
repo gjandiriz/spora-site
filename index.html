@@ -370,6 +370,36 @@
     reader.readAsArrayBuffer(archivo);
 }
 
+    function generarInterfazMapeo(headers) {
+    const contenedor = document.getElementById('selector-mapeo');
+    contenedor.innerHTML = "<p style='font-size:10px; color:#f1c40f;'>Mapeá las columnas de tu Excel:</p>";
+
+    document.getElementById('mapeador-columnas').classList.remove('hidden');
+
+    const campos = [
+        { id: "oc", et: "📄 Nro de OC (Obligatorio)" },
+        { id: "nroPieza", et: "🔢 Nro de Pieza (Obligatorio)" },
+        { id: "cliente", et: "👤 Cliente / Proyecto" }
+    ];
+
+    for (let i = 1; i <= 10; i++) {
+        campos.push({ id: `extra_${i}`, et: `📊 Dato Adicional ${i}` });
+    }
+
+    campos.forEach(campo => {
+        let opciones = `<option value="">-- Ignorar --</option>`;
+
+        headers.forEach((header, i) => {
+            opciones += `<option value="${i}">${header || 'Columna ' + (i + 1)}</option>`;
+        });
+
+        contenedor.innerHTML += `
+            <label style="color:#aaa;">${campo.et}</label>
+            <select id="sel-${campo.id}">${opciones}</select>
+        `;
+    });
+}
+
     function ejecutarImportacionFinal(idProyecto, filas) {
         // Función auxiliar BLINDADA para leer selectores
         const getV = (id) => {
