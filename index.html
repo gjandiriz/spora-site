@@ -98,7 +98,7 @@
             <p style="margin:2px"><strong id="estacion-op" style="color:#3498db;"></strong> | <span id="nombre-op-scan"></span></p>
         </div>
         <div id="reader"></div>
-        <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
+         id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
         <div style="margin-top: 15px; padding: 10px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px;">
             <p style="font-size: 10px; margin-bottom: 5px; color: #aaa;">⌨️ INGRESO MANUAL</p>
             <div style="display: flex; gap: 5px;">
@@ -269,23 +269,49 @@
     }
 
     function procesarYSubir() {
-        const fileInput = document.getElementById('archivo-excel');
-        const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
-        if (!idProy || fileInput.files.length === 0) return alert("Faltan datos.");
+    console.log("1. Botón presionado, iniciando función...");
+    
+    const fileInput = document.getElementById('archivo-excel');
+    const idProyInput = document.getElementById('id-proyecto-nuevo');
+    
+    // Verificamos si los elementos existen en el HTML
+    if (!idProyInput) { console.error("Error: No se encontró el input 'id-proyecto-nuevo'"); return; }
+    if (!fileInput) { console.error("Error: No se encontró el input 'archivo-excel'"); return; }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
+    const idProy = idProyInput.value.trim();
+    console.log("2. Proyecto:", idProy);
+    console.log("3. Archivos seleccionados:", fileInput.files.length);
+
+    if (!idProy || fileInput.files.length === 0) {
+        alert("Por favor, indicá el nombre del Proyecto y seleccioná un archivo.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        console.log("4. Excel leído correctamente por el navegador");
+        try {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
             const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+            
             const headers = json[0];
             datosTemporalesFilas = json.slice(1);
+            console.log("5. Encabezados detectados:", headers);
 
-            if (!contratoVigente) generarInterfazMapeo(headers);
-            else ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-        };
-        reader.readAsArrayBuffer(fileInput.files[0]);
-    }
+            if (!contratoVigente) {
+                console.log("6. No hay contrato, generando interfaz de mapeo...");
+                generarInterfazMapeo(headers);
+            } else {
+                console.log("6. Contrato detectado, ejecutando importación final...");
+                ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+            }
+        } catch (err) {
+            console.error("Error procesando el Excel:", err);
+        }
+    };
+    reader.readAsArrayBuffer(fileInput.files[0]);
+}
 
     function generarInterfazMapeo(headers) {
         const contenedor = document.getElementById('selector-mapeo');
