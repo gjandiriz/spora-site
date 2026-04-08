@@ -171,14 +171,14 @@
         <button onclick="document.getElementById('modal-reimpresion').classList.add('hidden')" style="background:#e74c3c; width:150px;">Cancelar</button>
     </div>
 </div>
-    
+
 <script>
+    // CAMBIAR POR TU URL ACTUAL
     const API_URL = "https://script.google.com/macros/s/AKfycbwz_7u93sZ3k8Hq0w581H_3Jpmaozhb1J8eHXjFKBS6tn7EQ0-TDgUT2c7vvNIeEZVD/exec";
+    
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
     let datosExcelRaw = [], listaColumnasExcel = [], estacionesParaFlujo = [];
-    let piezaDeMuestra = null;
-    let contratoVigente = null;
-    let datosTemporalesFilas = [];
+    let piezaDeMuestra = null, contratoVigente = null, datosTemporalesFilas = [];
 
     function callServer(action, params, callback) {
         params.action = action;
@@ -195,6 +195,7 @@
         const el = document.getElementById(id); if(el) el.classList.remove('hidden');
     }
 
+    // --- LOGIN ---
     function login() {
         const pin = document.getElementById('pin-login').value;
         callServer("login", {pin: pin}, res => {
@@ -203,6 +204,7 @@
                 if (res.usuario.rol === "GERENTE") mostrar('pantalla-menu');
                 else {
                     document.getElementById('nombre-op').innerText = usuarioActual;
+                    document.getElementById('nombre-op-scan').innerText = usuarioActual;
                     const sel = document.getElementById('select-puesto-op');
                     sel.innerHTML = '<option value="">-- Puesto --</option>';
                     res.puestosDisponibles.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
@@ -219,72 +221,48 @@
         mostrar('pantalla-operario');
     }
 
+    // --- ESCANEO ---
     function encenderCamara() {
         if (isProcessing) return;
         const readerDiv = document.getElementById("reader");
         readerDiv.style.display = "block"; 
-        if(html5QrCode) { html5QrCode.clear(); }
         html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
-        html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
+        html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (txt) => {
             isProcessing = true;
-            html5QrCode.stop().then(() => {
-                readerDiv.style.display = "none";
-                procesarScan(txt);
-            }).catch(err => console.error("Error al detener:", err));
-        }, (errorMessage) => {}).catch(err => {
-            console.error("Error cámara:", err);
-            alert("No se pudo iniciar la cámara.");
+            html5QrCode.stop().then(() => { readerDiv.style.display = "none"; procesarScan(txt); });
         });
     }
 
     function registrarManual() {
-        const inputMan = document.getElementById('input-manual');
-        const id = inputMan.value.trim();
-        if (!id) return alert("Por favor, escribí un ID válido");
-        procesarScan(id);
-        inputMan.value = "";
+        const id = document.getElementById('input-manual').value.trim();
+        if (id) { procesarScan(id); document.getElementById('input-manual').value = ""; }
     }
 
     function procesarScan(id) {
         const input = document.getElementById('input-scan');
         const log = document.getElementById('log-scan');
         input.value = "⌛ REGISTRANDO..."; 
-        input.style.background = "#f1c40f"; 
-        input.style.color = "#000";
         callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
-            if(res.status === "OK") {
-                input.style.background = "#2fc95c"; input.style.color = "#07111f"; input.value = "✅ " + id;
-            } else {
-                input.style.background = "#e74c3c"; input.style.color = "#fff"; input.value = "❌ ERROR";
-            }
-            const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            log.innerHTML = `<div style="border-bottom:1px solid rgba(255,255,255,0.1); padding:5px; font-size:12px;"><b>${hora}</b> - ${id}: ${res.msj}</div>` + log.innerHTML;
-            setTimeout(() => { 
-                input.value = "LISTO PARA ESCANEAR"; input.style.background = "#07111f"; input.style.color = "white"; isProcessing = false; 
-            }, 2000);
+            input.value = (res.status === "OK" ? "✅ " : "❌ ") + id;
+            log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${res.msj}</div>` + log.innerHTML;
+            setTimeout(() => { input.value = "LISTO PARA ESCANEAR"; isProcessing = false; }, 2000);
         });
     }
 
-    // --- MOTOR DE IMPORTACIÓN UNIFICADO ---
+    // --- IMPORTACIÓN SANEADA ---
     function abrirPantallaProyecto() {
-        const status = document.getElementById('status-contrato');
-        const btnReset = document.getElementById('btn-reset-contrato');
-        const mapeador = document.getElementById('mapeador-columnas');
-
         callServer("obtenerContratoImportacion", {}, (res) => {
+            const status = document.getElementById('status-contrato');
+            const mapeador = document.getElementById('mapeador-columnas');
+            const btnReset = document.getElementById('btn-reset-contrato');
             if (res && res.oc) {
                 contratoVigente = res;
-                status.innerHTML = "✅ FORMATO DETECTADO: El sistema ya conoce el orden de tus columnas.";
-                status.style.color = "#2ecc71";
-                btnReset.classList.remove('hidden');
-                mapeador.classList.add('hidden');
+                status.innerHTML = "✅ FORMATO DETECTADO"; status.style.color = "#2ecc71";
+                mapeador.classList.add('hidden'); btnReset.classList.remove('hidden');
             } else {
                 contratoVigente = null;
-                status.innerHTML = "ℹ️ SIN FORMATO: Deberás mapear las columnas en esta primera carga.";
-                status.style.color = "#f1c40f";
-                btnReset.classList.add('hidden');
-                mapeador.classList.remove('hidden');
+                status.innerHTML = "ℹ️ SIN FORMATO: Mapeá ahora."; status.style.color = "#f1c40f";
+                mapeador.classList.remove('hidden'); btnReset.classList.add('hidden');
             }
             mostrar('pantalla-proyecto');
         });
@@ -293,123 +271,68 @@
     function procesarYSubir() {
         const fileInput = document.getElementById('archivo-excel');
         const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
-        
-        if (!idProy) return alert("Por favor, indicá el nombre del Proyecto.");
-        if (fileInput.files.length === 0) return alert("Seleccioná un archivo Excel.");
+        if (!idProy || fileInput.files.length === 0) return alert("Faltan datos.");
 
         const reader = new FileReader();
         reader.onload = function(e) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, {header: 1});
-
+            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
             const headers = json[0];
-            datosTemporalesFilas = json.slice(1); 
+            datosTemporalesFilas = json.slice(1);
 
-            if (!contratoVigente) {
-                generarInterfazMapeo(headers);
-            } else {
-                ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-            }
+            if (!contratoVigente) generarInterfazMapeo(headers);
+            else ejecutarImportacionFinal(idProy, datosTemporalesFilas);
         };
         reader.readAsArrayBuffer(fileInput.files[0]);
     }
 
     function generarInterfazMapeo(headers) {
         const contenedor = document.getElementById('selector-mapeo');
-        const mapeadorDiv = document.getElementById('mapeador-columnas');
-        contenedor.innerHTML = `<p style="font-size: 11px; color: #f1c40f; margin-bottom:10px;">⚠️ Seleccioná las columnas que forman tu QR/Barra.</p>`;
-        mapeadorDiv.classList.remove('hidden');
-
-        const camposBase = [
-            { id: "oc", etiqueta: "📄 Número de OC (Obligatorio)" },
-            { id: "nroPieza", etiqueta: "🔢 Nro de Pieza (Obligatorio)" },
-            { id: "cliente", etiqueta: "👤 Cliente / Proyecto" }
+        contenedor.innerHTML = "<p style='font-size:10px; color:#f1c40f;'>Mapeá las columnas de tu Excel:</p>";
+        document.getElementById('mapeador-columnas').classList.remove('hidden');
+        const campos = [
+            { id: "oc", et: "📄 Nro de OC (Obligatorio)" },
+            { id: "nroPieza", et: "🔢 Nro de Pieza (Obligatorio)" },
+            { id: "cliente", et: "👤 Cliente / Proyecto" }
         ];
+        for(let i=1; i<=10; i++) campos.push({ id: `extra_${i}`, et: `📊 Dato Adicional ${i}` });
 
-        for(let i=1; i<=10; i++) {
-            camposBase.push({ id: `extra_${i}`, etiqueta: `📊 Dato Adicional ${i}` });
-        }
-
-        camposBase.forEach(campo => {
-            let options = `<option value="">-- Ignorar --</option>`;
-            options += headers.map((h, index) => `<option value="${index}">${h || 'Columna ' + (index+1)}</option>`).join('');
-            
-            contenedor.innerHTML += `
-                <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; text-align:left;">
-                    <label style="font-size:11px; display:block; color:${campo.id === 'oc' || campo.id === 'nroPieza' ? '#2fc95c' : '#aaa'};">${campo.etiqueta}:</label>
-                    <select id="sel-${campo.id}" style="width:100%; padding:4px; background:#222; color:white; border:1px solid #444;">${options}</select>
-                </div>
-            `;
+        campos.forEach(c => {
+            let ops = `<option value="">-- Ignorar --</option>`;
+            headers.forEach((h, i) => ops += `<option value="${i}">${h || 'Columna '+(i+1)}</option>`);
+            contenedor.innerHTML += `<label style="color:#aaa;">${c.et}</label><select id="sel-${c.id}">${ops}</select>`;
         });
     }
 
-    function ejecutarImportacionFinal(idProyecto, filas) {
+    function ejecutarImportacionFinal(idP, filas) {
         if (!contratoVigente) {
-            const getVal = (id) => {
-                const el = document.getElementById('sel-' + id);
-                return el ? el.value : "";
-            };
-
-            const nuevoContrato = {
-                oc: getVal('oc'),
-                nroPieza: getVal('nroPieza'),
-                cliente: getVal('cliente'),
-                extra_1: getVal('extra_1'), extra_2: getVal('extra_2'),
-                extra_3: getVal('extra_3'), extra_4: getVal('extra_4'),
-                extra_5: getVal('extra_5'), extra_6: getVal('extra_6'),
-                extra_7: getVal('extra_7'), extra_8: getVal('extra_8'),
-                extra_9: getVal('extra_9'), extra_10: getVal('extra_10')
-            };
-
-            if (!nuevoContrato.oc || !nuevoContrato.nroPieza) {
-                return alert("❌ Error: Debés seleccionar OC y Nro de Pieza.");
-            }
-
-            callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, (res) => {
-                if (res.status === "OK") {
-                    enviarDatosAlServidor(idProyecto, filas);
-                }
-            });
-        } else {
-            enviarDatosAlServidor(idProyecto, filas);
-        }
+            const getV = (id) => document.getElementById('sel-'+id).value;
+            const c = { oc: getV('oc'), nroPieza: getV('nroPieza'), cliente: getV('cliente') };
+            for(let i=1; i<=10; i++) c[`extra_${i}`] = getV(`extra_${i}`);
+            if (!c.oc || !c.nroPieza) return alert("OC y Pieza son obligatorios.");
+            callServer("guardarContratoImportacion", { contrato: JSON.stringify(c) }, () => mandar(idP, filas));
+        } else mandar(idP, filas);
     }
 
-    function enviarDatosAlServidor(idProy, filas) {
-        callServer("importarDatosMapeados", { 
-            idProyecto: idProy, 
-            filasJSON: JSON.stringify(filas) 
-        }, (res) => {
-            if (res.status === "OK") {
-                alert(res.msj);
-                location.reload();
-            } else {
-                alert("❌ Error: " + res.msj);
-            }
+    function mandar(idP, filas) {
+        callServer("importarDatosMapeados", { idProyecto: idP, filasJSON: JSON.stringify(filas) }, res => {
+            alert(res.msj); if(res.status === "OK") location.reload();
         });
     }
 
-    function borrarContrato() {
-        if (confirm("¿Estás seguro? Se borrará la memoria del formato.")) {
-            callServer("guardarContratoImportacion", { contrato: "" }, () => {
-                location.reload();
-            });
-        }
-    }
+    function borrarContrato() { if(confirm("¿Borrar?")) callServer("guardarContratoImportacion", { contrato: "" }, () => location.reload()); }
 
-    // --- CONFIGURADOR DE ETIQUETAS (TU LÓGICA INTACTA) ---
+    // --- ETIQUETAS E IMPRESIÓN ---
     function cargarConfigurador() {
         const idProy = document.getElementById('id-proy-print').value;
-        if (!idProy) return alert("Ingresa un ID de Proyecto");
+        if (!idProy) return alert("Ingresa ID de Proyecto");
         const cont = document.getElementById('config-campos-etiqueta');
-        cont.innerHTML = "⌛ Cargando columnas...";
+        cont.innerHTML = "⌛ Cargando...";
         callServer("listaGestion", { tipo: "PIEZAS_PROYECTO", id: idProy }, res => {
             if (res.status === "ERROR") return alert(res.msj);
-            window.headersActuales = res.encabezados;
-            piezaDeMuestra = res.piezas[0];
-            cont.innerHTML = `<div id="filas-configuracion"></div><button onclick="agregarFilaConfig()" style="background:#34495e; font-size:11px; width:auto;">+ Agregar Campo</button>`;
+            window.headersActuales = res.encabezados; piezaDeMuestra = res.piezas[0];
+            cont.innerHTML = `<div id="filas-configuracion"></div><button onclick="agregarFilaConfig()" style="background:#34495e; width:auto;">+ Campo</button>`;
             agregarFilaConfig();
         });
     }
@@ -417,110 +340,42 @@
     function agregarFilaConfig() {
         const contenedor = document.getElementById('filas-configuracion');
         const div = document.createElement('div');
-        div.className = "fila-etiqueta";
-        div.style = "display:flex; gap:5px; margin-bottom:5px;";
-        let opciones = window.headersActuales.map((h, i) => `<option value="${i}">${h}</option>`).join('');
-        div.innerHTML = `<select class="sel-col-et" style="flex:2" onchange="actualizarPreviewLive()">${opciones}</select><select class="sel-tit-et" style="flex:1" onchange="actualizarPreviewLive()"><option value="NO">SIN TÍTULO</option><option value="SI">CON TÍTULO</option></select><button onclick="this.parentElement.remove(); actualizarPreviewLive();" style="background:#c0392b; width:40px; margin:0;">X</button>`;
-        contenedor.appendChild(div);
-        actualizarPreviewLive();
+        div.className = "fila-etiqueta"; div.style = "display:flex; gap:5px; margin-bottom:5px;";
+        let ops = window.headersActuales.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+        div.innerHTML = `<select class="sel-col-et" style="flex:2" onchange="actualizarPreviewLive()">${ops}</select><select class="sel-tit-et" style="flex:1" onchange="actualizarPreviewLive()"><option value="NO">SIN TÍTULO</option><option value="SI">CON TÍTULO</option></select><button onclick="this.parentElement.remove(); actualizarPreviewLive();" style="background:#c0392b; width:40px; margin:0;">X</button>`;
+        contenedor.appendChild(div); actualizarPreviewLive();
     }
 
     function actualizarPreviewLive() {
         if(!piezaDeMuestra) return;
         const cont = document.getElementById('etiqueta-preview-live');
         const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
-        cont.innerHTML = "";
         let htmlCampos = "";
         filasConfig.forEach(fila => {
             const idx = fila.querySelector('.sel-col-et').value;
-            const conTitulo = fila.querySelector('.sel-tit-et').value === "SI";
-            const nombreCol = window.headersActuales[idx];
-            const valor = piezaDeMuestra[idx];
-            htmlCampos += `<div>${conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+            const conTit = fila.querySelector('.sel-tit-et').value === "SI";
+            htmlCampos += `<div>${conTit ? window.headersActuales[idx] + ': ' : ''}<b>${piezaDeMuestra[idx]}</b></div>`;
         });
         cont.innerHTML = `${htmlCampos}<svg id="bar-preview-live"></svg>`;
         JsBarcode("#bar-preview-live", piezaDeMuestra[2], { format: "CODE128", height: 30, displayValue: true, fontSize: 10 });
     }
 
     function guardarDisenoMaestro() {
-        const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
-        if(filasConfig.length === 0) return alert("Agregá al menos un campo.");
-        const config = filasConfig.map(fila => ({ colIndex: fila.querySelector('.sel-col-et').value, conTitulo: fila.querySelector('.sel-tit-et').value === "SI" }));
+        const filas = Array.from(document.querySelectorAll('.fila-etiqueta'));
+        const config = filas.map(f => ({ colIndex: f.querySelector('.sel-col-et').value, conTitulo: f.querySelector('.sel-tit-et').value === "SI" }));
         callServer("guardarConfiguracionMaestra", { config: JSON.stringify(config) }, res => alert(res.msj));
     }
 
-    function abrirBuscadorReimpresion() {
-        mostrar('pantalla-reimpresion');
-        document.getElementById('lista-resultados-busqueda').innerHTML = "";
-        document.getElementById('input-busqueda-universal').value = "";
-    }
-
-    function ejecutarBusquedaUniversal() {
-        const q = document.getElementById('input-busqueda-universal').value;
-        if(q.length < 2) return alert("Escribí algo más...");
-        const cont = document.getElementById('lista-resultados-busqueda');
-        cont.innerHTML = "⌛ Buscando...";
-        callServer("buscarPiezasUniversal", { query: q }, res => {
-            cont.innerHTML = "";
-            if(res.piezas.length === 0) return cont.innerHTML = "❌ No se encontró nada.";
-            res.piezas.forEach(p => {
-                cont.innerHTML += `<div class="item-lista" style="flex-direction:column; align-items:flex-start;"><div style="width:100%; display:flex; justify-content:space-between;"><b>${p[1]} | ${p[2]}</b><small>${p[3]}</small></div><div style="font-size:10px; color:#aaa;">OC: ${p[1]} | Proyecto: ${p[0]}</div><button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" style="background:#27ae60; padding:5px; margin-top:5px; font-size:10px; width:auto;">🖨️ REIMPRIMIR</button></div>`;
-            });
-        });
-    }
-
-    function reimprimirEtiquetaUnica(idProy, idPieza) {
-        callServer("obtenerConfiguracionMaestra", {}, configJSON => {
-            if(!configJSON) return alert("⚠️ No hay plantilla maestra guardada.");
-            const config = JSON.parse(configJSON);
-            callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
-                const pieza = res.piezas.find(p => String(p[2]) === String(idPieza));
-                if(!pieza) return alert("No se encontró la pieza.");
-                const modal = document.getElementById('modal-reimpresion');
-                const cont = document.getElementById('area-ticket-reimpresion');
-                modal.classList.remove('hidden');
-                cont.innerHTML = "";
-                let htmlCampos = "";
-                config.forEach(item => {
-                    const nombreCol = res.encabezados[item.colIndex];
-                    const valor = pieza[item.colIndex];
-                    htmlCampos += `<div style="color:black; font-family:Arial; font-size:14px; margin-bottom:2px;">${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
-                });
-                const div = document.createElement('div');
-                div.style = "background:white; padding:10px; border:1px solid #000; width:280px; text-align:center;";
-                div.innerHTML = `${htmlCampos}<svg id="bar-modal-reimp"></svg>`;
-                cont.appendChild(div);
-                JsBarcode("#bar-modal-reimp", idPieza, {format: "CODE128", height: 40, displayValue: true});
-            });
-        });
-    }
-
-    function lanzarImpresionUnica() {
-        const ticket = document.getElementById('area-ticket-reimpresion').innerHTML;
-        const ventanaPrent = window.open('', '_blank');
-        ventanaPrent.document.write('<html><body onload="window.print(); window.close();">' + ticket + '</body></html>');
-        ventanaPrent.document.close();
-        document.getElementById('modal-reimpresion').classList.add('hidden');
-    }
-
     function imprimirLoteCompleto(idProy) {
-        if(!idProy) return alert("ID Proyecto vacío.");
-        callServer("obtenerConfiguracionMaestra", {}, configJSON => {
-            if(!configJSON) return alert("❌ Primero debés guardar una Plantilla Maestra.");
-            const config = JSON.parse(configJSON);
+        callServer("obtenerConfiguracionMaestra", {}, configJ => {
+            const config = JSON.parse(configJ);
             callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
-                const cont = document.getElementById('contenedor-etiquetas');
-                cont.innerHTML = "";
+                const cont = document.getElementById('contenedor-etiquetas'); cont.innerHTML = "";
                 res.piezas.forEach((p, i) => {
-                    let htmlCampos = "";
-                    config.forEach(item => {
-                        const valor = p[item.colIndex];
-                        const nombreCol = res.encabezados[item.colIndex];
-                        htmlCampos += `<div>${item.conTitulo ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
-                    });
-                    const div = document.createElement('div');
-                    div.className = "etiqueta-preview";
-                    div.innerHTML = `${htmlCampos}<svg id="bar-gen-${i}"></svg>`;
+                    let html = "";
+                    config.forEach(item => html += `<div>${item.conTitulo ? res.encabezados[item.colIndex] + ': ' : ''}<b>${p[item.colIndex]}</b></div>`);
+                    const div = document.createElement('div'); div.className = "etiqueta-preview";
+                    div.innerHTML = `${html}<svg id="bar-gen-${i}"></svg>`;
                     cont.appendChild(div);
                     JsBarcode(`#bar-gen-${i}`, p[2], {format: "CODE128", height: 40, displayValue: true, fontSize: 10});
                 });
@@ -529,82 +384,89 @@
         });
     }
 
-    function guardarUsuario() {
-        const d = { legajo: document.getElementById('u-legajo').value, nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value };
-        callServer("crearNuevoUsuario", d, res => { alert(res.status); if(res.status==="OK") mostrar('pantalla-menu'); });
-    }
-
-    function guardarEstacion() {
-        callServer("crearEstacion", { nombre: document.getElementById('est-nombre').value, desc: document.getElementById('est-desc').value }, res => { alert(res); mostrar('pantalla-menu'); });
-    }
-
-    function cargarFlujograma() {
-        callServer("obtenerEstacionesFlujo", {}, res => { estacionesParaFlujo = res; renderizarFlujo(); mostrar('pantalla-flujo'); });
-    }
-
-    function renderizarFlujo() {
-        const cont = document.getElementById('lista-flujo-estaciones'); cont.innerHTML = "";
-        estacionesParaFlujo.forEach((est, i) => {
-            const activa = est.estado === "ACTIVO";
-            cont.innerHTML += `<div class="item-lista">
-                <div style="text-align:left;"><b>${est.nombre}</b><br><small>Orden: ${est.orden}</small></div>
-                <div style="display:flex; gap:5px;"><input type="number" value="${est.orden}" onchange="estacionesParaFlujo[${i}].orden=this.value" style="width:50px; margin:0;"><button onclick="estacionesParaFlujo[${i}].estado=(activa?'INACTIVO':'ACTIVO');renderizarFlujo();" style="width:50px; background:${activa?'#27ae60':'#c0392b'};">${activa?'ON':'OFF'}</button></div>
-            </div>`;
-        });
-    }
-
-    function salvarFlujo() {
-        callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => { alert(res.msj); if(res.status==="OK") mostrar('pantalla-menu'); });
-    }
-
-    function abrirGestorUsuarios() {
-        mostrar('pantalla-gestor');
-        callServer("obtenerListaUsuariosDetalle", {}, res => {
-            const cont = document.getElementById('lista-gestor'); cont.innerHTML = "";
-            res.forEach(u => {
-                cont.innerHTML += `<div class="item-lista">
-                    <div style="text-align:left;"><b>${u.nombre}</b><br><small>Legajo: ${u.legajo}</small></div>
-                    <button onclick="borrarUsuarioDefinitivo('${u.legajo}')" style="width:auto; padding:5px; background:#c0392b; font-size:10px;">ELIMINAR</button>
+    // --- BUSCADOR ---
+    function ejecutarBusquedaUniversal() {
+        const q = document.getElementById('input-busqueda-universal').value;
+        callServer("buscarPiezasUniversal", { query: q }, res => {
+            const cont = document.getElementById('lista-resultados-busqueda'); cont.innerHTML = "";
+            res.piezas.forEach(p => {
+                cont.innerHTML += `<div class="item-lista" style="flex-direction:column; align-items:flex-start;">
+                    <b>${p[1]} | ${p[2]}</b><small>${p[0]}</small>
+                    <button onclick="reimprimirEtiquetaUnica('${p[0]}', '${p[2]}')" style="background:#27ae60; font-size:10px; width:auto; margin-top:5px;">REIMPRIMIR</button>
                 </div>`;
             });
         });
     }
 
-    function borrarUsuarioDefinitivo(legajo) {
-        if(confirm("¿Borrar?")) callServer("eliminarUsuario", {legajo: legajo}, res => { alert(res.msj); abrirGestorUsuarios(); });
+    function reimprimirEtiquetaUnica(idP, idPieza) {
+        callServer("obtenerConfiguracionMaestra", {}, configJ => {
+            const config = JSON.parse(configJ);
+            callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idP}, res => {
+                const p = res.piezas.find(pz => String(pz[2]) === String(idPieza));
+                const cont = document.getElementById('area-ticket-reimpresion'); cont.innerHTML = "";
+                let html = "";
+                config.forEach(item => html += `<div>${item.conTitulo ? res.encabezados[item.colIndex] + ': ' : ''}<b>${p[item.colIndex]}</b></div>`);
+                cont.innerHTML = `<div style="background:white; padding:10px; width:280px; text-align:center; color:black;">${html}<svg id="bar-reimp"></svg></div>`;
+                document.getElementById('modal-reimpresion').classList.remove('hidden');
+                JsBarcode("#bar-reimp", idPieza, {format: "CODE128", height: 40, displayValue: true});
+            });
+        });
     }
 
-    function abrirConfigEmpresa() {
-        const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
-        const cont = document.getElementById('contenedor-horarios');
-        cont.innerHTML = "";
-        dias.forEach(d => {
-            cont.innerHTML += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;"><span style="width:40px; font-weight:bold;">${d}</span><input type="time" id="h-${d}-INI" style="margin:0; padding:5px;"><span>a</span><input type="time" id="h-${d}-FIN" style="margin:0; padding:5px;"></div>`;
+    function lanzarImpresionUnica() {
+        const ticket = document.getElementById('area-ticket-reimpresion').innerHTML;
+        const v = window.open('', '_blank');
+        v.document.write('<html><body onload="window.print(); window.close();">' + ticket + '</body></html>');
+        v.document.close();
+    }
+
+    // --- GESTIÓN ---
+    function guardarUsuario() {
+        const d = { legajo: document.getElementById('u-legajo').value, nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value };
+        callServer("crearNuevoUsuario", d, res => { alert(res.status); if(res.status==="OK") mostrar('pantalla-menu'); });
+    }
+
+    function abrirGestorUsuarios() {
+        callServer("obtenerListaUsuariosDetalle", {}, res => {
+            const cont = document.getElementById('lista-gestor'); cont.innerHTML = "";
+            res.forEach(u => cont.innerHTML += `<div class="item-lista"><span>${u.nombre}</span><button onclick="borrarU('${u.legajo}')" style="width:auto; background:red;">X</button></div>`);
+            mostrar('pantalla-gestor');
         });
+    }
+
+    function borrarU(l) { if(confirm("¿Borrar?")) callServer("eliminarUsuario", {legajo: l}, () => abrirGestorUsuarios()); }
+
+    function cargarFlujograma() { callServer("obtenerEstacionesFlujo", {}, res => { estacionesParaFlujo = res; renderFlujo(); mostrar('pantalla-flujo'); }); }
+    function renderFlujo() {
+        const cont = document.getElementById('lista-flujo-estaciones'); cont.innerHTML = "";
+        estacionesParaFlujo.forEach((est, i) => {
+            const activa = est.estado === "ACTIVO";
+            cont.innerHTML += `<div class="item-lista"><span>${est.nombre} (Ord: ${est.orden})</span><button onclick="estacionesParaFlujo[${i}].estado=(activa?'INACTIVO':'ACTIVO');renderFlujo();" style="width:50px; background:${activa?'#27ae60':'#c0392b'};">${activa?'ON':'OFF'}</button></div>`;
+        });
+    }
+    function salvarFlujo() { callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => { alert(res.msj); mostrar('pantalla-menu'); }); }
+
+    function abrirConfigEmpresa() {
         callServer("obtenerDatosEmpresa", {}, res => {
-            if(res.RAZON_SOCIAL) {
-                document.getElementById('emp-nombre').value = res.RAZON_SOCIAL;
-                document.getElementById('emp-cuit').value = res.CUIT || "";
-                document.getElementById('emp-direccion').value = res.DIRECCION || "";
-                document.getElementById('emp-logo').value = res.LOGO_URL || "";
-                dias.forEach(d => {
-                    document.getElementById(`h-${d}-INI`).value = res[d+"_INI"] || "08:00";
-                    document.getElementById(`h-${d}-FIN`).value = res[d+"_FIN"] || "17:00";
-                });
-            }
+            document.getElementById('emp-nombre').value = res.RAZON_SOCIAL || "";
+            document.getElementById('emp-cuit').value = res.CUIT || "";
+            document.getElementById('emp-direccion').value = res.DIRECCION || "";
+            document.getElementById('emp-logo').value = res.LOGO_URL || "";
+            const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
+            const cont = document.getElementById('contenedor-horarios'); cont.innerHTML = "";
+            dias.forEach(d => {
+                cont.innerHTML += `<div style="display:flex; gap:5px; font-size:10px; margin-bottom:2px;">${d} <input type="time" id="h-${d}-INI" value="${res[d+'_INI']||'08:00'}"> a <input type="time" id="h-${d}-FIN" value="${res[d+'_FIN']||'17:00'}"></div>`;
+            });
             mostrar('pantalla-config-empresa');
         });
     }
 
     function salvarConfigEmpresa() {
-        const dias = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
-        let config = { 
-            RAZON_SOCIAL: document.getElementById('emp-nombre').value, 
-            CUIT: document.getElementById('emp-cuit').value,
-            DIRECCION: document.getElementById('emp-direccion').value,
-            LOGO_URL: document.getElementById('emp-logo').value 
-        };
-        dias.forEach(d => { config[d+"_INI"] = document.getElementById(`h-${d}-INI`).value; config[d+"_FIN"] = document.getElementById(`h-${d}-FIN`).value; });
-        callServer("guardarDatosEmpresa", { config: JSON.stringify(config) }, res => { alert(res.msj); mostrar('pantalla-menu'); });
+        const conf = { RAZON_SOCIAL: document.getElementById('emp-nombre').value, CUIT: document.getElementById('emp-cuit').value, DIRECCION: document.getElementById('emp-direccion').value, LOGO_URL: document.getElementById('emp-logo').value };
+        ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"].forEach(d => { conf[d+"_INI"] = document.getElementById(`h-${d}-INI`).value; conf[d+"_FIN"] = document.getElementById(`h-${d}-FIN`).value; });
+        callServer("guardarDatosEmpresa", { config: JSON.stringify(conf) }, res => { alert(res.msj); mostrar('pantalla-menu'); });
     }
+
 </script>
+</body>
+</html>
