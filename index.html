@@ -269,32 +269,25 @@
     }
 
    function procesarYSubir() {
-    console.log("1. Botón presionado, iniciando función...");
+    console.log("1. Botón presionado...");
     
     const fileInput = document.getElementById('archivo-excel');
     const idProyInput = document.getElementById('id-proyecto-nuevo');
-    const mapeadorDiv = document.getElementById('mapeador-columnas'); // Nuevo: referencia al cuadro de mapeo
+    const idProy = idProyInput ? idProyInput.value.trim() : "";
     
-    // Verificamos si los elementos existen en el HTML
-    if (!idProyInput) { console.error("Error: No se encontró el input 'id-proyecto-nuevo'"); return; }
-    if (!fileInput) { console.error("Error: No se encontró el input 'archivo-excel'"); return; }
+    // Verificamos si ya existen los selectores de mapeo en pantalla
+    const hayMapeoActivo = document.getElementById('sel-oc');
 
-    const idProy = idProyInput.value.trim();
-    
-    // --- NUEVA COMPUERTA DE SEGURIDAD ---
-    // Si el mapeador ya es visible, significa que el usuario ya eligió columnas.
-    // No volvemos a leer el archivo, ejecutamos la importación final.
-    if (mapeadorDiv && !mapeadorDiv.classList.contains('hidden')) {
-        console.log("Mapeador detectado como abierto. Procediendo a importar...");
+    // SI YA HAY SELECTORES Y EL USUARIO YA ELIGIÓ ALGO (el valor no está vacío)
+    if (hayMapeoActivo && hayMapeoActivo.value !== "") {
+        console.log("Mapeo detectado. Enviando datos finales...");
         if (!idProy) return alert("Por favor, indicá el nombre del Proyecto.");
         ejecutarImportacionFinal(idProy, datosTemporalesFilas);
-        return; // Detenemos aquí para que no se ejecute el FileReader de abajo
+        return; 
     }
-    // ------------------------------------
 
-    console.log("2. Proyecto:", idProy);
-    console.log("3. Archivos seleccionados:", fileInput.files.length);
-
+    // SI NO HAY SELECTORES O ESTÁN VACÍOS, LEEMOS EL EXCEL PARA MOSTRARLOS
+    console.log("Iniciando lectura de archivo para mapeo...");
     if (!idProy || fileInput.files.length === 0) {
         alert("Por favor, indicá el nombre del Proyecto y seleccioná un archivo.");
         return;
@@ -302,7 +295,6 @@
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        console.log("4. Excel leído correctamente por el navegador");
         try {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
@@ -310,22 +302,20 @@
             
             const headers = json[0];
             datosTemporalesFilas = json.slice(1);
-            console.log("5. Encabezados detectados:", headers);
+            console.log("Encabezados detectados:", headers);
 
             if (!contratoVigente) {
-                console.log("6. No hay contrato, generando interfaz de mapeo...");
                 generarInterfazMapeo(headers);
             } else {
-                console.log("6. Contrato detectado, ejecutando importación final...");
                 ejecutarImportacionFinal(idProy, datosTemporalesFilas);
             }
         } catch (err) {
             console.error("Error procesando el Excel:", err);
+            alert("Error al leer el Excel. Revisá el formato.");
         }
     };
     reader.readAsArrayBuffer(fileInput.files[0]);
 }
-
     function generarInterfazMapeo(headers) {
         const contenedor = document.getElementById('selector-mapeo');
         contenedor.innerHTML = "<p style='font-size:10px; color:#f1c40f;'>Mapeá las columnas de tu Excel:</p>";
