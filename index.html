@@ -342,6 +342,7 @@
             }
 
             const headers = json[0] || [];
+            listaColumnasExcel = headers;
             datosTemporalesFilas = json.slice(1);
 
             console.log("Encabezados detectados:", headers);
@@ -444,26 +445,25 @@
     }
 
     function enviarDatosAlServidor(idProy, filas) {
-        console.log("Limpiando filas vacías antes de enviar...");
-        
-        // Filtramos para que solo mande filas que tengan al menos algún dato
-        // Así evitamos que te llene las 1000 filas del Sheet si el Excel tiene espacios en blanco
-        const filasLimpias = filas.filter(f => f.join('').trim() !== "");
+    console.log("Limpiando filas vacías antes de enviar...");
+    
+    const filasLimpias = filas.filter(f => f.join('').trim() !== "");
 
-        console.log("Enviando " + filasLimpias.length + " filas reales.");
+    console.log("Enviando " + filasLimpias.length + " filas reales.");
 
-        callServer("importarDatosMapeados", { 
-            idProyecto: idProy, 
-            filasJSON: JSON.stringify(filasLimpias) 
-        }, (res) => {
-            if (res.status === "OK") {
-                alert("🚀 Importación exitosa: " + res.msj);
-                location.reload();
-            } else {
-                alert("❌ Error: " + res.msj);
-            }
-        });
-    }
+    callServer("importarDatosMapeados", { 
+        idProyecto: idProy, 
+        filasJSON: JSON.stringify(filasLimpias),
+        headersJSON: JSON.stringify(listaColumnasExcel || [])
+    }, (res) => {
+        if (res.status === "OK") {
+            alert("🚀 Importación exitosa: " + res.msj);
+            location.reload();
+        } else {
+            alert("❌ Error: " + res.msj);
+        }
+    });
+}
 
     function mandar(idP, filas) {
         callServer("importarDatosMapeados", { idProyecto: idP, filasJSON: JSON.stringify(filas) }, res => {
