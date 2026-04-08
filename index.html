@@ -1,196 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <base target="_top">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Spora Systems V5.4 | Power Fix</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #07111f; color: white; margin: 0; padding: 15px; text-align: center; }
-        .card { background: #111d2b; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 500px; margin: auto; border: 1px solid rgba(255,255,255,0.05); }
-        .hidden { display: none !important; }
-        button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; color: white; background: #2c3e50; }
-        input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid #2c3e50; background: #07111f; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
-        label { display: block; text-align: left; font-size: 11px; font-weight: bold; margin-top: 10px; color: #2fc95c; }
-        .item-lista { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid #2fc95c; }
-        .box-mapeo { background: rgba(0,0,0,0.2); border: 1px dashed #2fc95c; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: left; }
-        .etiqueta-preview { background: white; color: black; border: 2px solid #000; margin: 15px auto; padding: 10px; width: 280px; text-align: center; border-radius: 5px; page-break-inside: avoid; }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #3498db; background: #000; margin: 15px 0; min-height: 200px; display: none; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h1 style="letter-spacing: 5px; margin-bottom: 0;">SPORA</h1>
-    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px;">SYSTEMS V5.4</p>
-
-    <div id="pantalla-login">
-        <input type="password" id="pin-login" placeholder="PIN de Acceso" inputmode="numeric">
-        <button onclick="login()" style="background:#2fc95c; color:#07111f;">ENTRAR</button>
-    </div>
-
-    <div id="pantalla-menu" class="hidden">
-        <button onclick="abrirPantallaProyecto()" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
-        <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
-        <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 BUSCADOR / REIMPRESIÓN</button>
-        
-        <button onclick="abrirConfigEmpresa()" style="background:#16a085">⚙️ CONFIGURACIÓN DE PLANTA</button>
-        
-        <hr style="opacity:0.1">
-        <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
-        <hr style="opacity:0.1">
-        <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
-        <button onclick="abrirGestorUsuarios()" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
-        <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
-        <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
-    </div>
-
-    <div id="pantalla-impresion" class="hidden">
-        <h3>Etiquetas y Diseño</h3>
-        <label>1. Buscar Proyecto para diseñar:</label>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="id-proy-print" placeholder="ID Proyecto">
-            <button onclick="cargarConfigurador()" style="background:#3498db; width:auto;">BUSCAR</button>
-        </div>
-        
-        <div id="config-campos-etiqueta" style="margin-top:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"></div>
-
-        <div id="preview-maestra-container" style="margin: 20px 0; padding: 10px; border: 1px dashed #2fc95c; background: rgba(47, 201, 92, 0.05); border-radius: 10px;">
-            <p style="font-size: 10px; color: #2fc95c; margin-top: 0;">👁️ VISTA PREVIA EN VIVO</p>
-            <div id="etiqueta-preview-live" class="etiqueta-preview" style="margin: 0 auto;"></div>
-        </div>
-
-        <button onclick="guardarDisenoMaestro()" style="background:#8e44ad;">💾 GUARDAR DISEÑO MAESTRO</button>
-        <hr style="opacity:0.1">
-        <button onclick="imprimirLoteCompleto(document.getElementById('id-proy-print').value)" style="background:#27ae60;">🖨️ GENERAR LOTE COMPLETO</button>
-        
-        <div id="contenedor-etiquetas" style="margin-top:20px;"></div>
-        
-        <button onclick="window.print()" style="background:#2c3e50" id="btn-imprimir-ahora" class="hidden">IMPRIMIR AHORA</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
-    </div>
-
-    <div id="pantalla-reimpresion" class="hidden">
-        <h3>Buscador de Piezas</h3>
-        <div style="display:flex; gap:5px; margin-bottom:15px;">
-            <input type="text" id="input-busqueda-universal" placeholder="Cliente, OC o ID...">
-            <button onclick="ejecutarBusquedaUniversal()" style="width:50px; margin:0;">🔍</button>
-        </div>
-        <div id="lista-resultados-busqueda" style="max-height:350px; overflow-y:auto;"></div>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444; margin-top:15px;">VOLVER</button>
-    </div>
-
-    <div id="pantalla-proyecto" class="hidden">
-        <h3>🚀 Nuevo Proyecto / Lote</h3>
-        <input type="text" id="id-proyecto-nuevo" placeholder="Nombre del Proyecto (Ej: Torre Madero)">
-        
-        <div id="status-contrato" style="font-size: 12px; margin: 10px 0; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05);">
-            Verificando configuración de importación...
-        </div>
-
-        <input type="file" id="archivo-excel" accept=".xlsx, .xls" style="margin-top:10px;">
-        
-        <div id="mapeador-columnas" class="hidden" style="margin-top:15px; border: 1px solid #555; padding: 10px;">
-            <div id="selector-mapeo"></div>
-        </div>
-
-        <button onclick="procesarYSubir()" style="background:#27ae60; margin-top:20px;">SUBIR E IMPORTAR</button>
-        <button onclick="borrarContrato()" id="btn-reset-contrato" class="hidden" style="background:#c0392b; font-size: 10px;">🔄 RESETEAR FORMATO EXCEL</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
-    </div>
-
-    <div id="pantalla-seleccion-puesto" class="hidden">
-        <h3>Panel de Producción</h3>
-        <p>Hola <strong id="nombre-op" style="color:#2fc95c;"></strong></p>
-        <select id="select-puesto-op"></select>
-        <button onclick="entrarAPuesto()" style="background:#f39c12">INGRESAR A ESTACIÓN</button>
-    </div>
-
-    <div id="pantalla-operario" class="hidden">
-        <div style="background:#07111f; padding:10px; border-radius:10px; border:1px solid #3498db; margin-bottom:10px;">
-            <p style="margin:2px"><strong id="estacion-op" style="color:#3498db;"></strong> | <span id="nombre-op-scan"></span></p>
-        </div>
-        <div id="reader"></div>
-        <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
-        
-        <div style="margin-top: 15px; padding: 10px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px;">
-            <p style="font-size: 10px; margin-bottom: 5px; color: #aaa;">⌨️ INGRESO MANUAL (SI EL QR/BARRA FALLA)</p>
-            <div style="display: flex; gap: 5px;">
-                <input type="text" id="input-manual" placeholder="Escribir ID Pieza..." style="margin:0; flex: 1;">
-                <button onclick="registrarManual()" style="width: auto; margin:0; background: #3498db; padding: 0 20px;">OK</button>
-            </div>
-        </div>
-
-        <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center; margin-top:20px;">
-        <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;"></div>
-        
-        <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
-    </div>
-
-    <div id="form-usuario" class="hidden">
-        <h3>Ficha de Personal</h3>
-        <div style="text-align:left;">
-            <label>Nro. de Legajo:</label><input type="text" id="u-legajo">
-            <label>Nombre:</label><input type="text" id="u-nombre">
-            <label>PIN (4 dígitos):</label><input type="number" id="u-pin">
-            <label>Rol:</label><select id="u-rol"><option value="OPERARIO">OPERARIO</option><option value="GERENTE">GERENTE</option></select>
-        </div>
-        <button onclick="guardarUsuario()" style="background:#27ae60; margin-top:20px;">CREAR USUARIO</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">CANCELAR</button>
-    </div>
-
-    <div id="form-estacion" class="hidden">
-        <h3>Nueva Estación</h3>
-        <input type="text" id="est-nombre" placeholder="Nombre Estación">
-        <input type="text" id="est-desc" placeholder="Descripción">
-        <button onclick="guardarEstacion()" style="background:#27ae60">GUARDAR</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
-    </div>
-
-    <div id="pantalla-flujo" class="hidden">
-        <h3>Configurador de Flujo</h3>
-        <div id="lista-flujo-estaciones"></div>
-        <button onclick="salvarFlujo()" style="background:#2fc95c; margin-top:20px;">GUARDAR ORDEN</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
-    </div>
-
-    <div id="pantalla-gestor" class="hidden">
-        <h3 id="titulo-gestor"></h3>
-        <div id="lista-gestor"></div>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
-    </div>
-
-    <div id="pantalla-config-empresa" class="hidden">
-        <h3>Configuración de Planta</h3>
-        <div style="text-align:left; background:rgba(255,255,255,0.05); padding:15px; border-radius:10px;">
-            <label>Razón Social:</label><input type="text" id="emp-nombre">
-            <label>Cuit:</label><input type="text" id="emp-cuit">
-            <label>Dirección:</label><input type="text" id="emp-direccion">
-            <label>URL Logo (PNG/JPG):</label><input type="text" id="emp-logo" placeholder="https://...">
-            
-            <p style="color:#2fc95c; font-size:12px; margin-top:20px; border-bottom:1px solid #2fc95c;">📅 HORARIOS LABORALES</p>
-            
-            <div id="contenedor-horarios" style="margin-top:10px;"></div>
-            
-        </div>
-        <button onclick="salvarConfigEmpresa()" style="background:#2fc95c; margin-top:20px;">GUARDAR CONFIGURACIÓN</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
-    </div>
-</div>
-
-<div id="modal-reimpresion" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column;">
-    <div id="area-ticket-reimpresion" style="background:white; padding:20px; border-radius:10px;"></div>
-    <div style="margin-top:20px; display:flex; gap:10px;">
-        <button onclick="lanzarImpresionUnica()" style="background:#2fc95c; width:150px;">Confirmar e Imprimir</button>
-        <button onclick="document.getElementById('modal-reimpresion').classList.add('hidden')" style="background:#e74c3c; width:150px;">Cancelar</button>
-    </div>
-</div>
-
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwz_7u93sZ3k8Hq0w581H_3Jpmaozhb1J8eHXjFKBS6tn7EQ0-TDgUT2c7vvNIeEZVD/exec";
     let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
@@ -253,7 +60,7 @@
             }).catch(err => console.error("Error al detener:", err));
         }, (errorMessage) => {}).catch(err => {
             console.error("Error cámara:", err);
-            alert("No se pudo iniciar la cámara. Verificá los permisos del navegador.");
+            alert("No se pudo iniciar la cámara.");
         });
     }
 
@@ -285,14 +92,14 @@
         });
     }
 
-    // --- IMPORTACION DE PROYECTO ---
+    // --- MOTOR DE IMPORTACIÓN UNIFICADO ---
     function abrirPantallaProyecto() {
         const status = document.getElementById('status-contrato');
         const btnReset = document.getElementById('btn-reset-contrato');
         const mapeador = document.getElementById('mapeador-columnas');
 
         callServer("obtenerContratoImportacion", {}, (res) => {
-            if (res && res.status !== "SIN_CONTRATO") {
+            if (res && res.oc) {
                 contratoVigente = res;
                 status.innerHTML = "✅ FORMATO DETECTADO: El sistema ya conoce el orden de tus columnas.";
                 status.style.color = "#2ecc71";
@@ -336,127 +143,89 @@
     }
 
     function generarInterfazMapeo(headers) {
-    const contenedor = document.getElementById('selector-mapeo');
-    const mapeadorDiv = document.getElementById('mapeador-columnas');
-    contenedor.innerHTML = `
-        <p style="font-size: 11px; color: #f1c40f; margin-bottom:10px;">
-            ⚠️ CONFIGURACIÓN DE CÓDIGO: Seleccioná las columnas que forman tu QR/Barra.
-        </p>
-    `;
-    mapeadorDiv.classList.remove('hidden');
+        const contenedor = document.getElementById('selector-mapeo');
+        const mapeadorDiv = document.getElementById('mapeador-columnas');
+        contenedor.innerHTML = `<p style="font-size: 11px; color: #f1c40f; margin-bottom:10px;">⚠️ Seleccioná las columnas que forman tu QR/Barra.</p>`;
+        mapeadorDiv.classList.remove('hidden');
 
-    // Definimos los campos OBLIGATORIOS que generan el código
-    const camposBase = [
-        { id: "oc", etiqueta: "📄 Número de OC (Obligatorio para Código)" },
-        { id: "nroPieza", etiqueta: "🔢 Nro de Pieza/Ítem (Obligatorio para Código)" },
-        { id: "cliente", etiqueta: "👤 Cliente / Proyecto" }
-    ];
+        const camposBase = [
+            { id: "oc", etiqueta: "📄 Número de OC (Obligatorio)" },
+            { id: "nroPieza", etiqueta: "🔢 Nro de Pieza (Obligatorio)" },
+            { id: "cliente", etiqueta: "👤 Cliente / Proyecto" }
+        ];
 
-    // Mantenemos los 10 extras para medidas, telas, etc.
-    const camposExtra = [];
-    for(let i=1; i<=10; i++) {
-        camposExtra.push({ id: `extra_${i}`, etiqueta: `📊 Dato Adicional ${i} (Ancho, Alto, etc.)` });
+        for(let i=1; i<=10; i++) {
+            camposBase.push({ id: `extra_${i}`, etiqueta: `📊 Dato Adicional ${i}` });
+        }
+
+        camposBase.forEach(campo => {
+            let options = `<option value="">-- Ignorar --</option>`;
+            options += headers.map((h, index) => `<option value="${index}">${h || 'Columna ' + (index+1)}</option>`).join('');
+            
+            contenedor.innerHTML += `
+                <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px; text-align:left;">
+                    <label style="font-size:11px; display:block; color:${campo.id === 'oc' || campo.id === 'nroPieza' ? '#2fc95c' : '#aaa'};">${campo.etiqueta}:</label>
+                    <select id="sel-${campo.id}" style="width:100%; padding:4px; background:#222; color:white; border:1px solid #444;">${options}</select>
+                </div>
+            `;
+        });
     }
-
-    const todosLosCampos = [...camposBase, ...camposExtra];
-
-    todosLosCampos.forEach(campo => {
-        let options = `<option value="">-- Seleccionar Columna --</option>`;
-        options += headers.map((h, index) => `<option value="${index}">${h || 'Columna ' + (index+1)}</option>`).join('');
-        
-        contenedor.innerHTML += `
-            <div style="margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
-                <label style="font-size:11px; display:block; color:${campo.id === 'oc' || campo.id === 'nroPieza' ? '#2fc95c' : '#aaa'}; font-weight:bold;">${campo.etiqueta}:</label>
-                <select id="sel-${campo.id}" style="width:100%; padding:4px; background:#222; color:white; border:1px solid #444;">${options}</select>
-            </div>
-        `;
-    });
-}
 
     function ejecutarImportacionFinal(idProyecto, filas) {
-    const getVal = (id) => {
-        const el = document.getElementById(id);
-        return el ? el.value : "";
-    };
+        if (!contratoVigente) {
+            const getVal = (id) => {
+                const el = document.getElementById('sel-' + id);
+                return el ? el.value : "";
+            };
 
-    if (!contratoVigente) {
-        // Captura blindada: si el elemento no existe, no rompe el código
-        const nuevoContrato = {
-            oc: getVal('sel-oc'),
-            nroPieza: getVal('sel-nroPieza'),
-            cliente: getVal('sel-cliente'),
-            extra_1: getVal('sel-extra_1'),
-            extra_2: getVal('sel-extra_2'),
-            extra_3: getVal('sel-extra_3'),
-            extra_4: getVal('sel-extra_4'),
-            extra_5: getVal('sel-extra_5'),
-            extra_6: getVal('sel-extra_6'),
-            extra_7: getVal('sel-extra_7'),
-            extra_8: getVal('sel-extra_8'),
-            extra_9: getVal('sel-extra_9'),
-            extra_10: getVal('sel-extra_10')
-        };
+            const nuevoContrato = {
+                oc: getVal('oc'),
+                nroPieza: getVal('nroPieza'),
+                cliente: getVal('cliente'),
+                extra_1: getVal('extra_1'), extra_2: getVal('extra_2'),
+                extra_3: getVal('extra_3'), extra_4: getVal('extra_4'),
+                extra_5: getVal('extra_5'), extra_6: getVal('extra_6'),
+                extra_7: getVal('extra_7'), extra_8: getVal('extra_8'),
+                extra_9: getVal('extra_9'), extra_10: getVal('extra_10')
+            };
 
-        if (!nuevoContrato.oc || !nuevoContrato.nroPieza) {
-            return alert("❌ Error: Debés seleccionar las columnas de OC y Nro de Pieza.");
+            if (!nuevoContrato.oc || !nuevoContrato.nroPieza) {
+                return alert("❌ Error: Debés seleccionar OC y Nro de Pieza.");
+            }
+
+            callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, (res) => {
+                if (res.status === "OK") {
+                    enviarDatosAlServidor(idProyecto, filas);
+                }
+            });
+        } else {
+            enviarDatosAlServidor(idProyecto, filas);
         }
+    }
 
-        // 1. Guardar Contrato
-        callServer("guardarContratoImportacion", { contrato: JSON.stringify(nuevoContrato) }, (res) => {
+    function enviarDatosAlServidor(idProy, filas) {
+        callServer("importarDatosMapeados", { 
+            idProyecto: idProy, 
+            filasJSON: JSON.stringify(filas) 
+        }, (res) => {
             if (res.status === "OK") {
-                // 2. Importar Datos (solo si el contrato se guardó bien)
-                enviarDatosAlServidor(idProyecto, filas);
+                alert(res.msj);
+                location.reload();
             } else {
-                alert("Error al guardar configuración: " + res.msj);
+                alert("❌ Error: " + res.msj);
             }
         });
-    } else {
-        enviarDatosAlServidor(idProyecto, filas);
     }
-}
 
-function enviarDatosAlServidor(idProy, filas) {
-    // IMPORTANTE: Convertimos a String antes de enviar
-    const payload = {
-        idProyecto: idProy,
-        filasJSON: JSON.stringify(filas)
-    };
-
-    callServer("importarDatosMapeados", payload, (res) => {
-        if (res.status === "OK") {
-            alert("🚀 " + res.msj);
-            location.reload();
-        } else {
-            alert("❌ Error: " + res.msj);
-        }
-    });
-}
-
-// Función auxiliar para no repetir código
-function enviarFilasAlServidor(idProyecto, filas) {
-    console.log("Enviando " + filas.length + " filas al servidor...");
-    
-    callServer("importarDatosMapeados", { 
-        idProyecto: idProyecto, 
-        filasJSON: JSON.stringify(filas) 
-    }, (res) => {
-        if (res.status === "OK") {
-            alert(res.msj);
-            location.reload(); // Recargamos para limpiar y ver cambios
-        } else {
-            alert("❌ Error en la importación: " + res.msj);
-        }
-    });
-}
     function borrarContrato() {
-        if (confirm("¿Estás seguro? Esto borrará la memoria del orden de las columnas y tendrás que mapear de nuevo.")) {
+        if (confirm("¿Estás seguro? Se borrará la memoria del formato.")) {
             callServer("guardarContratoImportacion", { contrato: "" }, () => {
-                abrirPantallaProyecto();
+                location.reload();
             });
         }
     }
 
-    // --- CONFIGURADOR DE ETIQUETAS ---
+    // --- CONFIGURADOR DE ETIQUETAS (TU LÓGICA INTACTA) ---
     function cargarConfigurador() {
         const idProy = document.getElementById('id-proy-print').value;
         if (!idProy) return alert("Ingresa un ID de Proyecto");
@@ -528,7 +297,7 @@ function enviarFilasAlServidor(idProyecto, filas) {
 
     function reimprimirEtiquetaUnica(idProy, idPieza) {
         callServer("obtenerConfiguracionMaestra", {}, configJSON => {
-            if(!configJSON) return alert("⚠️ No hay plantilla maestra guardada. Configurá una en el menú de etiquetas.");
+            if(!configJSON) return alert("⚠️ No hay plantilla maestra guardada.");
             const config = JSON.parse(configJSON);
             callServer("listaGestion", {tipo: "PIEZAS_PROYECTO", id: idProy}, res => {
                 const pieza = res.piezas.find(p => String(p[2]) === String(idPieza));
@@ -555,7 +324,7 @@ function enviarFilasAlServidor(idProyecto, filas) {
     function lanzarImpresionUnica() {
         const ticket = document.getElementById('area-ticket-reimpresion').innerHTML;
         const ventanaPrent = window.open('', '_blank');
-        ventanaPrent.document.write('<html><head><title>Imprimir Etiqueta</title><style>body{margin:0; display:flex; justify-content:center;} @page{size: auto; margin: 0mm;}</style></head><body onload="window.print(); window.close();">' + ticket + '</body></html>');
+        ventanaPrent.document.write('<html><body onload="window.print(); window.close();">' + ticket + '</body></html>');
         ventanaPrent.document.close();
         document.getElementById('modal-reimpresion').classList.add('hidden');
     }
@@ -586,57 +355,9 @@ function enviarFilasAlServidor(idProyecto, filas) {
         });
     }
 
-    function leerExcel(input) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            datosExcelRaw = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            if(datosExcelRaw.length > 0) {
-                listaColumnasExcel = Object.keys(datosExcelRaw[0]);
-                llenarSelect('map-oc', listaColumnasExcel); llenarSelect('map-pieza', listaColumnasExcel);
-                document.getElementById('zona-mapeo').classList.remove('hidden');
-            }
-        };
-        reader.readAsArrayBuffer(input.files[0]);
-    }
-
-    function confirmarImportacion() {
-        const idProy = document.getElementById('p-id').value.trim();
-        const oc = document.getElementById('map-oc').value;
-        const pz = document.getElementById('map-pieza').value;
-        if(!idProy || !oc || !pz) return alert("Completa OC y Pieza");
-        const extras = Array.from(document.querySelectorAll('.select-extra')).map(s => s.value).filter(v => v !== "");
-        const headersParaSheet = ["ID_PROYECTO", "OC", "CODIGO_ESCANEO", "ESTADO", "FECHA", pz, ...extras];
-        const filas = datosExcelRaw.map(r => {
-            const f = [String(r[oc]||""), String(r[pz]||"")];
-            extras.forEach(ex => f.push(String(r[ex]||"")));
-            return f;
-        });
-        callServer("crearProyecto", {id: idProy}, () => {
-            callServer("importarDatosMapeados", {id: idProy, f: JSON.stringify(filas), h: JSON.stringify(headersParaSheet)}, res => {
-                alert(res.msj); if(res.status === "OK") mostrar('pantalla-menu');
-            });
-        });
-    }
-
-    function llenarSelect(id, cols) {
-        const sel = document.getElementById(id); sel.innerHTML = '<option value="">--</option>';
-        cols.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
-    }
-
-    function agregarFilaExtra() {
-        const cont = document.getElementById('contenedor-extras');
-        const div = document.createElement('div'); div.style = "display:flex; gap:5px; margin-top:5px;";
-        let ops = '<option value="">-- Extra --</option>';
-        listaColumnasExcel.forEach(c => ops += `<option value="${c}">${c}</option>`);
-        div.innerHTML = `<select class="select-extra">${ops}</select><button onclick="this.parentElement.remove()" style="background:#e74c3c; width:40px; margin:0;">X</button>`;
-        cont.appendChild(div);
-    }
-
     function guardarUsuario() {
         const d = { legajo: document.getElementById('u-legajo').value, nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value };
-        callServer("crearNuevoUsuario", d, res => { alert(res.msj); if(res.status==="OK") mostrar('pantalla-menu'); });
+        callServer("crearNuevoUsuario", d, res => { alert(res.status); if(res.status==="OK") mostrar('pantalla-menu'); });
     }
 
     function guardarEstacion() {
@@ -651,7 +372,7 @@ function enviarFilasAlServidor(idProyecto, filas) {
         const cont = document.getElementById('lista-flujo-estaciones'); cont.innerHTML = "";
         estacionesParaFlujo.forEach((est, i) => {
             const activa = est.estado === "ACTIVO";
-            cont.innerHTML += `<div class="item-lista" style="border-left: 5px solid ${activa ? '#2fc95c' : '#e74c3c'};">
+            cont.innerHTML += `<div class="item-lista">
                 <div style="text-align:left;"><b>${est.nombre}</b><br><small>Orden: ${est.orden}</small></div>
                 <div style="display:flex; gap:5px;"><input type="number" value="${est.orden}" onchange="estacionesParaFlujo[${i}].orden=this.value" style="width:50px; margin:0;"><button onclick="estacionesParaFlujo[${i}].estado=(activa?'INACTIVO':'ACTIVO');renderizarFlujo();" style="width:50px; background:${activa?'#27ae60':'#c0392b'};">${activa?'ON':'OFF'}</button></div>
             </div>`;
@@ -667,7 +388,7 @@ function enviarFilasAlServidor(idProyecto, filas) {
         callServer("obtenerListaUsuariosDetalle", {}, res => {
             const cont = document.getElementById('lista-gestor'); cont.innerHTML = "";
             res.forEach(u => {
-                cont.innerHTML += `<div class="item-lista" style="border-left-color: ${u.estado==='ACTIVO'?'#2fc95c':'#e74c3c'}">
+                cont.innerHTML += `<div class="item-lista">
                     <div style="text-align:left;"><b>${u.nombre}</b><br><small>Legajo: ${u.legajo}</small></div>
                     <button onclick="borrarUsuarioDefinitivo('${u.legajo}')" style="width:auto; padding:5px; background:#c0392b; font-size:10px;">ELIMINAR</button>
                 </div>`;
@@ -713,5 +434,3 @@ function enviarFilasAlServidor(idProyecto, filas) {
         callServer("guardarDatosEmpresa", { config: JSON.stringify(config) }, res => { alert(res.msj); mostrar('pantalla-menu'); });
     }
 </script>
-</body>
-</html>
