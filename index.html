@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Spora Systems V5.4 | Power Fix</title>
+    <title>Spora Systems V5.5 | Full Restore</title>
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -27,7 +27,7 @@
 
 <div class="card">
     <h1 style="letter-spacing: 5px; margin-bottom: 0;">SPORA</h1>
-    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px;">SYSTEMS V5.4</p>
+    <p style="color: #2fc95c; font-weight: bold; font-size: 11px; margin-top: 5px; margin-bottom: 30px;">SYSTEMS V5.5</p>
 
     <div id="pantalla-login">
         <input type="password" id="pin-login" placeholder="PIN de Acceso" inputmode="numeric">
@@ -38,9 +38,7 @@
         <button onclick="abrirPantallaProyecto()" style="background:#e67e22">🚀 NUEVO PROYECTO / LOTE</button>
         <button onclick="mostrar('pantalla-impresion')" style="background:#34495e">🏷️ CONFIGURAR ETIQUETAS</button>
         <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 BUSCADOR / REIMPRESIÓN</button>
-        
         <button onclick="abrirConfigEmpresa()" style="background:#16a085">⚙️ CONFIGURACIÓN DE PLANTA</button>
-        
         <hr style="opacity:0.1">
         <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
         <hr style="opacity:0.1">
@@ -57,20 +55,15 @@
             <input type="text" id="id-proy-print" placeholder="ID Proyecto">
             <button onclick="cargarConfigurador()" style="background:#3498db; width:auto;">BUSCAR</button>
         </div>
-        
         <div id="config-campos-etiqueta" style="margin-top:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;"></div>
-
         <div id="preview-maestra-container" style="margin: 20px 0; padding: 10px; border: 1px dashed #2fc95c; background: rgba(47, 201, 92, 0.05); border-radius: 10px;">
             <p style="font-size: 10px; color: #2fc95c; margin-top: 0;">👁️ VISTA PREVIA EN VIVO</p>
             <div id="etiqueta-preview-live" class="etiqueta-preview" style="margin: 0 auto;"></div>
         </div>
-
         <button onclick="guardarDisenoMaestro()" style="background:#8e44ad;">💾 GUARDAR DISEÑO MAESTRO</button>
         <hr style="opacity:0.1">
         <button onclick="imprimirLoteCompleto(document.getElementById('id-proy-print').value)" style="background:#27ae60;">🖨️ GENERAR LOTE COMPLETO</button>
-        
         <div id="contenedor-etiquetas" style="margin-top:20px;"></div>
-        
         <button onclick="window.print()" style="background:#2c3e50" id="btn-imprimir-ahora" class="hidden">IMPRIMIR AHORA</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
@@ -88,20 +81,34 @@
     <div id="pantalla-proyecto" class="hidden">
         <h3>🚀 Nuevo Proyecto / Lote</h3>
         <input type="text" id="id-proyecto-nuevo" placeholder="Nombre del Proyecto (Ej: Torre Madero)">
-        
         <div id="status-contrato" style="font-size: 12px; margin: 10px 0; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05);">
-            Verificando configuración de importación...
+            Verificando configuración...
         </div>
-
         <input type="file" id="archivo-excel" accept=".xlsx, .xls" style="margin-top:10px;">
-        
         <div id="mapeador-columnas" class="hidden" style="margin-top:15px; border: 1px solid #555; padding: 10px;">
             <div id="selector-mapeo"></div>
         </div>
-
-        <button onclick="procesarYSubir()" style="background:#27ae60; margin-top:20px;">SUBIR E IMPORTAR</button>
+        <button type="button" onclick="event.preventDefault(); procesarYSubir();" style="background:#27ae60; margin-top:20px;">SUBIR E IMPORTAR</button>
         <button onclick="borrarContrato()" id="btn-reset-contrato" class="hidden" style="background:#c0392b; font-size: 10px;">🔄 RESETEAR FORMATO EXCEL</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
+
+    <div id="pantalla-operario" class="hidden">
+        <div style="background:#07111f; padding:10px; border-radius:10px; border:1px solid #3498db; margin-bottom:10px;">
+            <p style="margin:2px"><strong id="estacion-op" style="color:#3498db;"></strong> | <span id="nombre-op-scan"></span></p>
+        </div>
+        <div id="reader"></div>
+        <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
+        <div style="margin-top: 15px; padding: 10px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px;">
+            <p style="font-size: 10px; margin-bottom: 5px; color: #aaa;">⌨️ INGRESO MANUAL</p>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="input-manual" placeholder="Escribir ID..." style="margin:0; flex: 1;">
+                <button onclick="registrarManual()" style="width: auto; margin:0; background: #3498db; padding: 0 20px;">OK</button>
+            </div>
+        </div>
+        <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center; margin-top:20px;">
+        <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; font-size:11px;"></div>
+        <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
     </div>
 
     <div id="pantalla-seleccion-puesto" class="hidden">
@@ -111,35 +118,12 @@
         <button onclick="entrarAPuesto()" style="background:#f39c12">INGRESAR A ESTACIÓN</button>
     </div>
 
-    <div id="pantalla-operario" class="hidden">
-        <div style="background:#07111f; padding:10px; border-radius:10px; border:1px solid #3498db; margin-bottom:10px;">
-            <p style="margin:2px"><strong id="estacion-op" style="color:#3498db;"></strong> | <span id="nombre-op-scan"></span></p>
-        </div>
-        <div id="reader"></div>
-        <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
-        
-        <div style="margin-top: 15px; padding: 10px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px;">
-            <p style="font-size: 10px; margin-bottom: 5px; color: #aaa;">⌨️ INGRESO MANUAL (SI EL QR/BARRA FALLA)</p>
-            <div style="display: flex; gap: 5px;">
-                <input type="text" id="input-manual" placeholder="Escribir ID Pieza..." style="margin:0; flex: 1;">
-                <button onclick="registrarManual()" style="width: auto; margin:0; background: #3498db; padding: 0 20px;">OK</button>
-            </div>
-        </div>
-
-        <input type="text" id="input-scan" placeholder="Esperando..." readonly style="text-align:center; margin-top:20px;">
-        <div id="log-scan" style="margin-top:15px; max-height:120px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;"></div>
-        
-        <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
-    </div>
-
     <div id="form-usuario" class="hidden">
         <h3>Ficha de Personal</h3>
-        <div style="text-align:left;">
-            <label>Nro. de Legajo:</label><input type="text" id="u-legajo">
-            <label>Nombre:</label><input type="text" id="u-nombre">
-            <label>PIN (4 dígitos):</label><input type="number" id="u-pin">
-            <label>Rol:</label><select id="u-rol"><option value="OPERARIO">OPERARIO</option><option value="GERENTE">GERENTE</option></select>
-        </div>
+        <input type="text" id="u-legajo" placeholder="Legajo">
+        <input type="text" id="u-nombre" placeholder="Nombre completo">
+        <input type="number" id="u-pin" placeholder="PIN 4 dígitos">
+        <select id="u-rol"><option value="OPERARIO">OPERARIO</option><option value="GERENTE">GERENTE</option></select>
         <button onclick="guardarUsuario()" style="background:#27ae60; margin-top:20px;">CREAR USUARIO</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">CANCELAR</button>
     </div>
@@ -160,7 +144,7 @@
     </div>
 
     <div id="pantalla-gestor" class="hidden">
-        <h3 id="titulo-gestor"></h3>
+        <h3>Gestión de Usuarios</h3>
         <div id="lista-gestor"></div>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
@@ -171,12 +155,9 @@
             <label>Razón Social:</label><input type="text" id="emp-nombre">
             <label>Cuit:</label><input type="text" id="emp-cuit">
             <label>Dirección:</label><input type="text" id="emp-direccion">
-            <label>URL Logo (PNG/JPG):</label><input type="text" id="emp-logo" placeholder="https://...">
-            
-            <p style="color:#2fc95c; font-size:12px; margin-top:20px; border-bottom:1px solid #2fc95c;">📅 HORARIOS LABORALES</p>
-            
+            <label>URL Logo:</label><input type="text" id="emp-logo">
+            <p style="color:#2fc95c; font-size:12px; margin-top:20px; border-bottom:1px solid #2fc95c;">📅 HORARIOS</p>
             <div id="contenedor-horarios" style="margin-top:10px;"></div>
-            
         </div>
         <button onclick="salvarConfigEmpresa()" style="background:#2fc95c; margin-top:20px;">GUARDAR CONFIGURACIÓN</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
