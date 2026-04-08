@@ -268,17 +268,30 @@
         });
     }
 
-    function procesarYSubir() {
+   function procesarYSubir() {
     console.log("1. Botón presionado, iniciando función...");
     
     const fileInput = document.getElementById('archivo-excel');
     const idProyInput = document.getElementById('id-proyecto-nuevo');
+    const mapeadorDiv = document.getElementById('mapeador-columnas'); // Nuevo: referencia al cuadro de mapeo
     
     // Verificamos si los elementos existen en el HTML
     if (!idProyInput) { console.error("Error: No se encontró el input 'id-proyecto-nuevo'"); return; }
     if (!fileInput) { console.error("Error: No se encontró el input 'archivo-excel'"); return; }
 
     const idProy = idProyInput.value.trim();
+    
+    // --- NUEVA COMPUERTA DE SEGURIDAD ---
+    // Si el mapeador ya es visible, significa que el usuario ya eligió columnas.
+    // No volvemos a leer el archivo, ejecutamos la importación final.
+    if (mapeadorDiv && !mapeadorDiv.classList.contains('hidden')) {
+        console.log("Mapeador detectado como abierto. Procediendo a importar...");
+        if (!idProy) return alert("Por favor, indicá el nombre del Proyecto.");
+        ejecutarImportacionFinal(idProy, datosTemporalesFilas);
+        return; // Detenemos aquí para que no se ejecute el FileReader de abajo
+    }
+    // ------------------------------------
+
     console.log("2. Proyecto:", idProy);
     console.log("3. Archivos seleccionados:", fileInput.files.length);
 
