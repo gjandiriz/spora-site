@@ -98,7 +98,9 @@
             <p style="margin:2px"><strong id="estacion-op" style="color:#3498db;"></strong> | <span id="nombre-op-scan"></span></p>
         </div>
         <div id="reader"></div>
-         id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
+       <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">
+    ▶️ ESCANEAR PIEZA
+</button>
         <div style="margin-top: 15px; padding: 10px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px;">
             <p style="font-size: 10px; margin-bottom: 5px; color: #aaa;">⌨️ INGRESO MANUAL</p>
             <div style="display: flex; gap: 5px;">
@@ -172,7 +174,10 @@
     </div>
 </div>
 
+
 <script>
+
+  // ===== CORE =====
     // CAMBIAR POR TU URL ACTUAL
     const API_URL = "https://script.google.com/macros/s/AKfycbx-PMQEIEnWdS9DZ2cmGjORgcBKclqe3UW34txMBZN4kwGXyVpLSsRpCofp7O_sOmk-/exec";
     
@@ -195,7 +200,7 @@
         const el = document.getElementById(id); if(el) el.classList.remove('hidden');
     }
 
-    // --- LOGIN ---
+// --- LOGIN ---
     function login() {
         const pin = document.getElementById('pin-login').value;
         callServer("login", {pin: pin}, res => {
@@ -221,7 +226,7 @@
         mostrar('pantalla-operario');
     }
 
-    // --- ESCANEO ---
+// --- ESCANEO ---
     function encenderCamara() {
         if (isProcessing) return;
         const readerDiv = document.getElementById("reader");
@@ -249,8 +254,11 @@
         });
     }
 
-    // --- IMPORTACIÓN SANEADA ---
-    function abrirPantallaProyecto() {
+// ===== IMPORTACIÓN =====
+// (procesarYSubir, generarInterfazMapeo, ejecutarImportacionFinal, enviarDatosAlServidor, mandar, borrarContrato)
+// 👉 TODO ESTE BLOQUE LO DEJÉ TAL CUAL, SOLO LO AGRUPÉ ACÁ
+
+function abrirPantallaProyecto() {
         callServer("obtenerContratoImportacion", {}, (res) => {
             const status = document.getElementById('status-contrato');
             const mapeador = document.getElementById('mapeador-columnas');
@@ -268,7 +276,7 @@
         });
     }
 
-    function procesarYSubir() {
+function procesarYSubir() {
     const fileInput = document.getElementById('archivo-excel');
     const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
 
@@ -371,7 +379,7 @@
     reader.readAsArrayBuffer(archivo);
 }
 
-    function generarInterfazMapeo(headers) {
+function generarInterfazMapeo(headers) {
     const contenedor = document.getElementById('selector-mapeo');
     contenedor.innerHTML = "<p style='font-size:10px; color:#f1c40f;'>Mapeá las columnas de tu Excel:</p>";
 
@@ -401,7 +409,7 @@
     });
 }
 
-    function ejecutarImportacionFinal(idProyecto, filas) {
+function ejecutarImportacionFinal(idProyecto, filas) {
         // Función auxiliar BLINDADA para leer selectores
         const getV = (id) => {
             const el = document.getElementById('sel-' + id);
@@ -444,7 +452,7 @@
         }
     }
 
-    function enviarDatosAlServidor(idProy, filas) {
+function enviarDatosAlServidor(idProy, filas) {
     console.log("Limpiando filas vacías antes de enviar...");
     
     const filasLimpias = filas.filter(f => f.join('').trim() !== "");
@@ -473,8 +481,10 @@
 
     function borrarContrato() { if(confirm("¿Borrar?")) callServer("guardarContratoImportacion", { contrato: "" }, () => location.reload()); }
 
-    // --- ETIQUETAS E IMPRESIÓN ---
-    function cargarConfigurador() {
+// ===== ETIQUETAS =====
+// (cargarConfigurador, agregarFilaConfig, actualizarPreviewLive, guardarDisenoMaestro, imprimirLoteCompleto)
+
+function cargarConfigurador() {
         const idProy = document.getElementById('id-proy-print').value;
         if (!idProy) return alert("Ingresa ID de Proyecto");
         const cont = document.getElementById('config-campos-etiqueta');
@@ -487,7 +497,7 @@
         });
     }
 
-    function agregarFilaConfig() {
+function agregarFilaConfig() {
         const contenedor = document.getElementById('filas-configuracion');
         const div = document.createElement('div');
         div.className = "fila-etiqueta"; div.style = "display:flex; gap:5px; margin-bottom:5px;";
@@ -496,7 +506,8 @@
         contenedor.appendChild(div); actualizarPreviewLive();
     }
 
-    function actualizarPreviewLive() {
+
+ function actualizarPreviewLive() {
         if(!piezaDeMuestra) return;
         const cont = document.getElementById('etiqueta-preview-live');
         const filasConfig = Array.from(document.querySelectorAll('.fila-etiqueta'));
@@ -534,8 +545,11 @@
         });
     }
 
-    // --- BUSCADOR ---
-    function ejecutarBusquedaUniversal() {
+    // ===== BUSCADOR / REIMPRESIÓN =====
+// (ejecutarBusquedaUniversal, reimprimirEtiquetaUnica, lanzarImpresionUnica)
+
+
+function ejecutarBusquedaUniversal() {
         const q = document.getElementById('input-busqueda-universal').value;
         callServer("buscarPiezasUniversal", { query: q }, res => {
             const cont = document.getElementById('lista-resultados-busqueda'); cont.innerHTML = "";
@@ -570,8 +584,11 @@
         v.document.close();
     }
 
-    // --- GESTIÓN ---
-    function guardarUsuario() {
+
+// ===== USUARIOS =====
+// (guardarUsuario, abrirGestorUsuarios, borrarU)
+
+function guardarUsuario() {
         const d = { legajo: document.getElementById('u-legajo').value, nombre: document.getElementById('u-nombre').value, pin: document.getElementById('u-pin').value, rol: document.getElementById('u-rol').value };
         callServer("crearNuevoUsuario", d, res => { alert(res.status); if(res.status==="OK") mostrar('pantalla-menu'); });
     }
@@ -586,7 +603,12 @@
 
     function borrarU(l) { if(confirm("¿Borrar?")) callServer("eliminarUsuario", {legajo: l}, () => abrirGestorUsuarios()); }
 
-    function cargarFlujograma() { callServer("obtenerEstacionesFlujo", {}, res => { estacionesParaFlujo = res; renderFlujo(); mostrar('pantalla-flujo'); }); }
+
+
+    // ===== FLUJO / ESTACIONES =====
+// (cargarFlujograma, renderFlujo, salvarFlujo)
+
+ function cargarFlujograma() { callServer("obtenerEstacionesFlujo", {}, res => { estacionesParaFlujo = res; renderFlujo(); mostrar('pantalla-flujo'); }); }
     function renderFlujo() {
         const cont = document.getElementById('lista-flujo-estaciones'); cont.innerHTML = "";
         estacionesParaFlujo.forEach((est, i) => {
@@ -595,6 +617,11 @@
         });
     }
     function salvarFlujo() { callServer("guardarConfiguracionFlujo", { config: JSON.stringify(estacionesParaFlujo) }, res => { alert(res.msj); mostrar('pantalla-menu'); }); }
+
+
+// ===== CONFIGURACIÓN EMPRESA =====
+// (abrirConfigEmpresa, salvarConfigEmpresa)
+
 
     function abrirConfigEmpresa() {
         callServer("obtenerDatosEmpresa", {}, res => {
@@ -620,3 +647,4 @@
 </script>
 </body>
 </html>
+    
