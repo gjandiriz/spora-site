@@ -18,7 +18,14 @@ function renderFlujo() {
         cont.innerHTML += `
             <div class="item-lista" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span>${est.nombre} (Ord: ${est.orden})</span>
+                    <span>${est.nombre}</span>
+
+<input 
+    type="number" 
+    value="${est.orden}" 
+    style="width:60px;"
+    onchange="estacionesParaFlujo[${i}].orden = Number(this.value)"
+>
 
                     <button onclick="moverEstacionArriba(${i})" style="width:32px; background:#444;">↑</button>
                     <button onclick="moverEstacionAbajo(${i})" style="width:32px; background:#444;">↓</button>
