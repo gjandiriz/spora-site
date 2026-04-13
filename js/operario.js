@@ -52,15 +52,18 @@ function procesarScan(id) {
 
     input.value = "⌛ REGISTRANDO...";
 
-    let idFinal = id.trim();
+    const textoOriginal = String(id || "").trim();
+    console.log("SCAN ORIGINAL:", textoOriginal);
 
-    // Si el QR viene con más datos, intentamos extraer algo tipo 85771-01
-    if (idFinal.includes("|") || idFinal.includes("=")) {
-        const match = idFinal.match(/\d+-\d+/);
-        if (match) {
-            idFinal = match[0];
-        }
+    let idFinal = textoOriginal;
+
+    // Busca SIEMPRE un patrón tipo 85771-01, aunque venga mezclado con más texto
+    const match = textoOriginal.match(/\d+\s*-\s*\d+/);
+    if (match) {
+        idFinal = match[0].replace(/\s+/g, "");
     }
+
+    console.log("ID FINAL ENVIADO:", idFinal);
 
     callServer("registrar", {
         id: idFinal,
@@ -68,7 +71,7 @@ function procesarScan(id) {
         usuario: usuarioActual
     }, res => {
         input.value = (res.status === "OK" ? "✅ " : "❌ ") + idFinal;
-        log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${res.msj}</div>` + log.innerHTML;
+        log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${res.msj} | ${idFinal}</div>` + log.innerHTML;
 
         setTimeout(() => {
             input.value = "LISTO PARA ESCANEAR";
