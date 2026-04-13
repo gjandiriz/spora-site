@@ -19,6 +19,7 @@ function abrirPantallaProyecto() {
 }
 
 function procesarYSubir() {
+    console.log("mapeador:", document.getElementById('mapeador-columnas'));
     const fileInput = document.getElementById('archivo-excel');
     const idProy = document.getElementById('id-proyecto-nuevo').value.trim();
 
