@@ -46,7 +46,46 @@ function encenderCamara() {
         const input = document.getElementById('input-scan');
         const log = document.getElementById('log-scan');
         input.value = "⌛ REGISTRANDO..."; 
-        callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
+        callServer("obtenerConfiguracionMaestra", {}, configJSON => {
+    let tipoCodigo = "BARRAS";
+
+    if (configJSON) {
+        try {
+            const cfg = JSON.parse(configJSON);
+            tipoCodigo = cfg.tipoCodigo || "BARRAS";
+        } catch (e) {}
+    }
+
+    let idFinal = id;
+
+    // 👉 SI ES QR, intentamos extraer ID
+    if (tipoCodigo === "QR") {
+        // formato esperado: ID=123-5|OC=123|...
+        const partes = id.split("|");
+        const idPart = partes.find(p => p.startsWith("ID="));
+
+        if (idPart) {
+            idFinal = idPart.replace("ID=", "").trim();
+        }
+    }
+
+    callServer("registrar", { 
+        id: idFinal, 
+        estacion: estacionActual, 
+        usuario: usuarioActual 
+    }, res => {
+        const input = document.getElementById('input-scan');
+        const log = document.getElementById('log-scan');
+
+        input.value = (res.status === "OK" ? "✅ " : "❌ ") + idFinal;
+        log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${res.msj}</div>` + log.innerHTML;
+
+        setTimeout(() => { 
+            input.value = "LISTO PARA ESCANEAR"; 
+            isProcessing = false; 
+        }, 2000);
+    });
+});
             input.value = (res.status === "OK" ? "✅ " : "❌ ") + id;
             log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${res.msj}</div>` + log.innerHTML;
             setTimeout(() => { input.value = "LISTO PARA ESCANEAR"; isProcessing = false; }, 2000);
