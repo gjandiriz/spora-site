@@ -58,7 +58,7 @@ function procesarScan(id) {
     let idFinal = textoOriginal;
 
     // Busca SIEMPRE un patrón tipo 85771-01, aunque venga mezclado con más texto
-    const match = textoOriginal.match(/\d+\s*-\s*\d+/);
+    const match = textoOriginal.match(/\b\d+\s*-\s*\d+\b/m);
     if (match) {
         idFinal = match[0].replace(/\s+/g, "");
     }
