@@ -27,12 +27,14 @@ function procesarYSubir() {
         return;
     }
 
-    if (
-        !contratoVigente &&
-        datosTemporalesFilas &&
-        datosTemporalesFilas.length > 0 &&
-        !document.getElementById('mapeador-columnas').classList.contains('hidden')
-    ) {
+    const mapeador = document.getElementById('mapeador-columnas');
+
+if (
+    !contratoVigente &&
+    datosTemporalesFilas &&
+    datosTemporalesFilas.length > 0 &&
+    mapeador && !mapeador.classList.contains('hidden')
+) {
         console.log("Confirmación de mapeo detectada, procediendo a importar...");
         ejecutarImportacionFinal(idProy, datosTemporalesFilas);
         return;
