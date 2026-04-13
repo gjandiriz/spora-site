@@ -55,16 +55,33 @@
     </div>
 
     <div id="pantalla-proyecto" class="hidden">
-        <h3>🚀 Nuevo Proyecto / Lote</h3>
-        <input type="text" id="id-proyecto-nuevo" placeholder="Nombre del Proyecto">
-        <div id="status-contrato" style="font-size: 12px; margin: 10px 0; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05);">Verificando configuración...</div>
-        <input type="file" id="archivo-excel" accept=".xlsx, .xls">
-        <div id="mapeador-columnas" class="hidden" style="margin-top:15px; border: 1px solid #555; padding: 10px;">
-            <div id="selector-mapeo"></div>
-        </div>
-        <button onclick="procesarYSubir()" style="background:#27ae60; margin-top:20px;">SUBIR E IMPORTAR</button>
-        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    <h3>🚀 Nuevo Proyecto / Lote</h3>
+
+    <input type="text" id="id-proyecto-nuevo" placeholder="Nombre del Proyecto">
+
+    <div id="status-contrato" style="font-size: 12px; margin: 10px 0; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05);">
+        Verificando configuración...
     </div>
+
+    <input type="file" id="archivo-excel" accept=".xlsx, .xls">
+
+    <div id="mapeador-columnas" class="hidden" style="margin-top:15px; border: 1px solid #555; padding: 10px;">
+        <div id="selector-mapeo"></div>
+    </div>
+
+    <!-- ✅ ESTE ES EL QUE FALTABA -->
+    <button id="btn-reset-contrato" class="hidden" style="background:#444; margin-top:10px;">
+        RECONFIGURAR FORMATO
+    </button>
+
+    <button onclick="procesarYSubir()" style="background:#27ae60; margin-top:20px;">
+        SUBIR E IMPORTAR
+    </button>
+
+    <button onclick="mostrar('pantalla-menu')" style="background:#444">
+        VOLVER
+    </button>
+</div>
 
     <div id="pantalla-operario" class="hidden">
         <div style="background:#07111f; padding:10px; border-radius:10px; border:1px solid #3498db; margin-bottom:10px;">
