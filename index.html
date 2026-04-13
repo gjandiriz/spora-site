@@ -11,7 +11,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* Mantenemos tu estilo oscuro de Spora */
         body { font-family: 'Segoe UI', sans-serif; background: #07111f; color: white; margin: 0; padding: 15px; text-align: center; }
         .card { background: #111d2b; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 500px; margin: auto; border: 1px solid rgba(255,255,255,0.05); }
         .hidden { display: none !important; }
@@ -40,12 +39,20 @@
         <button onclick="mostrar('pantalla-menu-etiquetas')" style="background:#34495e">🏷️ ETIQUETAS</button>
         <button onclick="abrirConfigEmpresa()" style="background:#16a085">⚙️ CONFIGURACIÓN DE PLANTA</button>
         <hr style="opacity:0.1">
-        <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES Y FLUJO</button>
+        <button onclick="cargarFlujograma()" style="background:#f39c12">⚙️ GESTIONAR ESTACIONES</button>
         <hr style="opacity:0.1">
         <button onclick="mostrar('form-usuario')" style="background:#8e44ad">👤 NUEVA FICHA USUARIO</button>
         <button onclick="abrirGestorUsuarios()" style="background:#9b59b6">👥 GESTIONAR USUARIOS</button>
         <button onclick="mostrar('form-estacion')" style="background:#2980b9">🏗️ NUEVA ESTACIÓN</button>
         <button onclick="location.reload()" style="background:#444; margin-top:20px;">SALIR</button>
+    </div>
+
+    <div id="pantalla-menu-etiquetas" class="hidden">
+        <h3>Etiquetas</h3>
+        <button onclick="abrirDisenoEtiquetas()" style="background:#34495e">🏷️ DISEÑO DE ETIQUETAS</button>
+        <button onclick="abrirImpresionLote()" style="background:#27ae60">🖨️ IMPRESIÓN POR LOTE</button>
+        <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 REIMPRESIÓN / BUSCADOR</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444; margin-top:20px;">⬅ VOLVER</button>
     </div>
 
     <div id="pantalla-operario" class="hidden">
@@ -54,7 +61,6 @@
         </div>
         <div id="reader"></div>
         <button id="btn-cam" onclick="encenderCamara()" style="background:#27ae60">▶️ ESCANEAR PIEZA</button>
-        
         <div style="margin-top: 15px; padding: 10px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px;">
             <p style="font-size: 10px; margin-bottom: 5px; color: #aaa;">⌨️ INGRESO MANUAL</p>
             <div style="display: flex; gap: 5px;">
@@ -67,13 +73,49 @@
         <button onclick="location.reload()" style="background:#444; margin-top:15px;">SALIR</button>
     </div>
 
+    <div id="pantalla-proyecto" class="hidden">
+        <h3>🚀 Nuevo Proyecto</h3>
+        <input type="text" id="id-proyecto-nuevo" placeholder="Nombre del Proyecto">
+        <div id="status-contrato" style="font-size: 11px; margin: 10px 0;">Verificando...</div>
+        <input type="file" id="archivo-excel" accept=".xlsx, .xls">
+        <div id="mapeador-columnas" class="hidden" style="margin-top:10px;">
+            <div id="selector-mapeo"></div>
+        </div>
+        <button onclick="procesarYSubir()" style="background:#27ae60;">SUBIR E IMPORTAR</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
     </div>
 
-<div id="modal-reimpresion" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+    <div id="pantalla-impresion" class="hidden">
+        <h3>Diseño de Etiquetas</h3>
+        <select id="id-proy-print"></select>
+        <button onclick="cargarConfigurador()" style="background:#3498db">CARGAR</button>
+        <div id="config-campos-etiqueta"></div>
+        <div id="etiqueta-preview-live" class="etiqueta-preview"></div>
+        <button onclick="guardarDisenoMaestro()" style="background:#8e44ad;">💾 GUARDAR DISEÑO</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
+
+    <div id="pantalla-config-empresa" class="hidden">
+        <h3>Configuración de Planta</h3>
+        <input type="text" id="emp-nombre" placeholder="Razón Social">
+        <input type="text" id="emp-cuit" placeholder="CUIT">
+        <div id="contenedor-horarios"></div>
+        <button onclick="salvarConfigEmpresa()" style="background:#2fc95c;">GUARDAR</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
+
+    <div id="pantalla-flujo" class="hidden">
+        <h3>Gestionar Estaciones</h3>
+        <div id="lista-flujo-estaciones"></div>
+        <button onclick="salvarFlujo()" style="background:#2fc95c;">GUARDAR ORDEN</button>
+        <button onclick="mostrar('pantalla-menu')" style="background:#444">VOLVER</button>
+    </div>
+
+</div> <div id="modal-reimpresion" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column;">
     <div id="area-ticket-reimpresion" style="background:white; padding:20px; border-radius:10px;"></div>
     <div style="margin-top:20px; display:flex; gap:10px;">
-        <button onclick="lanzarImpresionUnica()" style="background:#2fc95c; width:150px;">Confirmar e Imprimir</button>
-        <button onclick="document.getElementById('modal-reimpresion').classList.add('hidden')" style="background:#e74c3c; width:150px;">Cancelar</button>
+        <button onclick="lanzarImpresionUnica()" style="background:#2fc95c; width:150px;">Imprimir</button>
+        <button onclick="document.getElementById('modal-reimpresion').classList.add('hidden')" style="background:#e74c3c; width:150px;">Cerrar</button>
     </div>
 </div>
 
