@@ -43,19 +43,36 @@ function encenderCamara() {
     }
 
     function procesarScan(id) {
-        const input = document.getElementById('input-scan');
-        const log = document.getElementById('log-scan');
-        input.value = "⌛ REGISTRANDO..."; 
-        callServer("obtenerConfiguracionMaestra", {}, configJSON => {
-    let tipoCodigo = "BARRAS";
+    const input = document.getElementById('input-scan');
+    const log = document.getElementById('log-scan');
 
-    if (configJSON) {
-        try {
-            const cfg = JSON.parse(configJSON);
-            tipoCodigo = cfg.tipoCodigo || "BARRAS";
-        } catch (e) {}
+    input.value = "⌛ REGISTRANDO...";
+
+    let idFinal = id.trim();
+
+    // 👉 Si el QR tiene más info (tipo OC=...|PIEZA=... o cosas así)
+    // intentamos encontrar algo con formato 12345-01
+    if (idFinal.includes("|") || idFinal.includes("=")) {
+        const match = idFinal.match(/\d+-\d+/);
+        if (match) {
+            idFinal = match[0];
+        }
     }
 
+    callServer("registrar", { 
+        id: idFinal, 
+        estacion: estacionActual, 
+        usuario: usuarioActual 
+    }, res => {
+        input.value = (res.status === "OK" ? "✅ " : "❌ ") + idFinal;
+        log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${res.msj}</div>` + log.innerHTML;
+
+        setTimeout(() => { 
+            input.value = "LISTO PARA ESCANEAR"; 
+            isProcessing = false; 
+        }, 2000);
+    });
+}
     let idFinal = id;
 
     // 👉 SI ES QR, intentamos extraer ID
