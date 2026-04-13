@@ -1,5 +1,5 @@
 // js/main.js
-const API_URL = "https://script.google.com/macros/s/AKfycbx-PMQEIEnWdS9DZ2cmGjORgcBKclqe3UW34txMBZN4kwGXyVpLSsRpCofp7O_sOmk-/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxCvpLf99LNrikY7aQ2QzznuO-1NzcbccWovl5BW46NXdtUX8qMDYKeW2YiED9boEBX/exec";
 
 let usuarioActual = "", estacionActual = "", html5QrCode = null, isProcessing = false;
 let datosExcelRaw = [], listaColumnasExcel = [], estacionesParaFlujo = [];
