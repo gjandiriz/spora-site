@@ -52,3 +52,52 @@ function login() {
         } else alert(res.mensaje);
     });
 }
+
+function verEventos() {
+    mostrar('pantalla-eventos');
+    cargarEventos();
+}
+
+function cargarEventos() {
+    const cont = document.getElementById('tabla-eventos');
+    cont.innerHTML = "⌛ Cargando...";
+
+    callServer("obtenerEventosHistorial", {}, res => {
+        if (res.status === "ERROR") {
+            cont.innerHTML = "❌ " + res.msj;
+            return;
+        }
+
+        if (!res.eventos || res.eventos.length === 0) {
+            cont.innerHTML = "Sin eventos";
+            return;
+        }
+
+        let html = `
+            <table style="width:100%; border-collapse: collapse;">
+                <tr style="background:#333;">
+                    <th>Hora</th>
+                    <th>Pieza</th>
+                    <th>Operario</th>
+                    <th>Estación</th>
+                    <th>Resultado</th>
+                </tr>
+        `;
+
+        res.eventos.forEach(ev => {
+            html += `
+                <tr style="border-bottom:1px solid #444;">
+                    <td>${new Date(ev.fecha).toLocaleTimeString()}</td>
+                    <td>${ev.pieza}</td>
+                    <td>${ev.operario}</td>
+                    <td>${ev.estacion}</td>
+                    <td>${ev.mensaje}</td>
+                </tr>
+            `;
+        });
+
+        html += `</table>`;
+
+        cont.innerHTML = html;
+    });
+}
