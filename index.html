@@ -53,6 +53,20 @@
         <button onclick="abrirBuscadorReimpresion()" style="background:#3498db">🔍 REIMPRESIÓN / BUSCADOR</button>
         <button onclick="mostrar('pantalla-menu')" style="background:#444; margin-top:20px;">⬅ VOLVER</button>
     </div>
+    
+    <div id="pantalla-eventos" class="hidden">
+    <h3>📊 Actividad en vivo</h3>
+
+    <button onclick="cargarEventos()" style="background:#2c3e50; margin-bottom:10px;">
+        🔄 Actualizar
+    </button>
+
+    <div id="tabla-eventos" style="font-size:12px;"></div>
+
+    <button onclick="mostrar('pantalla-menu')" style="background:#444; margin-top:15px;">
+        VOLVER
+    </button>
+</div>
 
     <div id="pantalla-proyecto" class="hidden">
     <h3>🚀 Nuevo Proyecto / Lote</h3>
