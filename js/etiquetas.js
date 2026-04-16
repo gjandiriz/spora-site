@@ -532,7 +532,18 @@ for (let i = 0; i < etiquetas.length; i += cantidadPorPagina) {
                         size: A4 portrait;
                         margin: 0;
                     }
+.pagina-etiquetas {
+    width: 210mm;
+    height: 297mm;
+    page-break-after: always;
+    break-after: page;
+    overflow: hidden;
+}
 
+.pagina-etiquetas:last-child {
+    page-break-after: auto;
+    break-after: auto;
+}
                     html, body {
                         margin: 0;
                         padding: 0;
@@ -604,9 +615,7 @@ for (let i = 0; i < etiquetas.length; i += cantidadPorPagina) {
                 </style>
             </head>
             <body onload="window.print(); window.close();">
-                <div class="contenedor-lote">
-                    ${contenido}
-                </div>
+                ${paginasHTML}
             </body>
             </html>
         `);
