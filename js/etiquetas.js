@@ -442,7 +442,9 @@ function abrirImpresionLote() {
 }
 
 function lanzarImpresionLote() {
-    const contenido = document.getElementById('contenedor-etiquetas-lote').innerHTML;
+   const contenedorOriginal = document.getElementById('contenedor-etiquetas-lote');
+const contenido = contenedorOriginal.innerHTML;
+const etiquetas = Array.from(contenedorOriginal.querySelectorAll('.etiqueta-preview'));
     const selectFormato = document.getElementById('formato-impresion-lote');
 
     if (!contenido || contenido.trim() === "") {
@@ -497,6 +499,23 @@ function lanzarImpresionLote() {
             alert("No se pudo identificar el formato seleccionado.");
             return;
         }
+        const cantidadPorPagina = Number(formato.cantidad) || 16;
+
+let paginasHTML = "";
+
+for (let i = 0; i < etiquetas.length; i += cantidadPorPagina) {
+    const bloque = etiquetas.slice(i, i + cantidadPorPagina)
+        .map(el => el.outerHTML)
+        .join("");
+
+    paginasHTML += `
+        <div class="pagina-etiquetas">
+            <div class="contenedor-lote">
+                ${bloque}
+            </div>
+        </div>
+    `;
+}
 
         const anchoMm = Number(formato.ancho) || 99.1;
         const altoMm = Number(formato.alto) || 57;
