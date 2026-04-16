@@ -572,34 +572,34 @@ for (let i = 0; i < etiquetas.length; i += cantidadPorPagina) {
                     }
 
                     .etiqueta-preview {
-                        width: ${anchoMm}mm;
-                        height: ${altoMm}mm;
-                        box-sizing: border-box;
-                        overflow: hidden;
-                        background: white;
-                        color: black;
-                        border: 1px solid #000;
-                        border-radius: 0;
-                        margin: 0;
-                        padding: 2mm;
-                        text-align: center;
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: flex-start;
-                        align-items: center;
-                    }
+    width: ${anchoMm}mm;
+    height: ${altoMm}mm;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: white;
+    color: black;
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+    padding: 1.2mm 1.5mm;
+    text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
 
                     .etiqueta-preview div {
-                        width: 100%;
-                        box-sizing: border-box;
-                        word-break: break-word;
-                        overflow-wrap: break-word;
-                        line-height: 1.1;
-                        margin-bottom: 1mm;
-                        font-size: 10pt;
-                    }
+    width: 100%;
+    box-sizing: border-box;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.05;
+    margin-bottom: 0.5mm;
+    font-size: 8pt;
+}
 
                     .etiqueta-preview svg {
                         max-width: 100%;
@@ -607,11 +607,11 @@ for (let i = 0; i < etiquetas.length; i += cantidadPorPagina) {
                     }
 
                     .etiqueta-preview img,
-                    .etiqueta-preview canvas {
-                        max-width: 100%;
-                        max-height: calc(${altoMm}mm - 18mm);
-                        height: auto;
-                    }
+.etiqueta-preview canvas {
+    max-width: 100%;
+    max-height: 11mm;
+    height: auto;
+}
                 </style>
             </head>
             <body onload="window.print(); window.close();">
