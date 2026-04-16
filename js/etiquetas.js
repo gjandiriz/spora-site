@@ -444,7 +444,7 @@ function abrirImpresionLote() {
 function lanzarImpresionLote() {
    const contenedorOriginal = document.getElementById('contenedor-etiquetas-lote');
 const contenido = contenedorOriginal.innerHTML;
-const etiquetas = Array.from(contenedorOriginal.querySelectorAll('.etiqueta-preview'));
+const etiquetas = Array.from(contenedorOriginal.children);
     const selectFormato = document.getElementById('formato-impresion-lote');
 
     if (!contenido || contenido.trim() === "") {
