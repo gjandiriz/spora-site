@@ -522,17 +522,23 @@ function lanzarImpresionLote() {
                     }
 
                     .contenedor-lote {
-                        width: 210mm;
-                        min-height: 297mm;
-                        margin: 0 auto;
-                        padding: 0;
-                        box-sizing: border-box;
-                        display: grid;
-                        grid-template-columns: repeat(${columnas}, ${anchoMm}mm);
-                        grid-auto-rows: ${altoMm}mm;
-                        justify-content: start;
-                        align-content: start;
-                        gap: 0;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    padding-left: ${formato.margenIzquierdo}mm;
+    padding-top: ${formato.margenSuperior}mm;
+    box-sizing: border-box;
+
+    display: grid;
+    grid-template-columns: repeat(${columnas}, ${anchoMm}mm);
+    grid-auto-rows: ${altoMm}mm;
+
+    column-gap: ${formato.pasoHorizontal - anchoMm}mm;
+    row-gap: ${formato.pasoVertical - altoMm}mm;
+
+    justify-content: start;
+    align-content: start;
+}
                     }
 
                     .etiqueta-preview {
