@@ -688,37 +688,36 @@ function cargarFormatosImpresion() {
         });
     });
 }
-window.abrirPantallaImpresion = function () {
-    mostrar('pantalla-impresion');
-
+function cargarProyectosDiseno() {
     const sel = document.getElementById('id-proy-print');
     if (!sel) {
-        alert("No se encontró el selector de proyectos.");
+        alert("No se encontró el selector.");
         return;
     }
 
     sel.innerHTML = '<option value="">Seleccionar proyecto...</option>';
 
     callServer("listaGestion", { tipo: "PROYECTOS" }, res => {
-        console.log("PROYECTOS:", res);
+        console.log("RESPUESTA PROYECTOS:", res);
 
         if (!res) {
-            alert("No hubo respuesta del servidor.");
+            alert("No hubo respuesta.");
             return;
         }
 
         const lista = res.proyectos || res.items || res.data || [];
 
         if (!Array.isArray(lista) || lista.length === 0) {
-            alert("No se encontraron proyectos para cargar.");
+            alert("No se encontraron proyectos.");
             return;
         }
 
         lista.forEach(p => {
+            const id = p.id || p.ID_PROYECTO || p[0] || "";
             const opt = document.createElement("option");
-            opt.value = p.id || p.ID_PROYECTO || p[0] || "";
-            opt.textContent = p.id || p.ID_PROYECTO || p[0] || "(sin id)";
+            opt.value = id;
+            opt.textContent = id;
             sel.appendChild(opt);
         });
     });
-};
+}
