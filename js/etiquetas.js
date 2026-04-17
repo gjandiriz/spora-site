@@ -461,9 +461,11 @@ function cargarSelectoresProyectos(callback) {
 }
 
 function abrirDisenoEtiquetas() {
-    cargarSelectoresProyectos(() => {
-        mostrar('pantalla-impresion');
-    });
+    mostrar('pantalla-impresion');
+
+    if (window.cargarSelectorProyectos) {
+        window.cargarSelectorProyectos();
+    }
 }
 
 function abrirImpresionLote() {
