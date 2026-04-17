@@ -320,11 +320,13 @@ function imprimirLoteCompleto(idProy) {
                     div.innerHTML = `${html}<svg id="bar-gen-${i}"></svg>`;
                     cont.appendChild(div);
 
-                    JsBarcode(`#bar-gen-${i}`, p[4], {
-                        format: "CODE128",
-                        height: 40,
-                        displayValue: true,
-                        fontSize: 10
+                   JsBarcode(`#bar-gen-${i}`, p[4], {
+    format: "CODE128",
+    height: 22,
+    displayValue: true,
+    fontSize: 8,
+    margin: 0,
+    width: 1
                     });
                 } else {
                     div.innerHTML = `${html}<div id="qr-gen-${i}" style="margin-top:10px; display:flex; justify-content:center;"></div>`;
