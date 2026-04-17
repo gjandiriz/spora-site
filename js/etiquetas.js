@@ -126,7 +126,7 @@ function cargarConfigurador() {
         });
     });
 }
-function cargarSelectorProyectos() {
+window.cargarSelectorProyectos = function () {
     const sel = document.getElementById('id-proy-print');
     sel.innerHTML = '<option value="">Seleccionar proyecto...</option>';
 
@@ -140,7 +140,7 @@ function cargarSelectorProyectos() {
             sel.appendChild(opt);
         });
     });
-}
+};
 
 function renderSelectorCamposQR(camposQRGuardados = []) {
     const cont = document.getElementById('selector-campos-qr');
