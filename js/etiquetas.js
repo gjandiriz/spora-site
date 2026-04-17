@@ -2,13 +2,13 @@ console.log("js_etiquetas cargado OK");
 
 function abrirDisenoEtiquetas() {
     mostrar('pantalla-impresion');
-    
-    // Usamos la misma función que usa la pantalla de Lotes
+
+    // Usamos la función que ya tenés escrita en la línea 387
+    // que es la que carga los proyectos correctamente con fecha
     if (typeof cargarSelectoresProyectos === 'function') {
         cargarSelectoresProyectos();
     }
 }
-
 function cargarConfigurador() {
     const idProy = document.getElementById('id-proy-print').value;
     if (!idProy) return alert("Ingresa ID de Proyecto");
