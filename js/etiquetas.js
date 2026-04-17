@@ -1,9 +1,11 @@
 console.log("js_etiquetas cargado OK");
-// PEGALO ACÁ ARRIBA
+
 function abrirDisenoEtiquetas() {
     mostrar('pantalla-impresion');
-    if (window.cargarSelectorProyectos) {
-        window.cargarSelectorProyectos();
+    
+    // Cambiamos a cargarProyectosDiseno que es la que tenés al final del script
+    if (typeof cargarProyectosDiseno === 'function') {
+        cargarProyectosDiseno();
     }
 }
 
