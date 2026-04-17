@@ -126,6 +126,21 @@ function cargarConfigurador() {
         });
     });
 }
+function cargarSelectorProyectos() {
+    const sel = document.getElementById('id-proy-print');
+    sel.innerHTML = '<option value="">Seleccionar proyecto...</option>';
+
+    callServer("listaGestion", { tipo: "PROYECTOS" }, res => {
+        if (!res || !res.proyectos) return;
+
+        res.proyectos.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = p.id + " - " + (p.nombre || "");
+            sel.appendChild(opt);
+        });
+    });
+}
 
 function renderSelectorCamposQR(camposQRGuardados = []) {
     const cont = document.getElementById('selector-campos-qr');
