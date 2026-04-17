@@ -3,9 +3,9 @@ console.log("js_etiquetas cargado OK");
 function abrirDisenoEtiquetas() {
     mostrar('pantalla-impresion');
     
-    // Cambiamos a cargarProyectosDiseno que es la que tenés al final del script
-    if (typeof cargarProyectosDiseno === 'function') {
-        cargarProyectosDiseno();
+    // Usamos la misma función que usa la pantalla de Lotes
+    if (typeof cargarSelectoresProyectos === 'function') {
+        cargarSelectoresProyectos();
     }
 }
 
