@@ -3,10 +3,10 @@ console.log("js_etiquetas cargado OK");
 function abrirDisenoEtiquetas() {
     mostrar('pantalla-impresion');
 
-    // Usamos la función que ya tenés escrita en la línea 387
-    // Es la que usa "obtenerListaProyectos" y llena ambos selectores
-    if (typeof cargarSelectoresProyectos === 'function') {
-        cargarSelectoresProyectos();
+    // Llamamos a la función que tenés al final del archivo (línea 711 aprox)
+    // que apunta directo a 'id-proy-print'
+    if (typeof cargarProyectosDiseno === 'function') {
+        cargarProyectosDiseno();
     }
 }
 function cargarConfigurador() {
