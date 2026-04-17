@@ -253,7 +253,7 @@ function actualizarPreviewLive() {
             margin: 0,
             width: 1
         });
-    } // <-- ACÁ estaba el error, faltaba cerrar el IF y NO la función.
+    } // <--- ESTA CIERRA EL "IF" (Acá estaba el error)
     else {
         let textoQR = "";
         filasQR.forEach(fila => {
@@ -278,9 +278,8 @@ function actualizarPreviewLive() {
             width: 70,
             height: 70
         });
-    }
-} // <-- Esta llave cierra TODA la función.
-
+    } // <--- ESTA CIERRA EL "ELSE"
+} // <--- ESTA CIERRA LA FUNCIÓN COMPLETA
 function guardarDisenoMaestro() {
     const filas = Array.from(document.querySelectorAll('.fila-etiqueta'));
     const filasQR = Array.from(document.querySelectorAll('.fila-qr'));
