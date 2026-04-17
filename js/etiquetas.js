@@ -205,44 +205,59 @@ function actualizarPreviewLive() {
 
     let htmlCampos = "";
 
-    filasConfig.forEach(fila => {
-        const idx = fila.querySelector('.sel-col-et').value;
-        const conTit = fila.querySelector('.sel-tit-et').value === "SI";
-        const nombreCol = window.headersActuales[idx];
-        const valor = piezaDeMuestra[idx];
+filasConfig.forEach(fila => {
+    const idx = fila.querySelector('.sel-col-et').value;
+    const conTit = fila.querySelector('.sel-tit-et').value === "SI";
+    const nombreCol = window.headersActuales[idx] || "";
+    const valor = piezaDeMuestra[idx] || "";
 
-        htmlCampos += `<div>${conTit ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+    htmlCampos += `<div class="campo-preview-live">${conTit ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+});
+    if (tipoCodigo === "BARRAS") {
+    cont.innerHTML = `
+        <div class="etiqueta-preview-real">
+            <div class="campos-preview-live">
+                ${htmlCampos}
+            </div>
+            <svg id="bar-preview-live"></svg>
+        </div>
+    `;
+
+    JsBarcode("#bar-preview-live", piezaDeMuestra[4], {
+        format: "CODE128",
+        height: 22,
+        displayValue: true,
+        fontSize: 8,
+        margin: 0,
+        width: 1
     });
 
-    if (tipoCodigo === "BARRAS") {
-        cont.innerHTML = `${htmlCampos}<svg id="bar-preview-live"></svg>`;
+} else {
+    let textoQR = "";
 
-        JsBarcode("#bar-preview-live", piezaDeMuestra[4], {
-            format: "CODE128",
-            height: 30,
-            displayValue: true,
-            fontSize: 10
-        });
-    } else {
-        let textoQR = "";
+    filasQR.forEach(fila => {
+        const idx = fila.querySelector('.sel-col-qr').value;
+        const conTit = fila.querySelector('.sel-tit-qr').value === "SI";
+        const nombreCol = window.headersActuales[idx] || "";
+        const valor = piezaDeMuestra[idx] || "";
 
-        filasQR.forEach(fila => {
-            const idx = fila.querySelector('.sel-col-qr').value;
-            const conTit = fila.querySelector('.sel-tit-qr').value === "SI";
-            const nombreCol = window.headersActuales[idx];
-            const valor = piezaDeMuestra[idx];
+        textoQR += `${conTit ? nombreCol + ': ' : ''}${valor}\n`;
+    });
 
-            textoQR += `${conTit ? nombreCol + ': ' : ''}${valor}\n`;
-        });
+    cont.innerHTML = `
+        <div class="etiqueta-preview-real">
+            <div class="campos-preview-live">
+                ${htmlCampos}
+            </div>
+            <div id="qr-preview-live" class="qr-preview-live-box"></div>
+        </div>
+    `;
 
-        cont.innerHTML = `${htmlCampos}<div id="qr-preview-live" style="margin-top:10px; display:flex; justify-content:center;"></div>`;
-
-        new QRCode(document.getElementById("qr-preview-live"), {
-            text: textoQR.trim(),
-            width: 120,
-            height: 120
-        });
-    }
+    new QRCode(document.getElementById("qr-preview-live"), {
+        text: textoQR.trim(),
+        width: 70,
+        height: 70
+    });
 }
 
 function guardarDisenoMaestro() {
