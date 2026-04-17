@@ -4,7 +4,7 @@ function abrirDisenoEtiquetas() {
     mostrar('pantalla-impresion');
 
     // Usamos la función que ya tenés escrita en la línea 387
-    // que es la que carga los proyectos correctamente con fecha
+    // Es la que usa "obtenerListaProyectos" y llena ambos selectores
     if (typeof cargarSelectoresProyectos === 'function') {
         cargarSelectoresProyectos();
     }
