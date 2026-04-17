@@ -227,60 +227,59 @@ function actualizarPreviewLive() {
 
     let htmlCampos = "";
 
-filasConfig.forEach(fila => {
-    const idx = fila.querySelector('.sel-col-et').value;
-    const conTit = fila.querySelector('.sel-tit-et').value === "SI";
-    const nombreCol = window.headersActuales[idx] || "";
-    const valor = piezaDeMuestra[idx] || "";
-
-    htmlCampos += `<div class="campo-preview-live">${conTit ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
-});
-    if (tipoCodigo === "BARRAS") {
-    cont.innerHTML = `
-        <div class="etiqueta-preview-real">
-            <div class="campos-preview-live">
-                ${htmlCampos}
-            </div>
-            <svg id="bar-preview-live"></svg>
-        </div>
-    `;
-
-    JsBarcode("#bar-preview-live", piezaDeMuestra[4], {
-        format: "CODE128",
-        height: 22,
-        displayValue: true,
-        fontSize: 8,
-        margin: 0,
-        width: 1
-    });
-} 
-    else {
-    let textoQR = "";
-
-    filasQR.forEach(fila => {
-        const idx = fila.querySelector('.sel-col-qr').value;
-        const conTit = fila.querySelector('.sel-tit-qr').value === "SI";
+    filasConfig.forEach(fila => {
+        const idx = fila.querySelector('.sel-col-et').value;
+        const conTit = fila.querySelector('.sel-tit-et').value === "SI";
         const nombreCol = window.headersActuales[idx] || "";
         const valor = piezaDeMuestra[idx] || "";
-
-        textoQR += `${conTit ? nombreCol + ': ' : ''}${valor}\n`;
+        htmlCampos += `<div class="campo-preview-live">${conTit ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
     });
 
-    cont.innerHTML = `
-        <div class="etiqueta-preview-real">
-            <div class="campos-preview-live">
-                ${htmlCampos}
+    if (tipoCodigo === "BARRAS") {
+        cont.innerHTML = `
+            <div class="etiqueta-preview-real">
+                <div class="campos-preview-live">
+                    ${htmlCampos}
+                </div>
+                <svg id="bar-preview-live"></svg>
             </div>
-            <div id="qr-preview-live" class="qr-preview-live-box"></div>
-        </div>
-    `;
+        `;
 
-    new QRCode(document.getElementById("qr-preview-live"), {
-        text: textoQR.trim(),
-        width: 70,
-        height: 70
-    });
-}
+        JsBarcode("#bar-preview-live", piezaDeMuestra[4], {
+            format: "CODE128",
+            height: 22,
+            displayValue: true,
+            fontSize: 8,
+            margin: 0,
+            width: 1
+        });
+    } // <-- ACÁ estaba el error, faltaba cerrar el IF y NO la función.
+    else {
+        let textoQR = "";
+        filasQR.forEach(fila => {
+            const idx = fila.querySelector('.sel-col-qr').value;
+            const conTit = fila.querySelector('.sel-tit-qr').value === "SI";
+            const nombreCol = window.headersActuales[idx] || "";
+            const valor = piezaDeMuestra[idx] || "";
+            textoQR += `${conTit ? nombreCol + ': ' : ''}${valor}\n`;
+        });
+
+        cont.innerHTML = `
+            <div class="etiqueta-preview-real">
+                <div class="campos-preview-live">
+                    ${htmlCampos}
+                </div>
+                <div id="qr-preview-live" class="qr-preview-live-box"></div>
+            </div>
+        `;
+
+        new QRCode(document.getElementById("qr-preview-live"), {
+            text: textoQR.trim(),
+            width: 70,
+            height: 70
+        });
+    }
+} // <-- Esta llave cierra TODA la función.
 
 function guardarDisenoMaestro() {
     const filas = Array.from(document.querySelectorAll('.fila-etiqueta'));
