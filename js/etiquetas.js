@@ -699,33 +699,38 @@ function cargarFormatosImpresion() {
 }
 function cargarProyectosDiseno() {
     const sel = document.getElementById('id-proy-print');
-    if (!sel) {
-        alert("No se encontró el selector.");
-        return;
-    }
+    if (!sel) return;
 
-    sel.innerHTML = '<option value="">Seleccionar proyecto...</option>';
+    sel.innerHTML = '<option value="">⌛ Buscando proyectos...</option>';
 
-    callServer("listaGestion", { tipo: "PROYECTOS" }, res => {
-        console.log("RESPUESTA PROYECTOS:", res);
+    // IMPORTANTE: Cambiamos "listaGestion" por "obtenerListaProyectos" 
+    // que es la que confirmamos que funciona en la pantalla de lotes.
+    callServer("obtenerListaProyectos", {}, res => {
+        console.log("RESPUESTA SERVIDOR (DISEÑO):", res);
 
-        if (!res) {
-            alert("No hubo respuesta.");
+        sel.innerHTML = '<option value="">Seleccionar proyecto...</option>';
+
+        if (!res || res.status === "ERROR") {
+            alert("Error al traer proyectos: " + (res.msj || "Sin respuesta"));
             return;
         }
 
-        const lista = res.proyectos || res.items || res.data || [];
+        // Usamos la estructura que el servidor SI mandó en la pantalla de lotes
+        const lista = res.proyectos || [];
 
-        if (!Array.isArray(lista) || lista.length === 0) {
-            alert("No se encontraron proyectos.");
+        if (lista.length === 0) {
+            alert("No se encontraron proyectos vigentes.");
             return;
         }
 
         lista.forEach(p => {
-            const id = p.id || p.ID_PROYECTO || p[0] || "";
+            // Ajustamos para leer ID y Fecha tal cual lo hace la función plural
+            const id = p.id || p[0] || "";
+            const fecha = p.fecha || "";
+            
             const opt = document.createElement("option");
             opt.value = id;
-            opt.textContent = id;
+            opt.textContent = id + (fecha ? " — " + fecha : "");
             sel.appendChild(opt);
         });
     });
