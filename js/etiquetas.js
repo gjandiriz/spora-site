@@ -246,8 +246,8 @@ filasConfig.forEach(fila => {
         margin: 0,
         width: 1
     });
-
-} else {
+} 
+    else {
     let textoQR = "";
 
     filasQR.forEach(fila => {
