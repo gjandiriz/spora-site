@@ -688,3 +688,37 @@ function cargarFormatosImpresion() {
         });
     });
 }
+window.abrirPantallaImpresion = function () {
+    mostrar('pantalla-impresion');
+
+    const sel = document.getElementById('id-proy-print');
+    if (!sel) {
+        alert("No se encontró el selector de proyectos.");
+        return;
+    }
+
+    sel.innerHTML = '<option value="">Seleccionar proyecto...</option>';
+
+    callServer("listaGestion", { tipo: "PROYECTOS" }, res => {
+        console.log("PROYECTOS:", res);
+
+        if (!res) {
+            alert("No hubo respuesta del servidor.");
+            return;
+        }
+
+        const lista = res.proyectos || res.items || res.data || [];
+
+        if (!Array.isArray(lista) || lista.length === 0) {
+            alert("No se encontraron proyectos para cargar.");
+            return;
+        }
+
+        lista.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id || p.ID_PROYECTO || p[0] || "";
+            opt.textContent = p.id || p.ID_PROYECTO || p[0] || "(sin id)";
+            sel.appendChild(opt);
+        });
+    });
+};
