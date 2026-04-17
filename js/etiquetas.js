@@ -701,37 +701,28 @@ function cargarProyectosDiseno() {
     const sel = document.getElementById('id-proy-print');
     if (!sel) return;
 
-    sel.innerHTML = '<option value="">⌛ Buscando proyectos...</option>';
+    sel.innerHTML = '<option value="">⌛ Cargando...</option>';
 
-    // IMPORTANTE: Cambiamos "listaGestion" por "obtenerListaProyectos" 
-    // que es la que confirmamos que funciona en la pantalla de lotes.
     callServer("obtenerListaProyectos", {}, res => {
-        console.log("RESPUESTA SERVIDOR (DISEÑO):", res);
+        console.log("DATOS RECIBIDOS:", res.proyectos); // Para ver la estructura exacta
 
         sel.innerHTML = '<option value="">Seleccionar proyecto...</option>';
 
-        if (!res || res.status === "ERROR") {
-            alert("Error al traer proyectos: " + (res.msj || "Sin respuesta"));
-            return;
+        if (res.status === "OK" && res.proyectos && res.proyectos.length > 0) {
+            res.proyectos.forEach(p => {
+                // Probamos todas las variantes posibles de nombre de campo
+                const id = p.id || p.ID || p.idProyecto || (Array.isArray(p) ? p[0] : "");
+                const nombre = p.nombre || p.nombreProyecto || "";
+                
+                if (id) {
+                    const opt = document.createElement("option");
+                    opt.value = id;
+                    opt.textContent = nombre ? `${id} - ${nombre}` : id;
+                    sel.appendChild(opt);
+                }
+            });
+        } else {
+            sel.innerHTML = '<option value="">No hay proyectos activos</option>';
         }
-
-        // Usamos la estructura que el servidor SI mandó en la pantalla de lotes
-        const lista = res.proyectos || [];
-
-        if (lista.length === 0) {
-            alert("No se encontraron proyectos vigentes.");
-            return;
-        }
-
-        lista.forEach(p => {
-            // Ajustamos para leer ID y Fecha tal cual lo hace la función plural
-            const id = p.id || p[0] || "";
-            const fecha = p.fecha || "";
-            
-            const opt = document.createElement("option");
-            opt.value = id;
-            opt.textContent = id + (fecha ? " — " + fecha : "");
-            sel.appendChild(opt);
-        });
     });
 }
