@@ -1,4 +1,11 @@
 console.log("js_etiquetas cargado OK");
+// PEGALO ACÁ ARRIBA
+function abrirDisenoEtiquetas() {
+    mostrar('pantalla-impresion');
+    if (window.cargarSelectorProyectos) {
+        window.cargarSelectorProyectos();
+    }
+}
 
 function cargarConfigurador() {
     const idProy = document.getElementById('id-proy-print').value;
