@@ -110,42 +110,38 @@
         <button onclick="mostrar('pantalla-menu')" style="background:#444; margin-top:20px;">⬅ VOLVER</button>
     </div>
     
-    <div id="pantalla-eventos" class="hidden">
-    <h3>🔍 Trazabilidad y Auditoría</h3>
+   <div id="pantalla-eventos" class="hidden">
+    <h3>📊 Monitor de Actividad</h3>
 
-    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-        <label style="font-size: 11px; color: #2fc95c; font-weight: bold; display: block; margin-bottom: 5px;">
-            BUSCADOR MULTIPLE (Pieza, Operario, Lote o Estación)
-        </label>
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="input-busqueda-trazabilidad" placeholder="Ej: P001, Gonzalo, Corte..." 
-                   style="flex: 1; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 4px;">
-            <button onclick="buscarTrazabilidad()" style="background: #3498db; width: auto; padding: 0 20px;">🔍 BUSCAR</button>
-        </div>
+    <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+        <button id="btn-vista-vivo" onclick="switchVistaEventos('vivo')" style="background: #2ecc71; flex: 1; font-size: 12px;">📡 ACTIVIDAD EN VIVO</button>
+        <button id="btn-vista-buscar" onclick="switchVistaEventos('buscar')" style="background: #444; flex: 1; font-size: 12px;">🔍 BUSCADOR / AUDITORÍA</button>
     </div>
 
-    <div id="contenedor-trazabilidad-especifica" class="hidden" 
-         style="margin-bottom: 20px; padding: 15px; border: 1px dashed #3498db; border-radius: 8px; background: rgba(52, 152, 219, 0.08);">
+    <div id="wrapper-actividad-vivo">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h4 style="color: #3498db; margin: 0;">📋 Línea de Tiempo de la Pieza</h4>
-            <button onclick="document.getElementById('contenedor-trazabilidad-especifica').classList.add('hidden')" 
-                    style="background: transparent; color: #aaa; width: auto; padding: 0; border: none; cursor: pointer;">✕ Cerrar</button>
+            <h4 style="margin: 0;">Flujo en tiempo real</h4>
+            <button onclick="cargarEventos()" style="background: #2c3e50; width: auto; padding: 5px 10px; font-size: 10px;">🔄 REFRESCAR</button>
         </div>
-        <div id="detalle-trazabilidad" style="font-size: 13px;"></div>
+        <div id="tabla-eventos" style="font-size: 12px; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 5px;"></div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h4 style="margin: 0;">📊 Actividad General</h4>
-        <button onclick="cargarEventos()" style="background: #2c3e50; width: auto; padding: 5px 15px; font-size: 11px;">
-            🔄 Actualizar en vivo
-        </button>
+    <div id="wrapper-buscador-trazabilidad" class="hidden">
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3498db;">
+            <label style="font-size: 11px; color: #3498db; font-weight: bold; display: block; margin-bottom: 5px;">RASTREAR POR PIEZA, CLIENTE O LOTE</label>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="input-busqueda-trazabilidad" placeholder="Ej: P001, Cliente, Corte..." 
+                       style="flex: 1; padding: 10px; background: #222; border: 1px solid #444; color: white;">
+                <button onclick="buscarTrazabilidad()" style="background: #3498db; width: auto; padding: 0 15px;">BUSCAR</button>
+            </div>
+        </div>
+        
+        <div id="detalle-trazabilidad" style="font-size: 13px; min-height: 100px;">
+            <p style="color: #666; text-align: center;">Ingresá un dato para ver su historia...</p>
+        </div>
     </div>
 
-    <div id="tabla-eventos" style="font-size: 12px; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 5px;"></div>
-
-    <button onclick="mostrar('pantalla-menu')" style="background: #444; margin-top: 15px;">
-        VOLVER AL MENÚ
-    </button>
+    <button onclick="mostrar('pantalla-menu')" style="background: #444; margin-top: 20px;">VOLVER AL MENÚ</button>
 </div>
 
     <div id="pantalla-proyecto" class="hidden">
