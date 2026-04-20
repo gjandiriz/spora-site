@@ -142,3 +142,22 @@ function buscarTrazabilidad() {
         detalle.innerHTML = html;
     });
 }
+function switchVistaEventos(vista) {
+    const vivo = document.getElementById('wrapper-actividad-vivo');
+    const buscar = document.getElementById('wrapper-buscador-trazabilidad');
+    const btnVivo = document.getElementById('btn-vista-vivo');
+    const btnBuscar = document.getElementById('btn-vista-buscar');
+
+    if (vista === 'vivo') {
+        vivo.classList.remove('hidden');
+        buscar.classList.add('hidden');
+        btnVivo.style.background = '#2ecc71';
+        btnBuscar.style.background = '#444';
+        cargarEventos(); // Cargamos la tabla general
+    } else {
+        vivo.classList.add('hidden');
+        buscar.classList.remove('hidden');
+        btnVivo.style.background = '#444';
+        btnBuscar.style.background = '#3498db';
+    }
+}
