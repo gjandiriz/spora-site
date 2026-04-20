@@ -103,36 +103,37 @@ function cargarEventos() {
 }
 function buscarTrazabilidad() {
     const term = document.getElementById('input-busqueda-trazabilidad').value.trim();
-    if (!term) return alert("Por favor, ingresá qué querés buscar (Pieza, Operario, etc.)");
+    if (!term) return alert("Por favor, ingresá un dato (Pieza, Cliente, etc.)");
 
     const detalle = document.getElementById('detalle-trazabilidad');
-    const contenedor = document.getElementById('contenedor-trazabilidad-especifica');
     
-    detalle.innerHTML = "⌛ Rastreando en la base de datos...";
-    contenedor.classList.remove('hidden');
+    // Limpiamos y avisamos que estamos buscando
+    detalle.innerHTML = `<div style="text-align:center; padding:20px;">⌛ Rastreando <b>${term}</b> en el historial...</div>`;
 
-    // Usamos el buscador específico
     callServer("buscarTrazabilidad", { filtro: term }, res => {
         if (res.status === "ERROR" || !res.eventos || res.eventos.length === 0) {
-            detalle.innerHTML = `<div style="color:#ff6b6b; padding:10px;">❌ No se encontró actividad para: <b>${term}</b></div>`;
+            detalle.innerHTML = `
+                <div style="background:rgba(231, 76, 60, 0.1); border:1px solid #e74c3c; color:#e74c3c; padding:15px; border-radius:8px; text-align:center;">
+                    ❌ No se encontró actividad para: <b>${term}</b><br>
+                    <small style="color:#aaa;">Probá con otro número de pieza o nombre.</small>
+                </div>`;
             return;
         }
 
-        // Generamos la Línea de Tiempo (Timeline) estética
-        let html = `<div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">`;
+        // Si hay datos, dibujamos la Línea de Tiempo
+        let html = `<div style="display:flex; flex-direction:column; gap:12px; padding:10px;">`;
         
         res.eventos.forEach((ev) => {
             const fecha = new Date(ev.fecha).toLocaleString('es-AR');
             html += `
-                <div style="border-left: 2px solid #3498db; padding-left: 15px; position: relative; margin-bottom:5px;">
-                    <div style="width: 10px; height: 10px; background: #3498db; border-radius: 50%; position: absolute; left: -6px; top: 4px;"></div>
+                <div style="border-left: 2px solid #3498db; padding-left: 15px; position: relative;">
+                    <div style="width: 10px; height: 10px; background: #3498db; border-radius: 50%; position: absolute; left: -6px; top: 5px;"></div>
                     <div style="font-size: 10px; color: #888;">${fecha}</div>
                     <div style="font-size: 13px; margin-top:2px;">
-                        Estación: <b style="color:#eee;">${ev.estacion}</b><br>
-                        Pieza: <b style="color:#3498db;">${ev.pieza}</b><br>
+                        <b>${ev.estacion}</b> | Pieza: <b style="color:#3498db;">${ev.pieza}</b><br>
                         Operario: <span style="color:#2fc95c">${ev.operario}</span>
                     </div>
-                    <div style="font-size: 11px; color: #aaa; font-style: italic; margin-top:3px;">Resultado: ${ev.mensaje}</div>
+                    <div style="font-size: 11px; color: #aaa; margin-top:3px;">Resultado: ${ev.mensaje}</div>
                 </div>
             `;
         });
