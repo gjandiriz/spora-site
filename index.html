@@ -111,16 +111,40 @@
     </div>
     
     <div id="pantalla-eventos" class="hidden">
-    <h3>📊 Actividad en vivo</h3>
+    <h3>🔍 Trazabilidad y Auditoría</h3>
 
-    <button onclick="cargarEventos()" style="background:#2c3e50; margin-bottom:10px;">
-        🔄 Actualizar
-    </button>
+    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <label style="font-size: 11px; color: #2fc95c; font-weight: bold; display: block; margin-bottom: 5px;">
+            BUSCADOR MULTIPLE (Pieza, Operario, Lote o Estación)
+        </label>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="input-busqueda-trazabilidad" placeholder="Ej: P001, Gonzalo, Corte..." 
+                   style="flex: 1; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 4px;">
+            <button onclick="buscarTrazabilidad()" style="background: #3498db; width: auto; padding: 0 20px;">🔍 BUSCAR</button>
+        </div>
+    </div>
 
-    <div id="tabla-eventos" style="font-size:12px;"></div>
+    <div id="contenedor-trazabilidad-especifica" class="hidden" 
+         style="margin-bottom: 20px; padding: 15px; border: 1px dashed #3498db; border-radius: 8px; background: rgba(52, 152, 219, 0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h4 style="color: #3498db; margin: 0;">📋 Línea de Tiempo de la Pieza</h4>
+            <button onclick="document.getElementById('contenedor-trazabilidad-especifica').classList.add('hidden')" 
+                    style="background: transparent; color: #aaa; width: auto; padding: 0; border: none; cursor: pointer;">✕ Cerrar</button>
+        </div>
+        <div id="detalle-trazabilidad" style="font-size: 13px;"></div>
+    </div>
 
-    <button onclick="mostrar('pantalla-menu')" style="background:#444; margin-top:15px;">
-        VOLVER
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h4 style="margin: 0;">📊 Actividad General</h4>
+        <button onclick="cargarEventos()" style="background: #2c3e50; width: auto; padding: 5px 15px; font-size: 11px;">
+            🔄 Actualizar en vivo
+        </button>
+    </div>
+
+    <div id="tabla-eventos" style="font-size: 12px; background: rgba(0,0,0,0.2); border-radius: 4px; padding: 5px;"></div>
+
+    <button onclick="mostrar('pantalla-menu')" style="background: #444; margin-top: 15px;">
+        VOLVER AL MENÚ
     </button>
 </div>
 
