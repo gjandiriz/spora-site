@@ -258,3 +258,17 @@ function enviarDatosAlServidor(idProy, filas) {
         }
     });
 }
+function resetearFormatoImportacion() {
+    if (!confirm("⚠️ ¿Estás seguro? Esto borrará el mapeo de columnas guardado y tendrás que configurar el Excel de nuevo.")) return;
+
+    // Llamamos al servidor para borrar el contrato/formato guardado
+    callServer("guardarContratoImportacion", { contrato: "" }, (res) => {
+        if (res.status === "OK") {
+            alert("✅ Formato reseteado. Ahora podés configurar uno nuevo.");
+            // Refrescamos la pantalla para que desaparezca el cartel verde y aparezca el mapeador
+            abrirPantallaProyecto();
+        } else {
+            alert("❌ Error al resetear: " + res.mensaje);
+        }
+    });
+}
