@@ -103,37 +103,44 @@ function cargarEventos() {
 }
 function buscarTrazabilidad() {
     const term = document.getElementById('input-busqueda-trazabilidad').value.trim();
-    if (!term) return alert("Por favor, ingresá un dato (Pieza, Cliente, etc.)");
+    if (!term) return alert("Ingresá un dato para buscar.");
 
     const detalle = document.getElementById('detalle-trazabilidad');
-    
-    // Limpiamos y avisamos que estamos buscando
-    detalle.innerHTML = `<div style="text-align:center; padding:20px;">⌛ Rastreando <b>${term}</b> en el historial...</div>`;
+    detalle.innerHTML = "⌛ Cruzando datos con DB_PIEZAS...";
 
     callServer("buscarTrazabilidad", { filtro: term }, res => {
         if (res.status === "ERROR" || !res.eventos || res.eventos.length === 0) {
-            detalle.innerHTML = `
-                <div style="background:rgba(231, 76, 60, 0.1); border:1px solid #e74c3c; color:#e74c3c; padding:15px; border-radius:8px; text-align:center;">
-                    ❌ No se encontró actividad para: <b>${term}</b><br>
-                    <small style="color:#aaa;">Probá con otro número de pieza o nombre.</small>
-                </div>`;
+            detalle.innerHTML = "❌ No se encontró nada.";
             return;
         }
 
-        // Si hay datos, dibujamos la Línea de Tiempo
-        let html = `<div style="display:flex; flex-direction:column; gap:12px; padding:10px;">`;
+        let html = `<div style="display:flex; flex-direction:column; gap:20px;">`;
         
         res.eventos.forEach((ev) => {
             const fecha = new Date(ev.fecha).toLocaleString('es-AR');
+            
+            // Creamos la tabla de detalles técnicos si existen
+            let tablaDetalle = "";
+            if (ev.detalles) {
+                tablaDetalle = `<table style="width:100%; font-size:10px; margin-top:10px; border:1px solid #444; border-collapse:collapse; background:#111;">`;
+                for (let key in ev.detalles) {
+                    if (ev.detalles[key]) { // Solo mostramos columnas que tengan datos
+                        tablaDetalle += `<tr><td style="border:1px solid #333; padding:4px; color:#aaa; width:40%;">${key}</td><td style="border:1px solid #333; padding:4px; color:#fff;">${ev.detalles[key]}</td></tr>`;
+                    }
+                }
+                tablaDetalle += `</table>`;
+            }
+
             html += `
-                <div style="border-left: 2px solid #3498db; padding-left: 15px; position: relative;">
-                    <div style="width: 10px; height: 10px; background: #3498db; border-radius: 50%; position: absolute; left: -6px; top: 5px;"></div>
-                    <div style="font-size: 10px; color: #888;">${fecha}</div>
-                    <div style="font-size: 13px; margin-top:2px;">
-                        <b>${ev.estacion}</b> | Pieza: <b style="color:#3498db;">${ev.pieza}</b><br>
-                        Operario: <span style="color:#2fc95c">${ev.operario}</span>
+                <div style="border-left: 3px solid #3498db; padding-left: 15px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 0 8px 8px 0;">
+                    <div style="font-size: 11px; color: #3498db; font-weight:bold;">${fecha} - ${ev.estacion}</div>
+                    <div style="font-size: 14px; margin: 5px 0;">Pieza: <b>${ev.pieza}</b> | Operario: <span style="color:#2fc95c;">${ev.operario}</span></div>
+                    <div style="font-size: 12px; color: #888; margin-bottom:10px;">Estado: ${ev.mensaje}</div>
+                    
+                    <div style="background: rgba(52, 152, 219, 0.05); padding: 10px; border-radius: 4px; border: 1px solid rgba(52, 152, 219, 0.2);">
+                        <span style="font-size: 10px; color: #3498db; font-weight:bold;">📋 FICHA TÉCNICA DE IMPORTACIÓN</span>
+                        ${tablaDetalle}
                     </div>
-                    <div style="font-size: 11px; color: #aaa; margin-top:3px;">Resultado: ${ev.mensaje}</div>
                 </div>
             `;
         });
