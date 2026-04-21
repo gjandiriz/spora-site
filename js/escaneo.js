@@ -48,12 +48,25 @@ function procesarScan(id) {
     const log = document.getElementById('log-scan');
     input.value = "⌛ REGISTRANDO..."; 
     
-    // Usamos la función callServer que está en main.js
     callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
-        input.value = (res.status === "OK" ? "✅ " : "❌ ") + id;
-        log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${res.msj}</div>` + log.innerHTML;
+        // LÓGICA DE ICONOS SEGÚN EL MENSAJE REAL
+        if (res.status === "OK") {
+            if (res.msj === "ESCANEO_OK") {
+                input.value = "✅ REGISTRADO";
+            } else if (res.msj === "ESCANEO_SALTO_FLUJO") {
+                input.value = "⚠️ SALTO DE FLUJO";
+                input.style.color = "#f1c40f"; // Color amarillo de advertencia
+            }
+        } else {
+            input.value = "❌ ERROR";
+            input.style.color = "#e74c3c";
+        }
+
+        log.innerHTML = `<div>${new Date().toLocaleTimeString()}: <b>${res.msj}</b> (${id})</div>` + log.innerHTML;
+
         setTimeout(() => { 
             input.value = "LISTO PARA ESCANEAR"; 
+            input.style.color = ""; // Reseteamos el color
             isProcessing = false; 
         }, 2000);
     });
