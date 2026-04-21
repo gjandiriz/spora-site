@@ -46,28 +46,45 @@ function registrarManual() {
 function procesarScan(id) {
     const input = document.getElementById('input-scan');
     const log = document.getElementById('log-scan');
-    input.value = "⌛ REGISTRANDO..."; 
-    
-    callServer("registrar", {id: id, estacion: estacionActual, usuario: usuarioActual}, res => {
-        // LÓGICA DE ICONOS SEGÚN EL MENSAJE REAL
-        if (res.status === "OK") {
-            if (res.msj === "ESCANEO_OK") {
-                input.value = "✅ REGISTRADO";
-            } else if (res.msj === "ESCANEO_SALTO_FLUJO") {
-                input.value = "⚠️ SALTO DE FLUJO";
-                input.style.color = "#f1c40f"; // Color amarillo de advertencia
+    const info = document.getElementById('info-tecnica-escaneo');
+
+    callServer("registrarEscaneo", {
+        id: id,
+        estacion: estacionActual,
+        usuario: usuarioActual
+    }, res => {
+
+        if (!res || res.status !== "OK") {
+            input.value = "❌ ERROR | " + id;
+            if (log) {
+                log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ERROR</div>` + log.innerHTML;
             }
-        } else {
-            input.value = "❌ ERROR";
-            input.style.color = "#e74c3c";
+            return;
         }
 
-        log.innerHTML = `<div>${new Date().toLocaleTimeString()}: <b>${res.msj}</b> (${id})</div>` + log.innerHTML;
+        if (res.msj === "ESCANEO_OK") {
+            input.value = "✅ OK | " + id;
+        } else if (res.msj === "ESCANEO_SALTO_FLUJO") {
+            input.value = "⚠️ SALTO DE FLUJO | " + id;
+        } else {
+            input.value = "ℹ️ " + res.msj + " | " + id;
+        }
 
-        setTimeout(() => { 
-            input.value = "LISTO PARA ESCANEAR"; 
-            input.style.color = ""; // Reseteamos el color
-            isProcessing = false; 
-        }, 2000);
+        if (info) {
+            if (res.datosTecnicos) {
+                let txt = `<div style="background:#222; padding:10px; border:1px solid #444; border-radius:8px; text-align:left;">`;
+                for (let key in res.datosTecnicos) {
+                    txt += `<div style="margin-bottom:4px;"><small>${key}:</small> <b>${res.datosTecnicos[key]}</b></div>`;
+                }
+                txt += `</div>`;
+                info.innerHTML = txt;
+            } else {
+                info.innerHTML = `<div style="background:#332; padding:10px; border:1px solid #665; border-radius:8px;">No se encontraron datos técnicos para este ID.</div>`;
+            }
+        }
+
+        if (log) {
+            log.innerHTML = `<div>${new Date().toLocaleTimeString()}: ${res.msj} | ${id}</div>` + log.innerHTML;
+        }
     });
 }
