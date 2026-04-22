@@ -30,11 +30,20 @@ function encenderCamara() {
             html5QrCode.stop().then(() => {
                 readerDiv.style.display = "none";
                 procesarScan(txt);
+                isProcessing = false;
+                html5QrCode = null;
+            }).catch(err => {
+                console.error("Error al detener cámara:", err);
+                readerDiv.style.display = "none";
+                isProcessing = false;
+                html5QrCode = null;
             });
         }
     ).catch(err => {
         console.error("Error al iniciar cámara:", err);
+        readerDiv.style.display = "none";
         isProcessing = false;
+        html5QrCode = null;
     });
 }
 
