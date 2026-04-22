@@ -45,6 +45,9 @@ function registrarManual() {
 
 function procesarScan(id) {
     const input = document.getElementById('input-scan');
+    input.style.color = "white";
+input.style.background = "#07111f";
+input.style.border = "1px solid #2c3e50";
     const log = document.getElementById('log-scan');
     const info = document.getElementById('info-tecnica-escaneo');
 
@@ -63,12 +66,18 @@ function procesarScan(id) {
         }
 
         if (res.msj === "ESCANEO_OK") {
-            input.value = "✅ OK | " + id;
-        } else if (res.msj === "ESCANEO_SALTO_FLUJO") {
-            input.value = "⚠️ SALTO DE FLUJO | " + id;
-        } else {
-            input.value = "ℹ️ " + res.msj + " | " + id;
-        }
+    input.value = "✅ OK | " + id;
+    input.style.background = "#12351f";
+    input.style.border = "1px solid #2ecc71";
+} else if (res.msj === "ESCANEO_SALTO_FLUJO") {
+    input.value = "⚠️ SALTO DE FLUJO | " + id;
+    input.style.background = "#4a3410";
+    input.style.border = "1px solid #f1c40f";
+} else {
+    input.value = "❌ " + res.msj + " | " + id;
+    input.style.background = "#4a1f1f";
+    input.style.border = "1px solid #e74c3c";
+}
 
         if (info) {
             if (res.datosTecnicos) {
