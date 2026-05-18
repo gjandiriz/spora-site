@@ -13,7 +13,7 @@ function guardarEstacion() {
         nombre: nombre,
         descripcion: descripcion
     }, res => {
-        alert(res);
+        alert(res.mensaje || res);
 
         document.getElementById("est-nombre").value = "";
         document.getElementById("est-desc").value = "";
