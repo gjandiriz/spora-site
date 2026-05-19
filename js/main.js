@@ -6,8 +6,27 @@ let datosExcelRaw = [], listaColumnasExcel = [], estacionesParaFlujo = [];
 let piezaDeMuestra = null, contratoVigente = null, datosTemporalesFilas = [];
 
 function callServer(action, params, callback) {
-    // 1. ANTES DEL FETCH: Bloqueamos clicks y ponemos el mouse en modo "reloj de arena"
-    document.body.style.cursor = "wait";
+    // 1. CREAR EL CARTEL DE "CARGANDO" GLOBAL
+    let cartel = document.getElementById('spora-loading');
+    if (!cartel) {
+        cartel = document.createElement('div');
+        cartel.id = 'spora-loading';
+        // Estilos para que quede un cartelito flotante sobrio arriba a la derecha
+        cartel.style.position = 'fixed';
+        cartel.style.top = '15px';
+        cartel.style.right = '15px';
+        cartel.style.padding = '10px 20px';
+        cartel.style.background = '#f1c40f'; // Color amarillo de advertencia/proceso
+        cartel.style.color = '#000';
+        cartel.style.fontWeight = 'bold';
+        cartel.style.borderRadius = '5px';
+        cartel.style.zIndex = '99999';
+        cartel.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+        cartel.innerText = '⏳ Procesando solicitud...';
+        document.body.appendChild(cartel);
+    }
+    
+    // Bloqueamos clicks en toda la pantalla para evitar doble envío
     document.body.style.pointerEvents = "none";
 
     params.action = action;
@@ -19,8 +38,8 @@ function callServer(action, params, callback) {
     fetch(API_URL, { method: 'POST', body: formData })
         .then(r => r.text())
         .then(txt => {
-            // 2. AL RECIBIR RESPUESTA: Devolvemos el mouse y los clicks a la normalidad
-            document.body.style.cursor = "default";
+            // 2. AL RECIBIR RESPUESTA: Borramos el cartel y liberamos la pantalla
+            if (cartel) cartel.remove();
             document.body.style.pointerEvents = "auto";
 
             let data;
@@ -33,8 +52,8 @@ function callServer(action, params, callback) {
             callback(data);
         })
         .catch(e => {
-            // 3. EN CASO DE ERROR DE RED: También restauramos la pantalla para no congelar al usuario
-            document.body.style.cursor = "default";
+            // 3. EN CASO DE ERROR: También limpiamos para no trabar la app
+            if (cartel) cartel.remove();
             document.body.style.pointerEvents = "auto";
             console.error("Error API:", e);
         });
