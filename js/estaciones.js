@@ -11,13 +11,20 @@ function guardarEstacion() {
 
     callServer("crearEstacion", {
         nombre: nombre,
-        descripcion: descripcion
-        }, res => {
+        desc: descripcion
+    }, res => {
         console.log("Respuesta crear estación:", res);
-        alert(res.msj || res.message || res.status || JSON.stringify(res));
+
+        if (res.status === "ERROR") {
+            alert("❌ " + res.msj);
+            return;
+        }
+
+        alert(res.msj || "✅ Estación creada.");
 
         document.getElementById("est-nombre").value = "";
         document.getElementById("est-desc").value = "";
 
         mostrar("pantalla-menu");
     });
+}
