@@ -9,7 +9,7 @@ function guardarEstacion() {
         return;
     }
 
-    callServer("crearNueva_estacion", {
+    callServer("crearEstacion", {
         nombre: nombre,
         descripcion: descripcion
         }, res => {
