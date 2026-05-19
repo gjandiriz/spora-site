@@ -6,6 +6,10 @@ let datosExcelRaw = [], listaColumnasExcel = [], estacionesParaFlujo = [];
 let piezaDeMuestra = null, contratoVigente = null, datosTemporalesFilas = [];
 
 function callServer(action, params, callback) {
+    // 1. ANTES DEL FETCH: Bloqueamos clicks y ponemos el mouse en modo "reloj de arena"
+    document.body.style.cursor = "wait";
+    document.body.style.pointerEvents = "none";
+
     params.action = action;
     const formData = new FormData();
     for (const key in params) {
@@ -15,6 +19,10 @@ function callServer(action, params, callback) {
     fetch(API_URL, { method: 'POST', body: formData })
         .then(r => r.text())
         .then(txt => {
+            // 2. AL RECIBIR RESPUESTA: Devolvemos el mouse y los clicks a la normalidad
+            document.body.style.cursor = "default";
+            document.body.style.pointerEvents = "auto";
+
             let data;
             try {
                 data = JSON.parse(txt);
@@ -24,7 +32,12 @@ function callServer(action, params, callback) {
             }
             callback(data);
         })
-        .catch(e => console.error("Error API:", e));
+        .catch(e => {
+            // 3. EN CASO DE ERROR DE RED: También restauramos la pantalla para no congelar al usuario
+            document.body.style.cursor = "default";
+            document.body.style.pointerEvents = "auto";
+            console.error("Error API:", e);
+        });
 }
 
 function mostrar(id) {
