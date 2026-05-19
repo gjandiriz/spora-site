@@ -76,26 +76,29 @@ function procesarScan(id) {
         usuario: usuarioActual
     }, res => {
         if (res.status === "OK") {
-            input.value = "✅ " + idFinal;
-            
-            // MOSTRAR FICHA TÉCNICA
-            // res.datos contiene TODA la fila de DB_PIEZAS
-            let htmlFicha = `
-                <div style="background: #1e3799; color: white; padding: 15px; border-radius: 8px; border-left: 5px solid #00a8ff;">
-                    <div style="font-size: 11px; text-transform: uppercase; opacity: 0.8;">Ficha de Fabricación</div>
-                    <div style="font-size: 18px; font-weight: bold; margin: 5px 0;">${res.datos.CLIENTE || 'Sin Cliente'}</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 14px;">
-                        <div>📏 Medidas: <b>${res.datos.ANCHO} x ${res.datos.ALTO}</b></div>
-                        <div>🎨 Tela: <b>${res.datos.TELA || '-'}</b></div>
-                    </div>
-                    <div style="margin-top: 10px; font-size: 13px; color: #fbc531;">
-                        <b>OBS:</b> ${res.datos.OBSERVACIONES || 'Sin notas'}
-                    </div>
+        input.value = "✅ " + idFinal;
+        
+        // --- BLINDAJE DE SEGURIDAD ---
+        // Nos aseguramos de que 'res.datos' exista para que no rompa el código si viene vacío
+        const datosPieza = res.datos || {};
+        
+        // MOSTRAR FICHA TÉCNICA
+        let htmlFicha = `
+            <div style="background: #1e3799; color: white; padding: 15px; border-radius: 8px; border-left: 5px solid #00a8ff;">
+                <div style="font-size: 11px; text-transform: uppercase; opacity: 0.8;">Ficha de Fabricación</div>
+                <div style="font-size: 18px; font-weight: bold; margin: 5px 0;">${datosPieza.CLIENTE || 'Sin Cliente / No Encontrado'}</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 14px;">
+                    <div>📏 Medidas: <b>${datosPieza.ANCHO || '-'} x ${datosPieza.ALTO || '-'}</b></div>
+                    <div>🎨 Tela: <b>${datosPieza.TELA || '-'}</b></div>
                 </div>
-            `;
-            infoPanel.innerHTML = htmlFicha;
+                <div style="margin-top: 10px; font-size: 13px; color: #fbc531;">
+                    <b>OBS:</b> ${datosPieza.OBSERVACIONES || 'Sin notas'}
+                </div>
+            </div>
+        `;
+        infoPanel.innerHTML = htmlFicha;
 
-        } else {
+    } else {
             input.value = "❌ ERROR";
             infoPanel.innerHTML = `<div style="background:#c0392b; color:white; padding:10px; border-radius:8px;">⚠️ ${res.msj}</div>`;
         }
