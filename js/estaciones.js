@@ -12,12 +12,12 @@ function guardarEstacion() {
     callServer("crearNueva_estacion", {
         nombre: nombre,
         descripcion: descripcion
-    }, res => {
-        alert(res.mensaje || res);
+        }, res => {
+        console.log("Respuesta crear estación:", res);
+        alert(res.msj || res.message || res.status || JSON.stringify(res));
 
         document.getElementById("est-nombre").value = "";
         document.getElementById("est-desc").value = "";
 
         mostrar("pantalla-menu");
     });
-}
