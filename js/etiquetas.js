@@ -273,26 +273,30 @@ function actualizarPreviewLive() {
     let htmlCampos = "";
 
     // ==========================================================================
-    // 🎨 RECORREMOS LAS FILAS LEYENDO LOS NUEVOS ATRIBUTOS DE DISEÑO
+    // 🎨 RECORREMOS LAS FILAS CORRIGIENDO LA LECTURA DE ÍNDICES EN VIVO
     // ==========================================================================
     filasConfig.forEach(fila => {
-        const idx = fila.querySelector('.sel-col-et').value;
+        // CORRECCIÓN CLAVE: Convertimos a entero el VALUE real del select seleccionado
+        const selectorColumna = fila.querySelector('.sel-col-et');
+        if (!selectorColumna) return;
+        
+        const idx = parseInt(selectorColumna.value, 10); 
         const conTit = fila.querySelector('.sel-tit-et').value === "SI";
         
-        // Leemos los nuevos selectores de forma segura (si no existen todavía, toman el valor por defecto)
+        // Atributos de diseño que agregamos antes
         const anchoElegido = fila.querySelector('.sel-ancho-et')?.value || "100%";
         const tamanoElegido = fila.querySelector('.sel-tamano-et')?.value || "normal";
         
+        // Ahora sí mapeamos de forma segura contra la base de datos de headers
         const nombreCol = window.headersActuales[idx] || "";
-        const valor = piezaDeMuestra[idx] || "";
+        const valor = piezaDeMuestra[idx] !== undefined ? piezaDeMuestra[idx] : "";
 
-        // Definimos estilos CSS dinámicos según lo seleccionado por el operario
         let estiloBloque = `width: ${anchoElegido}; display: inline-block; box-sizing: border-box; padding: 2px;`;
         
         if (tamanoElegido === "chica") {
-            estiloBloque += " font-size: 10px; line-height: 12px;"; // Achica el texto
+            estiloBloque += " font-size: 10px; line-height: 12px;";
         } else {
-            estiloBloque += " font-size: 13px; line-height: 16px;"; // Tamaño estándar legible
+            estiloBloque += " font-size: 13px; line-height: 16px;";
         }
 
         htmlCampos += `
@@ -302,7 +306,6 @@ function actualizarPreviewLive() {
         `;
     });
 
-    // Inyectamos un contenedor flex-wrap para permitir que los bloques de 50% se acoplen juntos
     const htmlContenedorCampos = `
         <div class="campos-preview-live" style="display: flex; flex-wrap: wrap; width: 100%; text-align: left;">
             ${htmlCampos}
@@ -317,7 +320,11 @@ function actualizarPreviewLive() {
             </div>
         `;
 
-        JsBarcode("#bar-preview-live", piezaDeMuestra[4], {
+        // CORRECCIÓN EXTRA: Buscamos dinámicamente cuál columna tiene el ID ÚNICO para el código de barras
+        // (Asumimos que el ID único sigue estando en el índice 4 o lo calculamos del registro de muestra)
+        const codigoBarraValor = piezaDeMuestra[4] || "123456";
+
+        JsBarcode("#bar-preview-live", codigoBarraValor, {
             format: "CODE128",
             height: 22,
             displayValue: true,
@@ -328,10 +335,13 @@ function actualizarPreviewLive() {
     } else {
         let textoQR = "";
         filasQR.forEach(fila => {
-            const idx = fila.querySelector('.sel-col-qr').value;
+            const selectorQR = fila.querySelector('.sel-col-qr');
+            if (!selectorQR) return;
+
+            const idx = parseInt(selectorQR.value, 10);
             const conTit = fila.querySelector('.sel-tit-qr').value === "SI";
             const nombreCol = window.headersActuales[idx] || "";
-            const valor = piezaDeMuestra[idx] || "";
+            const valor = piezaDeMuestra[idx] !== undefined ? piezaDeMuestra[idx] : "";
             textoQR += `${conTit ? nombreCol + ': ' : ''}${valor}\n`;
         });
 
