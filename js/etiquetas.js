@@ -201,11 +201,13 @@ function renderSelectorCamposQR(camposQRGuardados = []) {
     });
 }
 
-function agregarFilaConfig(colIndex = "", conTitulo = "NO") {
+function agregarFilaConfig(colIndex = "", conTitulo = "NO", ancho = "100%", tamano = "normal") {
     const contenedor = document.getElementById('filas-configuracion');
     const div = document.createElement('div');
     div.className = "fila-etiqueta";
-    div.style = "display:flex; gap:5px; margin-bottom:5px;";
+    
+    // Dejamos un margen abajo de cada renglón de configuración
+    div.style = "display:flex; gap:5px; margin-bottom:5px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 4px;";
 
     let ops = window.headersActuales.map((h, i) => {
         const selected = String(colIndex) === String(i) ? "selected" : "";
@@ -214,17 +216,28 @@ function agregarFilaConfig(colIndex = "", conTitulo = "NO") {
 
     div.innerHTML = `
         <select class="sel-col-et" style="flex:2" onchange="actualizarPreviewLive()">${ops}</select>
+        
         <select class="sel-tit-et" style="flex:1" onchange="actualizarPreviewLive()">
             <option value="NO" ${conTitulo === "NO" ? "selected" : ""}>SIN TÍTULO</option>
             <option value="SI" ${conTitulo === "SI" ? "selected" : ""}>CON TÍTULO</option>
         </select>
+
+        <select class="sel-ancho-et" style="flex:1" onchange="actualizarPreviewLive()">
+            <option value="100%" ${ancho === "100%" ? "selected" : ""}>Renglón Entero (100%)</option>
+            <option value="50%" ${ancho === "50%" ? "selected" : ""}>Medio Renglón (50%)</option>
+        </select>
+
+        <select class="sel-tamano-et" style="flex:1" onchange="actualizarPreviewLive()">
+            <option value="normal" ${tamano === "normal" ? "selected" : ""}>Letra Normal</option>
+            <option value="chica" ${tamano === "chica" ? "selected" : ""}>Letra Chica</option>
+        </select>
+        
         <button onclick="this.parentElement.remove(); actualizarPreviewLive();" style="background:#c0392b; width:40px; margin:0;">X</button>
     `;
 
     contenedor.appendChild(div);
     actualizarPreviewLive();
 }
-
 function agregarFilaQR(colIndex = "", conTitulo = "SI") {
     const contenedor = document.getElementById('filas-configuracion-qr');
     const div = document.createElement('div');
@@ -259,20 +272,47 @@ function actualizarPreviewLive() {
 
     let htmlCampos = "";
 
+    // ==========================================================================
+    // 🎨 RECORREMOS LAS FILAS LEYENDO LOS NUEVOS ATRIBUTOS DE DISEÑO
+    // ==========================================================================
     filasConfig.forEach(fila => {
         const idx = fila.querySelector('.sel-col-et').value;
         const conTit = fila.querySelector('.sel-tit-et').value === "SI";
+        
+        // Leemos los nuevos selectores de forma segura (si no existen todavía, toman el valor por defecto)
+        const anchoElegido = fila.querySelector('.sel-ancho-et')?.value || "100%";
+        const tamanoElegido = fila.querySelector('.sel-tamano-et')?.value || "normal";
+        
         const nombreCol = window.headersActuales[idx] || "";
         const valor = piezaDeMuestra[idx] || "";
-        htmlCampos += `<div class="campo-preview-live">${conTit ? nombreCol + ': ' : ''}<b>${valor}</b></div>`;
+
+        // Definimos estilos CSS dinámicos según lo seleccionado por el operario
+        let estiloBloque = `width: ${anchoElegido}; display: inline-block; box-sizing: border-box; padding: 2px;`;
+        
+        if (tamanoElegido === "chica") {
+            estiloBloque += " font-size: 10px; line-height: 12px;"; // Achica el texto
+        } else {
+            estiloBloque += " font-size: 13px; line-height: 16px;"; // Tamaño estándar legible
+        }
+
+        htmlCampos += `
+            <div style="${estiloBloque}" class="campo-preview-live">
+                ${conTit ? '<span style="color: #555; font-weight: normal;">' + nombreCol + ':</span> ' : ''}<b>${valor}</b>
+            </div>
+        `;
     });
+
+    // Inyectamos un contenedor flex-wrap para permitir que los bloques de 50% se acoplen juntos
+    const htmlContenedorCampos = `
+        <div class="campos-preview-live" style="display: flex; flex-wrap: wrap; width: 100%; text-align: left;">
+            ${htmlCampos}
+        </div>
+    `;
 
     if (tipoCodigo === "BARRAS") {
         cont.innerHTML = `
             <div class="etiqueta-preview-real">
-                <div class="campos-preview-live">
-                    ${htmlCampos}
-                </div>
+                ${htmlContenedorCampos}
                 <svg id="bar-preview-live"></svg>
             </div>
         `;
@@ -285,8 +325,7 @@ function actualizarPreviewLive() {
             margin: 0,
             width: 1
         });
-    } // <--- ESTA CIERRA EL "IF" (Acá estaba el error)
-    else {
+    } else {
         let textoQR = "";
         filasQR.forEach(fila => {
             const idx = fila.querySelector('.sel-col-qr').value;
@@ -298,9 +337,7 @@ function actualizarPreviewLive() {
 
         cont.innerHTML = `
             <div class="etiqueta-preview-real">
-                <div class="campos-preview-live">
-                    ${htmlCampos}
-                </div>
+                ${htmlContenedorCampos}
                 <div id="qr-preview-live" class="qr-preview-live-box"></div>
             </div>
         `;
@@ -310,8 +347,8 @@ function actualizarPreviewLive() {
             width: 70,
             height: 70
         });
-    } // <--- ESTA CIERRA EL "ELSE"
-} // <--- ESTA CIERRA LA FUNCIÓN COMPLETA
+    } 
+}
 function guardarDisenoMaestro() {
     const filas = Array.from(document.querySelectorAll('.fila-etiqueta'));
     const filasQR = Array.from(document.querySelectorAll('.fila-qr'));
