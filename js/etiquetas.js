@@ -24,6 +24,15 @@ function cargarConfigurador() {
         }
 
         window.headersActuales = res.encabezados;
+        // Filtrar columnas no imprimibles
+        const columnasNoImprimibles = [
+            "TIMESTAMP_IMPORTACION",
+            "ESTADO_ACTUAL"
+        ];
+
+        window.headersActuales = res.encabezados.filter(h => 
+            !columnasNoImprimibles.includes(String(h).trim())
+        );
         piezaDeMuestra = res.piezas[0];
 
         callServer("obtenerConfiguracionMaestra", {}, configJSON => {
@@ -132,9 +141,30 @@ function cargarConfigurador() {
             } else {
                 agregarFilaQR();
             }
+
+            // ==========================================================================
+            // 🚀 INTERRUPTOR DE ARRASTRE SEGURO (MUEVE FILAS Y ACTUALIZA LA PREVIEW)
+            // ==========================================================================
+            if (typeof Sortable !== "undefined") {
+                new Sortable(filasCont, {
+                    animation: 150,
+                    onEnd: function() {
+                        actualizarPreviewLive(); // Al soltar, redibuja tu etiqueta modelo
+                    }
+                });
+
+                new Sortable(filasQRCont, {
+                    animation: 150,
+                    onEnd: function() {
+                        actualizarPreviewLive(); // Al soltar, redibuja tu QR modelo
+                    }
+                });
+            }
+
         });
     });
 }
+
 window.cargarSelectorProyectos = function () {
     const sel = document.getElementById('id-proy-print');
     sel.innerHTML = '<option value="">Seleccionar proyecto...</option>';
