@@ -273,26 +273,22 @@ function actualizarPreviewLive() {
     let htmlCampos = "";
 
     // ==========================================================================
-    // 🎨 RECORREMOS LAS FILAS CORRIGIENDO EL DESFASE DE COLUMNAS FIJAS
+    // 🎨 RECORREMOS LAS FILAS - MAPEANDO DIRECTO 1 A 1 SIN DESFASE
     // ==========================================================================
     filasConfig.forEach(fila => {
         const selectorColumna = fila.querySelector('.sel-col-et');
         if (!selectorColumna) return;
         
-        // idx representa la posición dentro de window.headersActuales (ej: 0 para Ancho, 1 para Alto)
+        // idx directo (0 = PROYECTO, 1 = TIMESTAMP, etc.) tal como viene en el selector
         const idx = parseInt(selectorColumna.value, 10); 
         const conTit = fila.querySelector('.sel-tit-et').value === "SI";
         
         const anchoElegido = fila.querySelector('.sel-ancho-et')?.value || "100%";
         const tamanoElegido = fila.querySelector('.sel-tamano-et')?.value || "normal";
         
-        // Leemos el nombre del encabezado mapeado
         const nombreCol = window.headersActuales[idx] || "";
-        
-        // 🔥 CORRECCIÓN CLAVE: Como piezaDeMuestra tiene 6 columnas fijas al principio (A-F),
-        // le sumamos 6 al índice para apuntar exactamente al dato real en la base de datos (G en adelante).
-        const idxRealEnBD = idx + 6;
-        const valor = piezaDeMuestra[idxRealEnBD] !== undefined ? piezaDeMuestra[idxRealEnBD] : "";
+        // Leemos el índice directo sin sumarle nada
+        const valor = piezaDeMuestra[idx] !== undefined ? piezaDeMuestra[idx] : "";
 
         let estiloBloque = `width: ${anchoElegido}; display: inline-block; box-sizing: border-box; padding: 2px;`;
         
@@ -323,7 +319,7 @@ function actualizarPreviewLive() {
             </div>
         `;
 
-        // El ID_UNICO para el código de barras siempre está fijo en la columna E (índice 4)
+        // Tu código de barras lee el ID_UNICO fijo. En tu Excel está en la columna E (índice 4)
         const codigoBarraValor = piezaDeMuestra[4] || "123456";
 
         JsBarcode("#bar-preview-live", codigoBarraValor, {
@@ -344,9 +340,8 @@ function actualizarPreviewLive() {
             const conTit = fila.querySelector('.sel-tit-qr').value === "SI";
             const nombreCol = window.headersActuales[idx] || "";
             
-            // 🔥 APLICAMOS EL MISMO DESFASE (+6) PARA EL TEXTO DEL CÓDIGO QR
-            const idxRealEnBD = idx + 6;
-            const valor = piezaDeMuestra[idxRealEnBD] !== undefined ? piezaDeMuestra[idxRealEnBD] : "";
+            // Leemos directo sin sumarle nada también para el QR
+            const valor = piezaDeMuestra[idx] !== undefined ? piezaDeMuestra[idx] : "";
             
             textoQR += `${conTit ? nombreCol + ': ' : ''}${valor}\n`;
         });
