@@ -198,33 +198,32 @@ function agregarFilaConfig(colIndex = "", conTitulo = "NO", ancho = "100%", tama
     const contenedor = document.getElementById('filas-configuracion');
     const div = document.createElement('div');
     div.className = "fila-etiqueta";
-    
-    // Dejamos un margen abajo de cada renglón de configuración
     div.style = "display:flex; gap:5px; margin-bottom:5px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 4px;";
 
+    // Filtramos visualmente para que no se rendericen en el select
+    const columnasOcultas = ["TIMESTAMP_IMPORTACION", "ESTADO_ACTUAL"];
+
     let ops = window.headersActuales.map((h, i) => {
+        if (columnasOcultas.includes(String(h).trim())) return ""; // No genera la opción visual, pero mantiene el índice 'i' intacto
+        
         const selected = String(colIndex) === String(i) ? "selected" : "";
         return `<option value="${i}" ${selected}>${h}</option>`;
     }).join('');
 
     div.innerHTML = `
         <select class="sel-col-et" style="flex:2" onchange="actualizarPreviewLive()">${ops}</select>
-        
         <select class="sel-tit-et" style="flex:1" onchange="actualizarPreviewLive()">
             <option value="NO" ${conTitulo === "NO" ? "selected" : ""}>SIN TÍTULO</option>
             <option value="SI" ${conTitulo === "SI" ? "selected" : ""}>CON TÍTULO</option>
         </select>
-
         <select class="sel-ancho-et" style="flex:1" onchange="actualizarPreviewLive()">
-            <option value="100%" ${ancho === "100%" ? "selected" : ""}>Renglón Entero (100%)</option>
+            <option value="100%" ${ancho === "100%" ? "selected" : ""}>Renglón Entero (100%)\n</option>
             <option value="50%" ${ancho === "50%" ? "selected" : ""}>Medio Renglón (50%)</option>
         </select>
-
         <select class="sel-tamano-et" style="flex:1" onchange="actualizarPreviewLive()">
             <option value="normal" ${tamano === "normal" ? "selected" : ""}>Letra Normal</option>
             <option value="chica" ${tamano === "chica" ? "selected" : ""}>Letra Chica</option>
         </select>
-        
         <button onclick="this.parentElement.remove(); actualizarPreviewLive();" style="background:#c0392b; width:40px; margin:0;">X</button>
     `;
 
