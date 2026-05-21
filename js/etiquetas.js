@@ -273,23 +273,26 @@ function actualizarPreviewLive() {
     let htmlCampos = "";
 
     // ==========================================================================
-    // 🎨 RECORREMOS LAS FILAS CORRIGIENDO LA LECTURA DE ÍNDICES EN VIVO
+    // 🎨 RECORREMOS LAS FILAS CORRIGIENDO EL DESFASE DE COLUMNAS FIJAS
     // ==========================================================================
     filasConfig.forEach(fila => {
-        // CORRECCIÓN CLAVE: Convertimos a entero el VALUE real del select seleccionado
         const selectorColumna = fila.querySelector('.sel-col-et');
         if (!selectorColumna) return;
         
+        // idx representa la posición dentro de window.headersActuales (ej: 0 para Ancho, 1 para Alto)
         const idx = parseInt(selectorColumna.value, 10); 
         const conTit = fila.querySelector('.sel-tit-et').value === "SI";
         
-        // Atributos de diseño que agregamos antes
         const anchoElegido = fila.querySelector('.sel-ancho-et')?.value || "100%";
         const tamanoElegido = fila.querySelector('.sel-tamano-et')?.value || "normal";
         
-        // Ahora sí mapeamos de forma segura contra la base de datos de headers
+        // Leemos el nombre del encabezado mapeado
         const nombreCol = window.headersActuales[idx] || "";
-        const valor = piezaDeMuestra[idx] !== undefined ? piezaDeMuestra[idx] : "";
+        
+        // 🔥 CORRECCIÓN CLAVE: Como piezaDeMuestra tiene 6 columnas fijas al principio (A-F),
+        // le sumamos 6 al índice para apuntar exactamente al dato real en la base de datos (G en adelante).
+        const idxRealEnBD = idx + 6;
+        const valor = piezaDeMuestra[idxRealEnBD] !== undefined ? piezaDeMuestra[idxRealEnBD] : "";
 
         let estiloBloque = `width: ${anchoElegido}; display: inline-block; box-sizing: border-box; padding: 2px;`;
         
@@ -320,8 +323,7 @@ function actualizarPreviewLive() {
             </div>
         `;
 
-        // CORRECCIÓN EXTRA: Buscamos dinámicamente cuál columna tiene el ID ÚNICO para el código de barras
-        // (Asumimos que el ID único sigue estando en el índice 4 o lo calculamos del registro de muestra)
+        // El ID_UNICO para el código de barras siempre está fijo en la columna E (índice 4)
         const codigoBarraValor = piezaDeMuestra[4] || "123456";
 
         JsBarcode("#bar-preview-live", codigoBarraValor, {
@@ -341,7 +343,11 @@ function actualizarPreviewLive() {
             const idx = parseInt(selectorQR.value, 10);
             const conTit = fila.querySelector('.sel-tit-qr').value === "SI";
             const nombreCol = window.headersActuales[idx] || "";
-            const valor = piezaDeMuestra[idx] !== undefined ? piezaDeMuestra[idx] : "";
+            
+            // 🔥 APLICAMOS EL MISMO DESFASE (+6) PARA EL TEXTO DEL CÓDIGO QR
+            const idxRealEnBD = idx + 6;
+            const valor = piezaDeMuestra[idxRealEnBD] !== undefined ? piezaDeMuestra[idxRealEnBD] : "";
+            
             textoQR += `${conTit ? nombreCol + ': ' : ''}${valor}\n`;
         });
 
