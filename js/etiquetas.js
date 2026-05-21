@@ -23,16 +23,9 @@ function cargarConfigurador() {
             return;
         }
 
+        // CORRECCIÓN HISTÓRICA: Dejamos los encabezados COMPLETOS tal como vienen del servidor
+        // para que coincidan 1 a 1 de forma exacta con las posiciones del array de 'piezaDeMuestra'
         window.headersActuales = res.encabezados;
-        // Filtrar columnas no imprimibles
-        const columnasNoImprimibles = [
-            "TIMESTAMP_IMPORTACION",
-            "ESTADO_ACTUAL"
-        ];
-
-        window.headersActuales = res.encabezados.filter(h => 
-            !columnasNoImprimibles.includes(String(h).trim())
-        );
         piezaDeMuestra = res.piezas[0];
 
         callServer("obtenerConfiguracionMaestra", {}, configJSON => {
@@ -149,14 +142,14 @@ function cargarConfigurador() {
                 new Sortable(filasCont, {
                     animation: 150,
                     onEnd: function() {
-                        actualizarPreviewLive(); // Al soltar, redibuja tu etiqueta modelo
+                        actualizarPreviewLive();
                     }
                 });
 
                 new Sortable(filasQRCont, {
                     animation: 150,
                     onEnd: function() {
-                        actualizarPreviewLive(); // Al soltar, redibuja tu QR modelo
+                        actualizarPreviewLive();
                     }
                 });
             }
